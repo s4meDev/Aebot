@@ -1,0 +1,72 @@
+import type {
+  DataRule,
+  DataService,
+  RuleConclusionMeta,
+  RuleEvaluationResult,
+} from '../types';
+
+export function buildServiceSystemInstruction(
+  service: DataService,
+  rules: DataRule[],
+  conclusions: RuleConclusionMeta[]
+): string {
+  const hierarchy = conclusions
+    .sort((left, right) => left.priority - right.priority)
+    .map((item) => `${item.severity}: ${item.description}`)
+    .join('\n');
+  const ruleCatalog = rules
+    .map(
+      (rule) =>
+        `[${rule.id}] ${rule.title}\nConclusão: ${rule.severity}\nDescrição: ${rule.description}\nOrientação: ${rule.guidance ?? rule.message}`
+    )
+    .join('\n\n');
+
+  return `Você auxilia analistas no serviço "${service.name}".
+Use exclusivamente a avaliação determinística e as regras fornecidas.
+Nunca crie, altere ou complete regras por conhecimento geral.
+Se a decisão for nula, não escolha uma conclusão oficial.
+Se a intenção for hipótese, descreva o resultado como cenário, não como fato ocorrido.
+Seja curto, simples e natural.
+
+Conclusões oficiais:
+${hierarchy}
+
+Catálogo do serviço:
+${ruleCatalog}`;
+}
+
+export function buildEvaluationPrompt(
+  userPrompt: string,
+  evaluation: RuleEvaluationResult
+): string {
+  const rules = evaluation.matchedRules.map((rule) => ({
+    id: rule.id,
+    title: rule.title,
+    conclusion: rule.severity,
+    message: rule.message,
+    guidance: rule.guidance,
+  }));
+
+  return `[AVALIAÇÃO DETERMINÍSTICA — NÃO ALTERAR]
+${JSON.stringify(
+    {
+      serviceId: evaluation.serviceId,
+      intent: evaluation.intent,
+      decision: evaluation.decision,
+      hasSufficientEvidence: evaluation.hasSufficientEvidence,
+      confidence: evaluation.confidence,
+      reasoning: evaluation.reasoningSummary,
+      rules,
+    },
+    null,
+    2
+  )}
+
+Humanize somente a justificativa e a orientação. Não acrescente fatos ou regras.
+Retorne apenas JSON válido neste formato:
+{"justification":"texto curto","guidance":"ação objetiva"}
+Não inclua decisão nem lista de regras no JSON.
+
+[PERGUNTA ATUAL]
+${userPrompt}`;
+}

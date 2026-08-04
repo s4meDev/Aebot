@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "AEGEA Flow Service IA",
+  "version": "1.0.2",
+  "description": "Assistente operacional para analistas de serviços de campo AEGEA",
+  "permissions": ["storage", "sidePanel", "tabs"],
+  "action": {
+    "default_title": "Abrir assistente AEGEA"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}

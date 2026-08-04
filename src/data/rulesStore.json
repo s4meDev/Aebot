@@ -1,0 +1,230 @@
+{
+  "version": "2.0.0",
+  "conclusions": {
+    "Conforme": {
+      "severity": "Conforme",
+      "priority": 3,
+      "description": "Serviço aprovado e correto."
+    },
+    "Não Conforme": {
+      "severity": "Não Conforme",
+      "priority": 2,
+      "description": "Serviço aprovado, mas corrigido pelo setor de análise ou com problema que deve ser pontuado sem justificar reprovação."
+    },
+    "Reprovado": {
+      "severity": "Reprovado",
+      "priority": 1,
+      "description": "Serviço sem execução válida, em local incorreto, sem evidência suficiente ou com falha grave que impeça aprovação."
+    }
+  },
+  "services": [
+    {
+      "id": "reparo-cavalete",
+      "name": "Reparo de Cavalete",
+      "category": "Distribuição de Água",
+      "summary": "Regras de validação utilizadas pelo setor de análise para o serviço Reparo de Cavalete.",
+      "decisionDefault": "Conforme somente quando uma regra cadastrada confirmar execução correta e evidências obrigatórias presentes.",
+      "insights": [
+        "A foto depois da execução é crítica: se faltar, o resultado é Reprovado.",
+        "Falta da foto antes ou durante resulta em Não Conforme.",
+        "Falta de duas ou mais etapas resulta em Reprovado.",
+        "Foto do chassi sem número de hidrômetro visível resulta em Não Conforme.",
+        "Ausência de evidência da troca do lacre resulta em Não Conforme.",
+        "Serviço em local incorreto ou sem necessidade resulta em Reprovado."
+      ],
+      "suggestedQuestions": [
+        "Sem foto depois da execução, qual a decisão?",
+        "Faltou a foto antes e também a foto do chassi, qual a conclusão?",
+        "Faltou apenas a foto durante a execução, como classificar?",
+        "Faltaram as fotos antes e durante, qual o resultado?",
+        "Se faltar a foto do chassi e a foto final, qual regra prevalece?"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "RULE-RC-01",
+      "serviceId": "reparo-cavalete",
+      "title": "Falta da foto depois da execução",
+      "description": "Falta de evidência do hidrômetro reparado, serviço finalizado ou estado final do cavalete.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Evidência de execução",
+      "relatedEvidence": ["foto depois", "foto final", "serviço finalizado", "estado final"],
+      "conditionKeywords": [
+        "sem foto depois",
+        "falta foto depois",
+        "faltou a foto depois",
+        "foto depois ausente",
+        "sem foto final"
+      ],
+      "equivalentExpressions": [
+        "a foto depois não foi apresentada",
+        "foto final não foi apresentada",
+        "não apresentou a foto depois",
+        "não evidenciou o serviço finalizado"
+      ],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não foi apresentada", "não apresentou"],
+      "negativeSignals": ["não faltou foto depois", "foto depois foi apresentada", "foto final presente"],
+      "examples": ["A foto depois não foi apresentada."],
+      "message": "Não foi evidenciada a conclusão da execução do serviço.",
+      "guidance": "Reprove a Ordem de Serviço e registre a ausência da evidência final."
+    },
+    {
+      "id": "RULE-RC-02",
+      "serviceId": "reparo-cavalete",
+      "title": "Ausência de duas ou mais etapas",
+      "description": "Faltam ao menos duas das etapas antes, durante ou depois, ou nenhuma etapa foi apresentada.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Evidência de execução",
+      "relatedEvidence": ["duas fotos", "duas etapas", "nenhuma foto", "nenhuma evidência"],
+      "conditionKeywords": [
+        "faltaram duas fotos",
+        "faltam duas fotos",
+        "sem duas etapas",
+        "sem nenhuma foto",
+        "sem nenhuma evidência"
+      ],
+      "equivalentExpressions": ["apenas uma etapa foi apresentada", "só uma foto foi apresentada"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou"],
+      "negativeSignals": ["todas as etapas presentes", "nenhuma foto faltou"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            { "label": "antes", "expressions": ["foto antes", "antes"] },
+            { "label": "durante", "expressions": ["foto durante", "durante"] },
+            { "label": "depois", "expressions": ["foto depois", "foto final", "depois"] }
+          ]
+        }
+      },
+      "examples": ["Faltaram as fotos antes e durante."],
+      "message": "Não foi evidenciada a execução do serviço em etapas suficientes.",
+      "guidance": "Reprove a Ordem de Serviço e registre quais etapas não foram evidenciadas."
+    },
+    {
+      "id": "RULE-RC-03",
+      "serviceId": "reparo-cavalete",
+      "title": "Serviço no local incorreto",
+      "description": "Serviço executado em endereço ou instalação divergente da Ordem de Serviço.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Local de execução",
+      "conditionKeywords": ["local incorreto", "endereço diferente", "lugar errado", "local errado"],
+      "equivalentExpressions": ["executado em outro endereço", "instalação diferente da ordem"],
+      "negativeSignals": ["local correto", "endereço confirmado"],
+      "examples": ["O reparo foi executado em outro endereço."],
+      "message": "O serviço foi executado em local incorreto.",
+      "guidance": "Reprove a Ordem de Serviço e registre a divergência de local."
+    },
+    {
+      "id": "RULE-RC-04",
+      "serviceId": "reparo-cavalete",
+      "title": "Serviço sem necessidade",
+      "description": "Não havia necessidade técnica para realizar o reparo.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Validade da execução",
+      "conditionKeywords": ["sem necessidade", "não precisava", "não havia necessidade"],
+      "equivalentExpressions": ["reparo desnecessário"],
+      "message": "Não havia necessidade técnica para executar o serviço.",
+      "guidance": "Reprove a Ordem de Serviço e registre a ausência de necessidade técnica."
+    },
+    {
+      "id": "RULE-RC-05",
+      "serviceId": "reparo-cavalete",
+      "title": "Falta da foto do chassi com hidrômetro",
+      "description": "Ausência ou ilegibilidade da foto que identifica o hidrômetro correspondente à Ordem de Serviço.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Identificação",
+      "relatedEvidence": ["foto do chassi", "chassi", "número do hidrômetro", "hidrômetro", "número do hd"],
+      "conditionKeywords": [
+        "sem foto do chassi",
+        "falta foto do chassi",
+        "chassi ilegível",
+        "sem hidrômetro",
+        "sem número do hd"
+      ],
+      "equivalentExpressions": [
+        "chassi está ilegível",
+        "número do hidrômetro não aparece",
+        "identificação do hidrômetro ausente"
+      ],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "ilegível", "não aparece"],
+      "negativeSignals": ["chassi legível", "número do hidrômetro visível"],
+      "message": "A identificação do hidrômetro na foto do chassi está ausente ou ilegível.",
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da identificação."
+    },
+    {
+      "id": "RULE-RC-06",
+      "serviceId": "reparo-cavalete",
+      "title": "Falta da foto antes da execução",
+      "description": "Ausência de foto que justifique a abertura da Ordem de Serviço.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Evidência de execução",
+      "relatedEvidence": ["foto antes", "antes da execução"],
+      "conditionKeywords": ["sem foto antes", "falta foto antes", "faltou a foto antes", "foto antes ausente"],
+      "equivalentExpressions": ["a foto antes não foi apresentada", "não apresentou a foto antes"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não foi apresentada", "não apresentou"],
+      "negativeSignals": ["não faltou foto antes", "foto antes foi apresentada", "foto antes presente"],
+      "message": "A foto anterior à execução não foi apresentada.",
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência anterior."
+    },
+    {
+      "id": "RULE-RC-07",
+      "serviceId": "reparo-cavalete",
+      "title": "Falta da foto durante a execução",
+      "description": "Ausência de foto que evidencie o reparo em andamento.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Evidência de execução",
+      "relatedEvidence": ["foto durante", "durante a execução"],
+      "conditionKeywords": ["sem foto durante", "falta foto durante", "faltou a foto durante", "foto durante ausente"],
+      "equivalentExpressions": ["a foto durante não foi apresentada", "não apresentou a foto durante"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não foi apresentada", "não apresentou"],
+      "negativeSignals": ["não faltou foto durante", "foto durante foi apresentada", "foto durante presente"],
+      "message": "A foto durante a execução não foi apresentada.",
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência intermediária."
+    },
+    {
+      "id": "RULE-RC-08",
+      "serviceId": "reparo-cavalete",
+      "title": "Falta de evidência da troca do lacre",
+      "description": "Ausência de foto que comprove a substituição ou instalação do lacre do hidrômetro.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Evidência complementar",
+      "relatedEvidence": ["foto do lacre", "troca do lacre", "lacre"],
+      "conditionKeywords": ["sem foto do lacre", "falta foto do lacre", "troca do lacre não evidenciada"],
+      "equivalentExpressions": ["não comprovou a troca do lacre", "evidência do lacre ausente"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não evidenciada", "não comprovou"],
+      "negativeSignals": ["troca do lacre comprovada", "foto do lacre presente"],
+      "message": "Não foi apresentada evidência da troca do lacre.",
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade do lacre."
+    },
+    {
+      "id": "RULE-RC-09",
+      "serviceId": "reparo-cavalete",
+      "title": "Execução correta com evidências completas",
+      "description": "O serviço foi executado corretamente e todas as evidências obrigatórias estão presentes.",
+      "severity": "Conforme",
+      "priority": 3,
+      "category": "Conclusão positiva",
+      "conditionKeywords": [
+        "serviço executado corretamente e todas as evidências obrigatórias estão presentes",
+        "evidências completas e serviço correto",
+        "tudo correto e evidências completas"
+      ],
+      "equivalentExpressions": [
+        "execução correta com todas as fotos apresentadas",
+        "todas as evidências presentes e serviço correto"
+      ],
+      "negativeSignals": ["evidência ausente", "foto ausente", "execução incorreta"],
+      "message": "A execução correta e todas as evidências obrigatórias foram confirmadas.",
+      "guidance": "Aprove a Ordem de Serviço como Conforme."
+    }
+  ]
+}
