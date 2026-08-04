@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.3.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -23,7 +23,6 @@
       "name": "Reparo de Cavalete",
       "category": "Distribuição de Água",
       "summary": "Regras de validação utilizadas pelo setor de análise para o serviço Reparo de Cavalete.",
-      "decisionDefault": "Conforme somente quando uma regra cadastrada confirmar execução correta e evidências obrigatórias presentes.",
       "insights": [
         "A foto depois da execução é crítica: se faltar, o resultado é Reprovado.",
         "Falta da foto antes ou durante resulta em Não Conforme.",
@@ -50,6 +49,7 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Evidência de execução",
+      "topicKeywords": ["depois", "foto crítica", "evidência final", "conclusão da execução", "foto do fim", "foto depois"],
       "relatedEvidence": ["foto depois", "foto final", "serviço finalizado", "estado final"],
       "conditionKeywords": [
         "sem foto depois",
@@ -62,9 +62,10 @@
         "a foto depois não foi apresentada",
         "foto final não foi apresentada",
         "não apresentou a foto depois",
-        "não evidenciou o serviço finalizado"
+        "não evidenciou o serviço finalizado",
+        "a foto final não veio"
       ],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não foi apresentada", "não apresentou"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não foi apresentada", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
       "negativeSignals": ["não faltou foto depois", "foto depois foi apresentada", "foto final presente"],
       "examples": ["A foto depois não foi apresentada."],
       "message": "Não foi evidenciada a conclusão da execução do serviço.",
@@ -78,6 +79,7 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Evidência de execução",
+      "topicKeywords": ["etapas obrigatórias", "fotos obrigatórias", "evidências obrigatórias", "duas etapas"],
       "relatedEvidence": ["duas fotos", "duas etapas", "nenhuma foto", "nenhuma evidência"],
       "conditionKeywords": [
         "faltaram duas fotos",
@@ -86,12 +88,14 @@
         "sem nenhuma foto",
         "sem nenhuma evidência"
       ],
-      "equivalentExpressions": ["apenas uma etapa foi apresentada", "só uma foto foi apresentada"],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou"],
+      "equivalentExpressions": ["apenas uma etapa foi apresentada", "só uma foto foi apresentada", "mandaram só uma foto", "só mandaram uma foto"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
       "negativeSignals": ["todas as etapas presentes", "nenhuma foto faltou"],
       "matchPolicy": {
         "minimumGroups": {
           "count": 2,
+          "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou"],
+          "negativeSignals": ["presente", "presentes", "foi apresentada", "foram apresentadas", "com foto"],
           "groups": [
             { "label": "antes", "expressions": ["foto antes", "antes"] },
             { "label": "durante", "expressions": ["foto durante", "durante"] },
@@ -111,7 +115,8 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Local de execução",
-      "conditionKeywords": ["local incorreto", "endereço diferente", "lugar errado", "local errado"],
+      "topicKeywords": ["local de execução", "endereço da ordem", "endereço do serviço"],
+      "conditionKeywords": ["local incorreto", "endereço diferente", "endereço errado", "lugar errado", "local errado"],
       "equivalentExpressions": ["executado em outro endereço", "instalação diferente da ordem"],
       "negativeSignals": ["local correto", "endereço confirmado"],
       "examples": ["O reparo foi executado em outro endereço."],
@@ -126,6 +131,7 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Validade da execução",
+      "topicKeywords": ["necessidade técnica", "validade da execução", "reparo necessário"],
       "conditionKeywords": ["sem necessidade", "não precisava", "não havia necessidade"],
       "equivalentExpressions": ["reparo desnecessário"],
       "message": "Não havia necessidade técnica para executar o serviço.",
@@ -139,6 +145,7 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Identificação",
+      "topicKeywords": ["identificação do hidrômetro", "número do hidrômetro", "foto do chassi"],
       "relatedEvidence": ["foto do chassi", "chassi", "número do hidrômetro", "hidrômetro", "número do hd"],
       "conditionKeywords": [
         "sem foto do chassi",
@@ -152,7 +159,7 @@
         "número do hidrômetro não aparece",
         "identificação do hidrômetro ausente"
       ],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "ilegível", "não aparece"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "ilegível", "não aparece", "não tem", "não veio", "esqueceram"],
       "negativeSignals": ["chassi legível", "número do hidrômetro visível"],
       "message": "A identificação do hidrômetro na foto do chassi está ausente ou ilegível.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade da identificação."
@@ -165,10 +172,11 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Evidência de execução",
+      "topicKeywords": ["antes", "etapa antes", "evidência anterior", "foto antes"],
       "relatedEvidence": ["foto antes", "antes da execução"],
       "conditionKeywords": ["sem foto antes", "falta foto antes", "faltou a foto antes", "foto antes ausente"],
       "equivalentExpressions": ["a foto antes não foi apresentada", "não apresentou a foto antes"],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não foi apresentada", "não apresentou"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não foi apresentada", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
       "negativeSignals": ["não faltou foto antes", "foto antes foi apresentada", "foto antes presente"],
       "message": "A foto anterior à execução não foi apresentada.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência anterior."
@@ -181,12 +189,59 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Evidência de execução",
-      "relatedEvidence": ["foto durante", "durante a execução"],
-      "conditionKeywords": ["sem foto durante", "falta foto durante", "faltou a foto durante", "foto durante ausente"],
-      "equivalentExpressions": ["a foto durante não foi apresentada", "não apresentou a foto durante"],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não foi apresentada", "não apresentou"],
+      "topicKeywords": [
+        "durante",
+        "etapa durante",
+        "evidência durante",
+        "foto durante",
+        "execução do reparo",
+        "reparo em andamento",
+        "aperto da virola",
+        "virola"
+      ],
+      "relatedEvidence": [
+        "foto durante",
+        "durante a execução",
+        "foto fazendo",
+        "fazendo",
+        "fazendo o serviço",
+        "fazendo o reparo",
+        "serviço sendo feito",
+        "reparo sendo feito",
+        "execução do reparo",
+        "reparo em andamento",
+        "apertando a virola",
+        "aperto da virola",
+        "ajuste da virola",
+        "virola sendo apertada"
+      ],
+      "conditionKeywords": [
+        "sem foto durante",
+        "falta foto durante",
+        "faltou a foto durante",
+        "foto durante ausente",
+        "sem foto fazendo",
+        "sem foto da execução",
+        "sem foto do reparo sendo feito",
+        "sem foto apertando a virola",
+        "não mostrou apertando a virola"
+      ],
+      "equivalentExpressions": [
+        "a foto durante não foi apresentada",
+        "não apresentou a foto durante",
+        "faltaram as fotos antes e durante",
+        "não mostrou o serviço sendo feito",
+        "não apresentou foto fazendo o reparo",
+        "não evidenciou o reparo em andamento",
+        "não registrou a execução do reparo"
+      ],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não foi apresentada", "não apresentou", "não mostrou", "não evidenciou", "não registrou", "não tem", "não tiver", "não veio", "esqueceram"],
       "negativeSignals": ["não faltou foto durante", "foto durante foi apresentada", "foto durante presente"],
-      "message": "A foto durante a execução não foi apresentada.",
+      "examples": [
+        "Não mostrou a equipe apertando a virola.",
+        "Sem foto fazendo o reparo."
+      ],
+      "message": "A execução do reparo em andamento não foi evidenciada.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência intermediária."
     },
     {
@@ -197,10 +252,11 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Evidência complementar",
+      "topicKeywords": ["troca do lacre", "evidência do lacre", "foto do lacre"],
       "relatedEvidence": ["foto do lacre", "troca do lacre", "lacre"],
       "conditionKeywords": ["sem foto do lacre", "falta foto do lacre", "troca do lacre não evidenciada"],
-      "equivalentExpressions": ["não comprovou a troca do lacre", "evidência do lacre ausente"],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "ausente", "não evidenciada", "não comprovou"],
+      "equivalentExpressions": ["não comprovou a troca do lacre", "evidência do lacre ausente", "não botaram foto do lacre"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não evidenciada", "não comprovou", "não tem", "não veio", "não botaram", "esqueceram"],
       "negativeSignals": ["troca do lacre comprovada", "foto do lacre presente"],
       "message": "Não foi apresentada evidência da troca do lacre.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade do lacre."
@@ -213,6 +269,7 @@
       "severity": "Conforme",
       "priority": 3,
       "category": "Conclusão positiva",
+      "topicKeywords": ["aprovação", "conformidade", "evidências completas", "serviço correto"],
       "conditionKeywords": [
         "serviço executado corretamente e todas as evidências obrigatórias estão presentes",
         "evidências completas e serviço correto",
@@ -220,7 +277,9 @@
       ],
       "equivalentExpressions": [
         "execução correta com todas as fotos apresentadas",
-        "todas as evidências presentes e serviço correto"
+        "todas as evidências presentes e serviço correto",
+        "as evidências estão completas e o serviço está correto",
+        "evidências estão completas e serviço correto"
       ],
       "negativeSignals": ["evidência ausente", "foto ausente", "execução incorreta"],
       "message": "A execução correta e todas as evidências obrigatórias foram confirmadas.",

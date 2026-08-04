@@ -1,9 +1,39 @@
 import type { QueryIntent } from '../types';
 import { findExpressions, type NormalizedText } from './TextNormalizer';
 
-const HYPOTHETICAL_MARKERS = ['se faltar', 'se houver', 'caso falte', 'caso haja', 'e se'];
-const QUESTION_MARKERS = ['como', 'qual', 'quando', 'onde', 'por que', 'porque'];
+const HYPOTHETICAL_MARKERS = [
+  'se faltar',
+  'se houver',
+  'se nao',
+  'se tiver',
+  'se estiver',
+  'caso falte',
+  'caso haja',
+  'caso nao',
+  'e se',
+];
+const QUESTION_MARKERS = [
+  'como',
+  'qual',
+  'quando',
+  'onde',
+  'por que',
+  'porque',
+  'o que',
+  'quero entender',
+  'me explique',
+  'me explica',
+  'me diga',
+  'liste',
+  'mostre',
+  'quais',
+  'que regra',
+  'para que',
+];
 const FACT_MARKERS = [
+  'ausente',
+  'falta',
+  'faltam',
   'faltou',
   'faltaram',
   'esta ausente',
@@ -12,6 +42,15 @@ const FACT_MARKERS = [
   'não foi apresentada',
   'nao apresentou',
   'não apresentou',
+  'nao comprovou',
+  'não comprovou',
+  'nao tem',
+  'não tem',
+  'nao veio',
+  'não veio',
+  'nao botaram',
+  'não botaram',
+  'esqueceram',
   'sem',
   'foi executado',
   'foi corrigido',
@@ -21,15 +60,42 @@ const FACT_MARKERS = [
 
 export function classifyQueryIntent(query: NormalizedText): QueryIntent {
   if (!query.value) return 'indefinida';
-  if (findExpressions(query, HYPOTHETICAL_MARKERS).length) return 'hipotese';
+  const hasConditionalFact =
+    query.tokens.includes('se') && findExpressions(query, FACT_MARKERS).length > 0;
+  if (findExpressions(query, HYPOTHETICAL_MARKERS).length || hasConditionalFact) return 'hipotese';
 
   const startsAsQuestion = QUESTION_MARKERS.some(
-    (marker) => query.value === normalizeMarker(marker) || query.value.startsWith(`${normalizeMarker(marker)} `)
+    (marker) =>
+      query.value === normalizeMarker(marker) ||
+      query.value.startsWith(`${normalizeMarker(marker)} `)
   );
   if (startsAsQuestion) return 'pergunta_informativa';
   if (findExpressions(query, FACT_MARKERS).length) return 'relato_afirmativo';
   if (query.original.includes('?')) return 'pergunta_informativa';
   return 'indefinida';
+}
+
+const SERVICE_OVERVIEW_MARKERS = [
+  'como funciona esse servico',
+  'como funciona o servico',
+  'como se analisa esse servico',
+  'como analisar esse servico',
+  'quero entender o servico',
+  'me explique o servico',
+  'me explica o servico',
+  'quais sao as regras do servico',
+  'quais regras do servico',
+  'quais sao as regras',
+  'quais regras tem',
+  'me fale das regras',
+  'resuma o servico',
+  'o que analisar nesse servico',
+  'o que devo analisar',
+  'o que preciso analisar',
+];
+
+export function isServiceOverviewQuestion(query: NormalizedText): boolean {
+  return findExpressions(query, SERVICE_OVERVIEW_MARKERS).length > 0;
 }
 
 function normalizeMarker(marker: string): string {

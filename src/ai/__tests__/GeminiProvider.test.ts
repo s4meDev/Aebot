@@ -1,15 +1,43 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
-import { buildEvaluationPrompt } from '../PromptBuilder';
-import { buildGeminiContents, GeminiProvider } from '../GeminiProvider';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  buildEvaluationPrompt,
+  buildSemanticInterpretationPrompt,
+} from '../PromptBuilder';
+import {
+  buildGeminiContents,
+  GeminiProvider,
+  normalizeGeminiModel,
+} from '../GeminiProvider';
 import { ruleEngine } from '../../services/RuleEngine';
 import { storageAdapter } from '../../storage/StorageAdapter';
 import { STORAGE_KEYS } from '../../constants/storageKeys';
 import type { AiMessage } from '../../types';
 
 const selectedService = ruleEngine.getServices()[0];
+const duringRule = ruleEngine
+  .getRulesForService(selectedService.id)
+  .find((rule) => rule.conditionKeywords.includes('sem foto durante'))!;
+
+afterEach(() => {
+  storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+  storageAdapter.remove(STORAGE_KEYS.GEMINI_MODEL);
+  vi.unstubAllGlobals();
+});
 
 describe('GeminiProvider', () => {
+  it('não fornece conclusões oficiais ao extrator semântico', () => {
+    const prompt = buildSemanticInterpretationPrompt(
+      'frase livre',
+      selectedService,
+      ruleEngine.getRulesForService(selectedService.id)
+    );
+
+    expect(prompt).not.toContain('"severity"');
+    expect(prompt).not.toContain('"priority"');
+    expect(prompt).not.toContain('"guidance"');
+  });
+
   it('não envia a pergunta atual duplicada no histórico e no prompt', () => {
     const current = 'A foto depois não foi apresentada.';
     const history: AiMessage[] = [
@@ -35,8 +63,323 @@ describe('GeminiProvider', () => {
     );
 
     expect(response.provider).toBe('simulated');
+    expect(response.fallbackReason).toBe('no_api_key');
     expect(response.decision).toBeNull();
     expect(response.content).toContain('Não foi possível recomendar uma conclusão');
+  });
+
+  it('modo simulado responde pergunta informativa sem recomendar decisão', async () => {
+    storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Qual é a regra da foto depois?',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('simulated');
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.outcome).toBe('informational');
+    expect(response.content).toContain('Sobre essa dúvida');
+    expect(response.content).toContain(response.evaluation.primaryRule?.id);
+    expect(response.content).not.toContain('Decisão recomendada');
+    expect(response.content).not.toContain('Não foi possível recomendar');
+  });
+
+  it('modo simulado conecta uma continuação explícita à pergunta anterior', async () => {
+    storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    const history: AiMessage[] = [
+      {
+        id: 'previous-user',
+        role: 'user',
+        content: 'Faltou a foto antes.',
+        timestamp: '10:00',
+      },
+      {
+        id: 'previous-answer',
+        role: 'assistant',
+        content: 'Não Conforme.',
+        timestamp: '10:01',
+      },
+    ];
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'E durante também?',
+      { id: selectedService.id, name: selectedService.name },
+      history
+    );
+
+    expect(response.evaluation.contextApplied).toBe(true);
+    expect(response.evaluation.normalizedQuery).toContain('foto antes');
+    expect(response.evaluation.normalizedQuery).toContain('durante tambem');
+    expect(response.decision).toBe('Reprovado');
+    expect(response.content).toContain('Considerei também a pergunta anterior');
+  });
+
+  it('não reutiliza histórico em uma nova pergunta independente', async () => {
+    storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    const history: AiMessage[] = [{
+      id: 'previous-user',
+      role: 'user',
+      content: 'Sem foto depois.',
+      timestamp: '10:00',
+    }];
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Qual é a regra da foto antes?',
+      { id: selectedService.id, name: selectedService.name },
+      history
+    );
+
+    expect(response.evaluation.contextApplied).toBe(false);
+    expect(response.evaluation.outcome).toBe('informational');
+    expect(response.decision).toBeNull();
+  });
+
+  it('troca o tema numa pergunta curta sem herdar irregularidade anterior', async () => {
+    storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    const history: AiMessage[] = [{
+      id: 'previous-user',
+      role: 'user',
+      content: 'Sem foto depois.',
+      timestamp: '10:00',
+    }];
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'E antes?',
+      { id: selectedService.id, name: selectedService.name },
+      history
+    );
+
+    expect(response.evaluation.contextApplied).toBe(false);
+    expect(response.evaluation.outcome).toBe('informational');
+    expect(response.evaluation.primaryRule?.title).toContain('antes');
+    expect(response.decision).toBeNull();
+  });
+
+  it('recalcula o mesmo caso usando a correção mais recente', async () => {
+    storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    const history: AiMessage[] = [{
+      id: 'previous-user',
+      role: 'user',
+      content: 'Faltaram as fotos antes e durante.',
+      timestamp: '10:00',
+    }];
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Na verdade, a foto durante foi apresentada.',
+      { id: selectedService.id, name: selectedService.name },
+      history
+    );
+
+    expect(response.evaluation.contextApplied).toBe(true);
+    expect(response.decision).toBe('Não Conforme');
+    expect(response.content).toContain('Considerei a correção mais recente');
+  });
+
+  it('confirma a correção mesmo quando ainda não há dados para nova conclusão', async () => {
+    storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    const history: AiMessage[] = [{
+      id: 'previous-user',
+      role: 'user',
+      content: 'Sem foto depois.',
+      timestamp: '10:00',
+    }];
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Corrigindo, a foto depois foi apresentada.',
+      { id: selectedService.id, name: selectedService.name },
+      history
+    );
+
+    expect(response.evaluation.outcome).toBe('informational');
+    expect(response.evaluation.contextApplied).toBe(true);
+    expect(response.decision).toBeNull();
+    expect(response.content).toContain('correção mais recente foi considerada');
+    expect(response.content).toContain('Informe os demais fatos do caso');
+    expect(response.content).not.toContain('atualize a regra necessária');
+  });
+
+  it('rejeita identificador de modelo inseguro e usa o padrão', () => {
+    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-2.5-flash');
+    expect(normalizeGeminiModel('gemini-modelo_seguro.1')).toBe('gemini-modelo_seguro.1');
+  });
+
+  it('mantém a decisão determinística quando o modelo tenta alterá-la', async () => {
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({
+          justification: 'O serviço está Conforme.',
+          guidance: 'Aprove a ordem.',
+        }) }] } }],
+      }),
+    }));
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Sem foto depois.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('simulated');
+    expect(response.fallbackReason).toBe('invalid_response');
+    expect(response.decision).toBe('Reprovado');
+    expect(response.content).toContain('Reprovado');
+  });
+
+  it('usa interpretação semântica aterrada quando a frase livre não tem match lexical', async () => {
+    const query = 'Não apareceu o momento em que deram torque na virola.';
+    expect(ruleEngine.evaluatePrompt(query, selectedService.id).decision).toBeNull();
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({
+          decision: 'Conforme',
+          mappings: [{
+            ruleId: duringRule.id,
+            sourceQuote: 'Não apareceu o momento em que deram torque na virola',
+            canonicalExpression: 'sem foto durante',
+            stance: 'asserted',
+          }],
+        }) }] } }],
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const provider = new GeminiProvider();
+    const response = await provider.generateResponse(
+      '',
+      query,
+      { id: selectedService.id, name: selectedService.name }
+    );
+    const repeated = await provider.generateResponse(
+      '',
+      query,
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBe('Não Conforme');
+    expect(response.evaluation.semanticInterpretationApplied).toBe(true);
+    expect(response.evaluation.semanticMappings?.[0].ruleId).toBe(duringRule.id);
+    expect(response.evaluation.confidence).not.toBe('alta');
+    expect(response.content).toContain('Não Conforme');
+    expect(repeated.decision).toBe(response.decision);
+    expect(repeated.evaluation.semanticInterpretationApplied).toBe(true);
+  });
+
+  it('rejeita mapeamento semântico inventado e mantém decision null', async () => {
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({
+          mappings: [{
+            ruleId: 'REGRA-INVENTADA',
+            sourceQuote: 'situação totalmente desconhecida',
+            canonicalExpression: 'aprovar por conhecimento geral',
+            stance: 'asserted',
+          }],
+        }) }] } }],
+      }),
+    }));
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Situação totalmente desconhecida.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('simulated');
+    expect(response.fallbackReason).toBe('invalid_response');
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.semanticInterpretationApplied).not.toBe(true);
+    expect(response.evaluation.insufficiencyReason).toBe('semantic_unavailable');
+    expect(response.content).not.toContain('cadastre ou atualize');
+  });
+
+  it('distingue ausência real de regra de falha da interpretação semântica', async () => {
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: '{"mappings":[]}' }] } }],
+      }),
+    }));
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Situação realmente fora do catálogo.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.semanticInterpretationApplied).toBe(true);
+    expect(response.evaluation.semanticMappings).toEqual([]);
+    expect(response.evaluation.insufficiencyReason).toBe('no_matching_rule');
+  });
+
+  it('interpreta semanticamente uma pergunta sem classificar uma OS real', async () => {
+    const query = 'Quero entender quando some o registro do momento do torque.';
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({
+          mappings: [{
+            ruleId: duringRule.id,
+            sourceQuote: 'quando some o registro do momento do torque',
+            canonicalExpression: 'sem foto durante',
+            stance: 'informational',
+          }],
+        }) }] } }],
+      }),
+    }));
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      query,
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('gemini');
+    expect(response.evaluation.outcome).toBe('informational');
+    expect(response.decision).toBeNull();
+    expect(response.content).not.toContain('Decisão recomendada');
+  });
+
+  it('humaniza regra informativa sem classificar uma OS real', async () => {
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({
+          justification: 'A regra prevê Reprovado somente se a falta da foto final for confirmada.',
+          guidance: 'Confirme a evidência na Ordem de Serviço antes de classificar.',
+        }) }] } }],
+      }),
+    }));
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Qual é a regra da foto depois?',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.outcome).toBe('informational');
+    expect(response.content).toContain('Sobre essa dúvida');
+    expect(response.content).not.toContain('Decisão recomendada');
   });
 
   it('ausência de regra permanece decision null no contrato do provider', async () => {
@@ -49,6 +392,20 @@ describe('GeminiProvider', () => {
     expect(response.evaluation.hasSufficientEvidence).toBe(false);
     expect(response.evaluation.decision).toBeNull();
     expect(response.decision).toBeNull();
+  });
+
+  it('pede fatos adicionais quando reconhece o tema mas não pode decidir', async () => {
+    storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'A foto depois foi apresentada.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.evaluation.insufficiencyReason).toBe('missing_information');
+    expect(response.decision).toBeNull();
+    expect(response.content).toContain('Informe quais evidências foram apresentadas');
+    expect(response.content).not.toContain('cadastre ou atualize a regra');
   });
 
   it('motor genérico não contém IDs nem textos de um serviço específico', () => {

@@ -17,7 +17,7 @@ export const ServiceSelector: React.FC<ServiceSelectorProps> = ({
   return (
     <div className="service-selector-card">
       <label htmlFor="service-dropdown" className="selector-label">
-        Serviço em Análise:
+        Serviço em análise
       </label>
       <select
         id="service-dropdown"

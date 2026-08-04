@@ -1,11 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "AEGEA Flow Service IA",
-  "version": "1.0.2",
-  "description": "Assistente operacional para analistas de serviços de campo AEGEA",
-  "permissions": ["storage", "sidePanel", "tabs"],
+  "name": "AEBOT — Assistente de Análise",
+  "version": "2.1.0",
+  "description": "Assistente de análise de serviços de campo baseado nas regras cadastradas",
+  "permissions": ["sidePanel"],
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
   "action": {
-    "default_title": "Abrir assistente AEGEA"
+    "default_title": "Abrir AEBOT"
   },
   "side_panel": {
     "default_path": "index.html"
@@ -15,6 +20,6 @@
     "type": "module"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src https://generativelanguage.googleapis.com http://127.0.0.1:* http://localhost:*"
   }
 }

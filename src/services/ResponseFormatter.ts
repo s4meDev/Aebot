@@ -16,11 +16,42 @@ export function formatEvaluationResponse(
   evaluation: RuleEvaluationResult,
   narrative: ResponseNarrative = {}
 ): string {
+  if (evaluation.outcome === 'informational') {
+    let rules = evaluation.contextApplied
+      ? 'Contexto atualizado do caso'
+      : 'Cadastro do serviço selecionado';
+    if (evaluation.matchedRules.length) {
+      rules = evaluation.matchedRules
+        .map((rule) => `${rule.id} — ${rule.title}`)
+        .join('\n');
+    }
+
+    let defaultInformationalGuidance =
+      'Consulte as regras cadastradas ao analisar um caso concreto e informe os fatos observados.';
+    if (evaluation.primaryRule) {
+      defaultInformationalGuidance =
+        'Use essa orientação somente quando os fatos correspondentes forem confirmados na Ordem de Serviço.';
+    } else if (evaluation.contextApplied) {
+      defaultInformationalGuidance =
+        'Informe os demais fatos do caso para que uma nova conclusão possa ser calculada.';
+    }
+    const guidance = narrative.guidance ?? defaultInformationalGuidance;
+    const explanation = narrative.justification ?? evaluation.reasoningSummary;
+    return `Sobre essa dúvida:\n${explanation}\n\nRegras consultadas:\n${rules}\n\nOrientação ao analista:\n${guidance}`;
+  }
+
   if (!evaluation.decision || !evaluation.hasSufficientEvidence) {
     const reason = evaluation.errorCode === 'SERVICE_NOT_FOUND'
       ? 'O serviço selecionado não existe na base de regras.'
       : evaluation.reasoningSummary;
-    return `Não foi possível recomendar uma conclusão com segurança.\n\nMotivo:\n${reason}\n\nOrientação ao analista:\nValide com o responsável e cadastre ou atualize a regra necessária na base.`;
+    const guidance = evaluation.insufficiencyReason === 'missing_information'
+      ? 'Informe quais evidências foram apresentadas, quais faltaram e se a execução do serviço estava correta.'
+      : evaluation.insufficiencyReason === 'semantic_unavailable'
+        ? 'Tente novamente. Se o problema persistir, valide o caso com o responsável; não altere a base somente por esta falha técnica.'
+      : evaluation.insufficiencyReason === 'service_not_found'
+        ? 'Selecione um serviço válido antes de realizar a análise.'
+        : 'Valide com o responsável e cadastre ou atualize a regra necessária na base.';
+    return `Não foi possível recomendar uma conclusão com segurança.\n\nMotivo:\n${reason}\n\nOrientação ao analista:\n${guidance}`;
   }
 
   const rules = evaluation.matchedRules

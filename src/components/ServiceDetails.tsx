@@ -17,18 +17,20 @@ export const ServiceDetails: React.FC<ServiceDetailsProps> = ({ service }) => {
 
       <p className="service-summary">{service.summary}</p>
 
-      {/* Insights Section */}
-      <div className="insights-container">
-        <h4 className="insights-title">Insights e Diretrizes Operacionais</h4>
+      <details className="insights-container">
+        <summary className="insights-summary">
+          <span>Regras e diretrizes</span>
+          <span className="insights-count">{service.insights.length}</span>
+        </summary>
         <ul className="insights-list">
-          {service.insights.map((insight, idx) => (
-            <li key={idx} className="insight-item">
+          {service.insights.map((insight) => (
+            <li key={insight} className="insight-item">
               <span className="insight-bullet"></span>
               <span className="insight-text">{insight}</span>
             </li>
           ))}
         </ul>
-      </div>
+      </details>
     </div>
   );
 };

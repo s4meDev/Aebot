@@ -86,8 +86,8 @@ export default function App() {
             <span>AEGEA</span>
           </div>
           <div>
-            <h1 className="app-title">Flow Service IA</h1>
-            <p className="app-subtitle">Assistente do Analista Operacional</p>
+            <h1 className="app-title">AEBOT</h1>
+            <p className="app-subtitle">Assistente de Análise Operacional</p>
           </div>
         </div>
 
@@ -97,7 +97,7 @@ export default function App() {
           onClick={() => setIsConfigOpen(true)}
           title="Configurações do Gemini"
         >
-          ⚙️ Config
+          Config
         </button>
       </header>
 
@@ -105,7 +105,7 @@ export default function App() {
       <main className="main-content">
         <ServiceSelector
           services={services}
-          selectedServiceId={selectedService?.id ?? ''}
+          selectedServiceId={selectedServiceId}
           onSelect={setSelectedServiceId}
         />
 
@@ -121,7 +121,7 @@ export default function App() {
 
       {/* Footer info */}
       <footer className="app-footer">
-        <span>AEGEA Saneamento • Gemini 3.6 Flash Engine</span>
+        <span>AEBOT • Análise baseada em regras</span>
       </footer>
 
       {/* Settings Modal */}

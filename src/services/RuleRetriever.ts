@@ -2,6 +2,7 @@ import type { DataRule, MatchedRule, QueryIntent } from '../types';
 import {
   findExpression,
   findExpressions,
+  hasScopedPositiveSignal,
   normalizeText,
   type NormalizedText,
 } from './TextNormalizer';
@@ -32,7 +33,10 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
   const negativeMatches = findExpressions(query, rule.negativeSignals);
   if (exceptionMatches.length || negativeMatches.length) return null;
 
-  const scenarioExpressions = [...rule.conditionKeywords, ...(rule.equivalentExpressions ?? [])];
+  const scenarioExpressions = [
+    ...rule.conditionKeywords,
+    ...(rule.equivalentExpressions ?? []),
+  ];
   const directMatches = findExpressions(query, scenarioExpressions);
   const signalMatches = findExpressions(query, rule.positiveSignals);
   const evidenceMatches = findExpressions(query, rule.relatedEvidence);
@@ -52,14 +56,26 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
   const minimumGroups = rule.matchPolicy?.minimumGroups;
   const matchedGroups = minimumGroups
     ? minimumGroups.groups.filter((group) =>
-        group.expressions.some((expression) => findExpression(query, expression))
+        (minimumGroups.positiveSignals ?? rule.positiveSignals)?.length
+          ? hasScopedPositiveSignal(
+              query,
+              group.expressions,
+              minimumGroups.positiveSignals ?? rule.positiveSignals,
+              minimumGroups.negativeSignals
+            )
+          : group.expressions.some((expression) => findExpression(query, expression))
       )
     : [];
   const satisfiesMinimumGroups = Boolean(
-    minimumGroups && matchedGroups.length >= minimumGroups.count && signalMatches.length
+    minimumGroups && matchedGroups.length >= minimumGroups.count
   );
 
-  const hasCompositeMatch = signalMatches.length > 0 && evidenceMatches.length > 0;
+  const hasCompositeMatch = hasScopedPositiveSignal(
+    query,
+    rule.relatedEvidence,
+    rule.positiveSignals,
+    rule.negativeSignals
+  );
   const hasDirectScenario = directMatches.length > 0;
   if (!hasDirectScenario && !hasCompositeMatch && !satisfiesAllOf && !satisfiesMinimumGroups) {
     return null;
@@ -86,7 +102,7 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
     ...directMatches.map(expressionSpecificity),
     ...evidenceMatches.map(expressionSpecificity),
     allOfMatches.length,
-    matchedGroups.length * 2
+    matchedGroups.length * 4
   );
   const factMatchQuality = getFactMatchQuality(intent, hasDirectScenario);
   const relevance = Math.min(
@@ -122,6 +138,53 @@ export function retrieveRules(
 ): MatchedRule[] {
   return rules.flatMap((rule) => {
     const match = matchRule(query, intent, rule);
+    return match ? [match] : [];
+  });
+}
+
+function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedRule | null {
+  const lastSegment = query.segments[query.segments.length - 1] ?? query.value;
+  const topicQuery = normalizeText(lastSegment);
+  const topicExpressions = unique([
+    ...(rule.topicKeywords ?? []),
+    ...(rule.relatedEvidence ?? []),
+    rule.title,
+    rule.severity,
+    ...(rule.category ? [rule.category] : []),
+  ]);
+  const topicMatches = findExpressions(topicQuery, topicExpressions);
+  if (!topicMatches.length) return null;
+
+  const specificity = Math.max(...topicMatches.map(expressionSpecificity));
+  const relevance = Math.min(
+    1,
+    0.45 + topicMatches.length * 0.12 + Math.min(specificity, 5) * 0.05
+  );
+  const score = Math.round(Math.min(10, relevance * 7 + specificity * 0.35) * 10) / 10;
+
+  return {
+    id: rule.id,
+    title: rule.title,
+    severity: rule.severity,
+    priority: rule.priority,
+    score,
+    factMatchQuality: 0,
+    specificity,
+    relevance,
+    matchReasons: ['tema da regra identificado'],
+    matchedTerms: topicMatches,
+    guidance: rule.guidance,
+    message: rule.message,
+  };
+}
+
+/** Recupera regras por tema sem inferir que os fatos ocorreram na OS. */
+export function retrieveInformationalRules(
+  query: NormalizedText,
+  rules: DataRule[]
+): MatchedRule[] {
+  return rules.flatMap((rule) => {
+    const match = matchInformationalRule(query, rule);
     return match ? [match] : [];
   });
 }

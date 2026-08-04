@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { type AiMessage, type ServiceRecord, type DecisionType } from '../types';
-import { GeminiProvider } from '../ai/GeminiProvider';
+import { assistantProvider, normalizeBackendUrl } from '../ai/BackendProvider';
 import { storageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS } from '../constants/storageKeys';
+import { parseNewCaseCommand } from '../services/ConversationContextResolver';
 
 interface ChatPanelProps {
   service: ServiceRecord;
@@ -10,7 +11,16 @@ interface ChatPanelProps {
   context: string;
 }
 
-const geminiProvider = new GeminiProvider();
+function createWelcomeMessage(serviceName: string, isNewCase = false): AiMessage {
+  return {
+    id: 'welcome',
+    role: 'assistant',
+    content: isNewCase
+      ? `Novo caso iniciado para ${serviceName}. O contexto anterior foi descartado. Descreva os fatos observados.`
+      : `Olá! Como posso ajudar na auditoria do ${serviceName}?`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  };
+}
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
   const [messages, setMessages] = useState<AiMessage[]>([]);
@@ -18,26 +28,42 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
   const [isThinking, setIsThinking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isGeminiKeyConfigured = Boolean(storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, ''));
+  const isGeminiKeyConfigured = Boolean(
+    storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, '').trim()
+  );
+  const isBackendConfigured = Boolean(normalizeBackendUrl(
+    storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
+  ));
 
   useEffect(() => {
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: `Olá! Como posso ajudar na auditoria do ${service.name}?`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
+    setMessages([createWelcomeMessage(service.name)]);
   }, [service.id, service.name]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking]);
 
+  const startNewCase = () => {
+    if (isThinking) return;
+    setDraft('');
+    setMessages([createWelcomeMessage(service.name, true)]);
+  };
+
   const handleSend = async (customText?: string) => {
-    const textToSend = (customText || draft).trim();
-    if (!textToSend || isThinking) return;
+    const submittedText = (customText || draft).trim();
+    if (!submittedText || isThinking) return;
+
+    const newCaseCommand = parseNewCaseCommand(submittedText);
+    if (newCaseCommand.isNewCase && !newCaseCommand.remainingPrompt) {
+      startNewCase();
+      return;
+    }
+
+    const textToSend = newCaseCommand.remainingPrompt ?? submittedText;
+    const requestHistory = newCaseCommand.isNewCase ? [] : messages;
+    const initialMessages = newCaseCommand.isNewCase
+      ? [createWelcomeMessage(service.name, true)]
+      : messages;
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMessage: AiMessage = {
@@ -47,29 +73,38 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
       timestamp: timeStr,
     };
 
-    const updatedMessages = [...messages, userMessage];
+    const updatedMessages = [...initialMessages, userMessage];
     setMessages(updatedMessages);
     if (!customText) setDraft('');
     setIsThinking(true);
 
     try {
-      const response = await geminiProvider.generateResponse(
+      const response = await assistantProvider.generateResponse(
         context,
         textToSend,
         { id: service.id, name: service.name },
-        messages
+        requestHistory
       );
 
-      setMessages((current) => [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: response.content,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          decision: response.decision ?? undefined,
-        },
-      ]);
+      setMessages((current) => {
+        const messagesWithContext = response.evaluation.contextApplied
+          ? current.map((message) =>
+              message.id === userMessage.id
+                ? { ...message, contextQuery: response.evaluation.normalizedQuery }
+                : message
+            )
+          : current;
+        return [
+          ...messagesWithContext,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: response.content,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            decision: response.decision ?? undefined,
+          },
+        ];
+      });
     } catch (error) {
       setMessages((current) => [
         ...current,
@@ -101,12 +136,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
     <section className="card chat-shell">
       <div className="chat-hero">
         <div className="chat-hero-title">
-          <span className="sparkle-icon">✨</span>
-          <h3>Assistente de Inteligência Artificial</h3>
+          <span className="assistant-mark" aria-hidden="true">A</span>
+          <h3>Assistente de Análise</h3>
         </div>
-        <span className={`engine-pill ${isGeminiKeyConfigured ? 'api-mode' : 'sim-mode'}`}>
-          {isGeminiKeyConfigured ? 'Gemini API' : 'Simulador'}
-        </span>
+        <div className="chat-actions">
+          <button
+            type="button"
+            className="new-case-btn"
+            disabled={isThinking}
+            onClick={startNewCase}
+            title="Descartar o contexto atual e iniciar outra Ordem de Serviço"
+          >
+            ↻ Novo caso
+          </button>
+          <span
+            className={`engine-pill ${isBackendConfigured || isGeminiKeyConfigured ? 'api-mode' : 'sim-mode'}`}
+            title={isBackendConfigured
+              ? 'Backend central ativo; regras e IA são processadas pelo servidor'
+              : isGeminiKeyConfigured
+                ? 'Interpretação semântica Gemini ativa; decisões validadas pelo motor de regras'
+                : 'Modo local: somente matching determinístico, sem interpretação semântica'}
+          >
+            {isBackendConfigured ? 'Backend' : isGeminiKeyConfigured ? 'Gemini API' : 'Simulador'}
+          </span>
+        </div>
       </div>
 
       {/* Suggested Prompt Chips */}
@@ -133,7 +186,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
           <div key={message.id} className={`message-wrapper ${message.role}`}>
             <div className="bubble-header">
               <span className="author-name">
-                {message.role === 'user' ? 'Você' : 'Assistente IA'}
+                {message.role === 'user' ? 'Você' : 'AEBOT'}
               </span>
               <span className="timestamp">{message.timestamp}</span>
             </div>
@@ -152,7 +205,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
                 <span>.</span>
                 <span>.</span>
               </span>
-              <span>Analisando regras do serviço</span>
+              <span>Consultando regras do serviço</span>
             </div>
           </div>
         )}
@@ -171,7 +224,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
               void handleSend();
             }
           }}
-          placeholder="Digite sua dúvida sobre o serviço..."
+          placeholder="Descreva a dúvida ou os fatos da OS..."
           rows={2}
         />
         <button
@@ -180,7 +233,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
           disabled={!draft.trim() || isThinking}
           onClick={() => void handleSend()}
         >
-          Enviar ➔
+          Enviar
         </button>
       </div>
     </section>

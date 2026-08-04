@@ -8,6 +8,14 @@ export type QueryIntent =
 
 export type ConfidenceLevel = 'insuficiente' | 'baixa' | 'média' | 'alta';
 
+export type EvaluationOutcome = 'decision' | 'informational' | 'insufficient';
+
+export type InsufficiencyReason =
+  | 'missing_information'
+  | 'no_matching_rule'
+  | 'semantic_unavailable'
+  | 'service_not_found';
+
 export interface RuleConditionGroup {
   label: string;
   expressions: string[];
@@ -19,6 +27,10 @@ export interface RuleMatchPolicy {
   /** Exige uma quantidade mínima de grupos de fatos distintos. */
   minimumGroups?: {
     count: number;
+    /** Sinais aplicados por proximidade a cada grupo de evidência. */
+    positiveSignals?: string[];
+    /** Sinais de presença/correção que anulam o positivo mais distante. */
+    negativeSignals?: string[];
     groups: RuleConditionGroup[];
   };
 }
@@ -44,6 +56,8 @@ export interface DataRule {
   guidance?: string;
   category?: string;
   relatedEvidence?: string[];
+  /** Termos usados somente para localizar a regra em perguntas informativas. */
+  topicKeywords?: string[];
   matchPolicy?: RuleMatchPolicy;
 }
 
@@ -52,8 +66,6 @@ export interface DataService {
   name: string;
   category: string;
   summary: string;
-  /** Texto informativo legado; nunca é usado como fallback de decisão. */
-  decisionDefault?: string;
   insights: string[];
   suggestedQuestions?: string[];
 }
@@ -94,10 +106,29 @@ export interface EvaluationConflict {
   resolution: string;
 }
 
+export type SemanticMappingStance =
+  | 'asserted'
+  | 'hypothetical'
+  | 'informational'
+  | 'negated_or_present';
+
+export interface SemanticRuleMapping {
+  ruleId: string;
+  /** Trecho literal da pergunta que sustenta o mapeamento. */
+  sourceQuote: string;
+  /** Expressão escolhida literalmente entre as condições cadastradas da regra. */
+  canonicalExpression: string;
+  stance: SemanticMappingStance;
+}
+
 export interface RuleEvaluationResult {
   serviceId: string;
+  ruleStoreVersion: string;
   normalizedQuery: string;
+  /** Indica que uma continuação explícita foi ligada à última pergunta do analista. */
+  contextApplied: boolean;
   intent: QueryIntent;
+  outcome: EvaluationOutcome;
   decision: DecisionType | null;
   hasSufficientEvidence: boolean;
   matchedRules: MatchedRule[];
@@ -106,6 +137,15 @@ export interface RuleEvaluationResult {
   confidence: ConfidenceLevel;
   reasoningSummary: string;
   requiresHumanValidation: boolean;
+  /** A linguagem livre foi aterrada em expressões cadastradas antes da avaliação. */
+  semanticInterpretationApplied?: boolean;
+  semanticMappings?: SemanticRuleMapping[];
+  insufficiencyReason?: InsufficiencyReason;
+  serviceContext?: {
+    name: string;
+    summary: string;
+    insights: string[];
+  };
   errorCode?: 'SERVICE_NOT_FOUND';
 }
 
@@ -129,15 +169,18 @@ export interface AiMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  /** Consulta contextual acumulada, usada apenas pelo motor determinístico. */
+  contextQuery?: string;
   timestamp: string;
   decision?: DecisionType;
 }
 
 export interface AiProviderResponse {
   content: string;
-  provider: 'gemini' | 'simulated';
+  provider: 'backend' | 'gemini' | 'simulated';
   decision: DecisionType | null;
   evaluation: RuleEvaluationResult;
+  fallbackReason?: 'no_api_key' | 'api_error' | 'invalid_response' | 'backend_error';
 }
 
 export interface AiProvider {

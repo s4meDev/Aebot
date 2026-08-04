@@ -4,7 +4,19 @@
 - As únicas conclusões oficiais são `Conforme`, `Não Conforme` e `Reprovado`. Ausência de regra suficiente produz `decision: null` e validação humana; nunca use decisão padrão para aprovar.
 - Regras específicas de serviços pertencem exclusivamente a `src/data/rulesStore.json`. O motor TypeScript deve permanecer genérico, sem IDs, textos ou heurísticas de um serviço.
 - Matching usa normalização e tokens inteiros. Menção isolada, palavra interrogativa ou conhecimento geral não comprovam ocorrência.
-- A avaliação determinística decide; providers de IA apenas humanizam a justificativa e não podem alterar a decisão nem inventar regras.
+- O resultado técnico distingue `decision`, `informational` e `insufficient`; consulta sobre uma regra pode ser respondida com `decision: null` sem exigir validação humana, desde que a resposta esteja na base.
+- Resultados `insufficient` distinguem `missing_information`, `no_matching_rule`, `semantic_unavailable` e `service_not_found`; só ausência real de regra deve recomendar atualização da base.
+- Abreviações e equivalências linguísticas genéricas ficam na base versionada e validada `src/data/languageAliases.json`; equivalências de negócio permanecem na regra correspondente do `rulesStore.json`.
+- Ações específicas que representam uma etapa ou evidência devem ser cadastradas em `relatedEvidence`/expressões da regra; o motor combina essas ações com sinais de presença ou ausência sem inferir conhecimento de negócio livremente.
+- Contexto conversacional só pode ser acumulado diante de continuação linguística explícita e continua sujeito ao mesmo motor determinístico.
+- Comandos de novo caso devem limpar o contexto; retificações explícitas do mesmo caso fazem a informação mais recente prevalecer para a evidência relacionada.
+- A avaliação determinística decide; providers de IA podem mapear linguagem livre somente para IDs e expressões exatas já cadastradas e humanizar a justificativa, mas não podem alterar a decisão nem inventar regras.
 - Toda avaliação usa o `serviceId` realmente selecionado. IDs ausentes ou inválidos geram erro controlado, sem fallback para outro serviço.
 - Preserve React + TypeScript estrito + Vite e compatibilidade Chrome Manifest V3. Não versione chaves; mantenha provider substituível.
+- A interface segue o `PROJETO.md`: fundo preto, superfícies grafite, sem brilho e com Azul Royal restrito a ações principais e foco; o chat e a decisão são o foco visual.
+- Nunca aceite chave de IA por variável `VITE_*`: esse valor seria incorporado ao bundle da extensão.
+- O backend reutiliza o mesmo `RuleEngine` e a mesma base da extensão; nunca copie decisões ou regras para a API.
+- Chaves de provedor ficam somente em variáveis de ambiente do servidor. Logs do backend não devem registrar perguntas, histórico ou respostas dos analistas.
+- Em produção, a API exige origem explícita e token de acesso; permissões de host da extensão devem listar somente endpoints concretos.
 - Mudanças no motor exigem testes Vitest, typecheck e build antes da entrega.
+- Mudanças na base exigem versão compatível, validação runtime e casos no corpus de regressão.

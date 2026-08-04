@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 
+const projectRoot = import.meta.dirname;
+
 export default defineConfig({
   base: './',
   plugins: [
@@ -15,12 +17,13 @@ export default defineConfig({
       // copiado manualmente, eliminando o risco de arquivos divergentes.
       name: 'copy-extension-files',
       closeBundle() {
-        const distDir = path.resolve(__dirname, 'dist');
+        const distDir = path.resolve(projectRoot, 'dist');
+        const manifestSource = path.resolve(projectRoot, 'manifest.json');
         if (!fs.existsSync(distDir)) {
           fs.mkdirSync(distDir, { recursive: true });
         }
-        if (fs.existsSync('manifest.json')) {
-          fs.copyFileSync('manifest.json', path.join(distDir, 'manifest.json'));
+        if (fs.existsSync(manifestSource)) {
+          fs.copyFileSync(manifestSource, path.join(distDir, 'manifest.json'));
         }
       },
     },
@@ -32,7 +35,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        background: path.resolve(__dirname, 'src/background.ts'),
+        background: path.resolve(projectRoot, 'src/background.ts'),
       },
       output: {
         // O manifest.json espera "background.js" na raiz do dist (side_panel/MV3

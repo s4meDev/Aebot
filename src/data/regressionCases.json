@@ -1,0 +1,393 @@
+[
+  {
+    "name": "pergunta sem regra",
+    "serviceId": "reparo-cavalete",
+    "query": "A equipe chegou cedo ao endereço.",
+    "intent": "indefinida",
+    "outcome": "insufficient",
+    "insufficiencyReason": "no_matching_rule",
+    "decision": null,
+    "minimumMatches": 0
+  },
+  {
+    "name": "menção isolada de etapa",
+    "serviceId": "reparo-cavalete",
+    "query": "Quero entender a etapa antes.",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "hipótese de falta da foto final",
+    "serviceId": "reparo-cavalete",
+    "query": "Se faltar a foto depois, reprova?",
+    "intent": "hipotese",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "pergunta informativa sem ocorrência",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual é a regra da foto depois?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "ausência afirmada da foto final",
+    "serviceId": "reparo-cavalete",
+    "query": "A foto depois não foi apresentada.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "falta da foto anterior",
+    "serviceId": "reparo-cavalete",
+    "query": "Faltou a foto antes.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "falta da foto durante",
+    "serviceId": "reparo-cavalete",
+    "query": "Sem foto durante a execução.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "ação da virola sem evidência durante",
+    "serviceId": "reparo-cavalete",
+    "query": "não mostrou apertando a virola",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "foto fazendo ausente",
+    "serviceId": "reparo-cavalete",
+    "query": "sem foto fazendo",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "imagem informal da execução ausente",
+    "serviceId": "reparo-cavalete",
+    "query": "não mandaram imagem fazendo o reparo",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "duas etapas ausentes",
+    "serviceId": "reparo-cavalete",
+    "query": "Faltaram as fotos antes e durante.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 2
+  },
+  {
+    "name": "hidrômetro sem acento",
+    "serviceId": "reparo-cavalete",
+    "query": "Sem hidrometro na foto do chassi.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "serviço em outro endereço",
+    "serviceId": "reparo-cavalete",
+    "query": "O reparo foi executado em outro endereço.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "serviço desnecessário",
+    "serviceId": "reparo-cavalete",
+    "query": "Não havia necessidade do reparo.",
+    "intent": "indefinida",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "lacre não comprovado",
+    "serviceId": "reparo-cavalete",
+    "query": "Não comprovou a troca do lacre.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "conformidade explicitamente comprovada",
+    "serviceId": "reparo-cavalete",
+    "query": "Execução correta com todas as fotos apresentadas.",
+    "intent": "indefinida",
+    "outcome": "decision",
+    "decision": "Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "incompleto não é completo",
+    "serviceId": "reparo-cavalete",
+    "query": "O conjunto está incompleto.",
+    "intent": "indefinida",
+    "outcome": "insufficient",
+    "decision": null,
+    "minimumMatches": 0
+  },
+  {
+    "name": "caixa alta e pontuação",
+    "serviceId": "reparo-cavalete",
+    "query": "SEM FOTO DEPOIS!!!",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "ausência negada",
+    "serviceId": "reparo-cavalete",
+    "query": "Não faltou foto depois.",
+    "intent": "relato_afirmativo",
+    "outcome": "insufficient",
+    "decision": null,
+    "minimumMatches": 0
+  },
+  {
+    "name": "etapas presentes não herdam falta de outra etapa",
+    "serviceId": "reparo-cavalete",
+    "query": "Faltou a foto depois, mas as fotos antes e durante estão presentes.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1,
+    "maximumMatches": 1
+  },
+  {
+    "name": "duas ausências e etapa final presente",
+    "serviceId": "reparo-cavalete",
+    "query": "Faltaram as fotos antes e durante; a foto depois foi apresentada.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 3
+  },
+  {
+    "name": "fato positivo em outra frase não contamina pergunta",
+    "serviceId": "reparo-cavalete",
+    "query": "A foto depois foi apresentada. Qual é a regra da foto antes?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "consulta de cenário explicitamente irregular",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual regra vale para local incorreto?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "abreviações informais na foto final",
+    "serviceId": "reparo-cavalete",
+    "query": "n tem ft dps",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "sinônimo após para etapa final",
+    "serviceId": "reparo-cavalete",
+    "query": "sem foto após",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "imagem posterior não anexada",
+    "serviceId": "reparo-cavalete",
+    "query": "não anexaram a imagem posterior",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "imagem anterior ausente",
+    "serviceId": "reparo-cavalete",
+    "query": "imagem anterior ausente",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "pergunta sobre ausência da imagem posterior",
+    "serviceId": "reparo-cavalete",
+    "query": "qual é a regra da ausência da imagem posterior?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "flexão plural de imagem posterior",
+    "serviceId": "reparo-cavalete",
+    "query": "sem imagens posteriores",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "verbo informal na foto anterior",
+    "serviceId": "reparo-cavalete",
+    "query": "esqueceram da foto antes",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "endereço errado escrito informalmente",
+    "serviceId": "reparo-cavalete",
+    "query": "fizeram no endereco errado",
+    "intent": "indefinida",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "lacre descrito informalmente",
+    "serviceId": "reparo-cavalete",
+    "query": "nao botaram foto do lacre",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "hipótese informal de foto durante",
+    "serviceId": "reparo-cavalete",
+    "query": "e se n tiver ft durante?",
+    "intent": "hipotese",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "hipótese informal da foto final",
+    "serviceId": "reparo-cavalete",
+    "query": "qual regra q vale se a ft final n veio?",
+    "intent": "hipotese",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "chassi ilegível informal",
+    "serviceId": "reparo-cavalete",
+    "query": "a foto do chassi ta ilegivel",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "conformidade escrita informalmente",
+    "serviceId": "reparo-cavalete",
+    "query": "as evidencias tao completas e o servico correto",
+    "intent": "indefinida",
+    "outcome": "decision",
+    "decision": "Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "pergunta sobre finalidade da foto anterior",
+    "serviceId": "reparo-cavalete",
+    "query": "Para que serve a foto antes?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "visão geral do serviço",
+    "serviceId": "reparo-cavalete",
+    "query": "Como funciona esse serviço?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 0
+  },
+  {
+    "name": "pergunta externa à base",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual é a capital do Brasil?",
+    "intent": "pergunta_informativa",
+    "outcome": "insufficient",
+    "insufficiencyReason": "no_matching_rule",
+    "decision": null,
+    "minimumMatches": 0
+  },
+  {
+    "name": "tema conhecido sem fatos suficientes",
+    "serviceId": "reparo-cavalete",
+    "query": "A foto depois foi apresentada.",
+    "intent": "indefinida",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "consulta das regras por severidade informal",
+    "serviceId": "reparo-cavalete",
+    "query": "quais regras reprovam?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 4
+  },
+  {
+    "name": "imagem usada como sinônimo de foto",
+    "serviceId": "reparo-cavalete",
+    "query": "q regra fala da imagem final?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "pronome se não vira hipótese sozinho",
+    "serviceId": "reparo-cavalete",
+    "query": "Como se analisa esse serviço?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 0
+  }
+]
