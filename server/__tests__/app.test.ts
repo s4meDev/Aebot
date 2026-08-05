@@ -21,9 +21,12 @@ function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig {
     port: 0,
     allowedOrigins: ['chrome-extension://teste'],
     allowChromeExtensionOrigins: false,
+    trustProxy: false,
     apiToken: 'token-de-teste',
     geminiApiKey: '',
     geminiModel: 'gemini-test',
+    geminiFallbackModel: 'gemini-fallback-test',
+    humanizeDeterministicResponses: false,
     bodyLimitBytes: 32_768,
     rateLimitPerMinute: 60,
     ...overrides,
@@ -113,5 +116,15 @@ describe('API AEBOT', () => {
     const limited = await start(testConfig({ rateLimitPerMinute: 1 }));
     expect((await fetch(`${limited.url}/health`)).status).toBe(200);
     expect((await fetch(`${limited.url}/health`)).status).toBe(429);
+  });
+
+  it('só usa o IP encaminhado quando o proxy é explicitamente confiável', async () => {
+    const trusted = await start(testConfig({ trustProxy: true, rateLimitPerMinute: 1 }));
+    expect((await fetch(`${trusted.url}/health`, {
+      headers: { 'X-Forwarded-For': '203.0.113.10' },
+    })).status).toBe(200);
+    expect((await fetch(`${trusted.url}/health`, {
+      headers: { 'X-Forwarded-For': '203.0.113.11' },
+    })).status).toBe(200);
   });
 });

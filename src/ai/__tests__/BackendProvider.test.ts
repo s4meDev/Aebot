@@ -3,7 +3,7 @@ import type { AiProvider, AiProviderResponse } from '../../types';
 import { ruleEngine } from '../../services/RuleEngine';
 import { storageAdapter } from '../../storage/StorageAdapter';
 import { STORAGE_KEYS } from '../../constants/storageKeys';
-import { BackendProvider, normalizeBackendUrl } from '../BackendProvider';
+import { BackendProvider } from '../BackendProvider';
 
 function localResponse(prompt = 'sem foto depois'): AiProviderResponse {
   const evaluation = ruleEngine.evaluatePrompt(prompt, 'reparo-cavalete');
@@ -22,21 +22,11 @@ function fallback(response = localResponse()): AiProvider {
 afterEach(() => {
   storageAdapter.remove(STORAGE_KEYS.BACKEND_URL);
   storageAdapter.remove(STORAGE_KEYS.BACKEND_TOKEN);
+  storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
   vi.unstubAllGlobals();
 });
 
 describe('BackendProvider', () => {
-  it.each([
-    ['http://127.0.0.1:8787/', 'http://127.0.0.1:8787'],
-    ['http://localhost:8787/api/', 'http://localhost:8787/api'],
-    ['https://aebot.example/', 'https://aebot.example'],
-    ['http://aebot.example', null],
-    ['https://usuario:senha@aebot.example', null],
-    ['não é url', null],
-  ])('normaliza URL segura %s', (input, expected) => {
-    expect(normalizeBackendUrl(input)).toBe(expected);
-  });
-
   it('usa o fallback diretamente quando não há backend configurado', async () => {
     const local = fallback();
     const provider = new BackendProvider(local);
@@ -85,6 +75,31 @@ describe('BackendProvider', () => {
     expect(result.provider).toBe('simulated');
     expect(result.fallbackReason).toBe('backend_error');
     expect(result.content).toContain('modo local');
+    expect(local.generateResponse).toHaveBeenCalledOnce();
+  });
+
+  it('preserva a interpretação Gemini local quando o backend ainda está sem chave', async () => {
+    storageAdapter.set(STORAGE_KEYS.BACKEND_URL, 'http://localhost:8787');
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'chave-local-de-teste');
+    const backendResponse = localResponse();
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      result: { ...backendResponse, fallbackReason: 'no_api_key' },
+    }), { status: 200 })));
+    const localGeminiResponse: AiProviderResponse = {
+      ...localResponse(),
+      provider: 'gemini',
+      content: 'Resposta interpretada localmente.',
+    };
+    const local = fallback(localGeminiResponse);
+
+    const result = await new BackendProvider(local).generateResponse(
+      '',
+      'sem foto depois',
+      { id: 'reparo-cavalete', name: 'Reparo de Cavalete' }
+    );
+
+    expect(result.provider).toBe('gemini');
+    expect(result.content).toContain('interpretação de IA foi feita localmente');
     expect(local.generateResponse).toHaveBeenCalledOnce();
   });
 });

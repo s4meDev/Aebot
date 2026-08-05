@@ -9,26 +9,17 @@ import type {
 import { STORAGE_KEYS } from '../constants/storageKeys';
 import { storageAdapter } from '../storage/StorageAdapter';
 import { GeminiProvider } from './GeminiProvider';
+import { normalizeBackendUrl } from './BackendClient';
 
-const BACKEND_TIMEOUT_MS = 20_000;
+const BACKEND_TIMEOUT_MS = 25_000;
 const OFFICIAL_DECISIONS = new Set<DecisionType>(['Conforme', 'Não Conforme', 'Reprovado']);
-
-export function normalizeBackendUrl(value: string): string | null {
-  const candidate = value.trim();
-  if (!candidate) return null;
-  try {
-    const url = new URL(candidate);
-    const localHttp =
-      url.protocol === 'http:' && (url.hostname === 'localhost' || url.hostname === '127.0.0.1');
-    if ((url.protocol !== 'https:' && !localHttp) || url.username || url.password) return null;
-    url.pathname = url.pathname.replace(/\/+$/, '');
-    url.search = '';
-    url.hash = '';
-    return url.toString().replace(/\/$/, '');
-  } catch {
-    return null;
-  }
-}
+const VALID_FALLBACK_REASONS = new Set<NonNullable<AiProviderResponse['fallbackReason']>>([
+  'no_api_key',
+    'api_error',
+    'rate_limited',
+  'invalid_response',
+  'backend_error',
+]);
 
 function isEvaluation(value: unknown, serviceId: string): value is RuleEvaluationResult {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -57,12 +48,18 @@ function parseBackendResponse(value: unknown, serviceId: string): AiProviderResp
   const evaluation = response.evaluation;
   const decision = response.decision;
   if (decision !== evaluation.decision) return null;
+  const fallbackReason = response.fallbackReason;
 
   return {
     provider: 'backend',
     content: response.content,
     decision: evaluation.decision,
     evaluation,
+    fallbackReason: typeof fallbackReason === 'string' && VALID_FALLBACK_REASONS.has(
+      fallbackReason as NonNullable<AiProviderResponse['fallbackReason']>
+    )
+      ? fallbackReason as NonNullable<AiProviderResponse['fallbackReason']>
+      : undefined,
   };
 }
 
@@ -103,6 +100,21 @@ export class BackendProvider implements AiProvider {
       if (!response.ok) throw new Error(`Backend respondeu HTTP ${response.status}`);
       const parsed = parseBackendResponse(await response.json(), service.id);
       if (!parsed) throw new Error('Contrato inválido retornado pelo backend');
+      const localGeminiKey = storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, '').trim();
+      if (parsed.fallbackReason === 'no_api_key' && localGeminiKey) {
+        const localResponse = await this.fallbackProvider.generateResponse(
+          context,
+          prompt,
+          service,
+          history
+        );
+        if (localResponse.provider === 'gemini') {
+          return {
+            ...localResponse,
+            content: `${localResponse.content}\n\nObservação técnica:\nO backend está ativo, mas a interpretação de IA foi feita localmente neste Chrome.`,
+          };
+        }
+      }
       return parsed;
     } catch (error) {
       console.warn('Backend AEBOT indisponível:', error);

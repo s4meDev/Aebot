@@ -27,12 +27,22 @@ Sem backend, a chave opcional do Gemini pode ser informada nas configurações d
 
 ## Rodar o backend local
 
-1. Execute `npm run build:server`.
-2. No PowerShell, defina a chave apenas para o processo atual, se desejar usar interpretação semântica: `$env:GEMINI_API_KEY="sua-chave"`.
-3. Execute `npm run server:start`.
-4. Nas configurações da extensão, informe `http://127.0.0.1:8787` como URL do backend.
+1. Execute `npm run server:setup`. Isso cria `.env.local` sem sobrescrever um arquivo existente.
+2. Abra `.env.local` e preencha `GEMINI_API_KEY` se desejar interpretação semântica central. Não envie nem versione essa chave.
+3. Execute `npm run server:local`. Esse comando valida, compila e inicia o backend.
+4. Em outro terminal, execute `npm run server:check` para conferir servidor, base e Gemini.
+5. Nas configurações da extensão, informe `http://127.0.0.1:8787` como URL do backend.
+6. Clique em `Testar conexão`. A extensão informa separadamente se o servidor está ativo e se o Gemini central foi configurado.
 
 O endpoint público `GET /health` informa se o servidor está ativo. `GET /v1/services` lista os serviços e `POST /v1/analyze` executa a análise.
+
+O indicador no chat usa o estado real do servidor: `Backend + IA`, `Backend + IA local`, `Backend sem IA` ou `Local • backend off`. Se o servidor estiver sem Gemini, mas este Chrome tiver uma chave local, a interpretação semântica local continua disponível. Se o backend cair, a resposta informa o fallback e o motor embarcado continua funcionando.
+
+Quando o Gemini está ativo, a pergunta do analista, até seis mensagens recentes e as regras relacionadas ao serviço são transmitidas ao Google para interpretação e humanização. A decisão oficial continua sendo calculada localmente pelo motor determinístico; arquivos do computador não são enviados.
+
+Por padrão, o backend chama o Gemini somente quando o matching local é insuficiente e precisa interpretar linguagem livre. Isso reduz latência e consumo de cota. Defina `AEBOT_HUMANIZE_DETERMINISTIC=true` apenas se também quiser que respostas já resolvidas pelo motor sejam reescritas pelo Gemini.
+
+Se o modelo principal atingir o limite temporário de uso, o backend tenta uma vez o modelo reserva configurado em `GEMINI_FALLBACK_MODEL`. Ambos apenas interpretam a frase usando o catálogo enviado; a decisão continua sendo calculada pelo mesmo motor de regras.
 
 ### Produção
 
@@ -41,6 +51,7 @@ Em produção, o servidor exige:
 - `NODE_ENV=production`;
 - `AEBOT_ALLOWED_ORIGINS` com o endereço exato da extensão (`chrome-extension://ID`);
 - `AEBOT_API_TOKEN` com um token forte;
+- `AEBOT_TRUST_PROXY=true` somente quando a hospedagem possuir proxy reverso confiável;
 - `GEMINI_API_KEY` configurada somente no servidor;
 - HTTPS por proxy ou plataforma de hospedagem.
 
@@ -53,6 +64,9 @@ Copie `.env.example` apenas como referência; o projeto não carrega esse arquiv
 - `npm run build`: gera somente a extensão em `dist`.
 - `npm run build:server`: gera somente a API em `server-dist`.
 - `npm run build:all`: gera extensão e API.
+- `npm run server:setup`: cria a configuração local ignorada pelo Git.
+- `npm run server:local`: compila e inicia o servidor usando `.env.local`.
+- `npm run server:check`: diagnostica a conexão e as capacidades do servidor.
 - `npm run validate`: executa testes, builds e inspeções de segurança dos dois pacotes.
 
 ## Limites atuais

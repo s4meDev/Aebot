@@ -7,6 +7,7 @@ import {
 import {
   buildGeminiContents,
   GeminiProvider,
+  getGeminiThinkingConfig,
   normalizeGeminiModel,
 } from '../GeminiProvider';
 import { ruleEngine } from '../../services/RuleEngine';
@@ -36,6 +37,8 @@ describe('GeminiProvider', () => {
     expect(prompt).not.toContain('"severity"');
     expect(prompt).not.toContain('"priority"');
     expect(prompt).not.toContain('"guidance"');
+    expect(prompt).toContain('paráfrases, sinônimos e descrições informais');
+    expect(prompt).toContain('mencionar uma evidência ou ação sem afirmar');
   });
 
   it('não envia a pergunta atual duplicada no histórico e no prompt', () => {
@@ -205,8 +208,141 @@ describe('GeminiProvider', () => {
   });
 
   it('rejeita identificador de modelo inseguro e usa o padrão', () => {
-    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-2.5-flash');
+    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-flash-latest');
+    expect(normalizeGeminiModel('gemini-2.5-flash')).toBe('gemini-flash-latest');
     expect(normalizeGeminiModel('gemini-modelo_seguro.1')).toBe('gemini-modelo_seguro.1');
+  });
+
+  it('limita o raciocínio interno dos modelos Flash sem afetar modelos antigos', () => {
+    expect(getGeminiThinkingConfig('gemini-flash-latest')).toEqual({
+      thinkingLevel: 'MINIMAL',
+    });
+    expect(getGeminiThinkingConfig('gemini-flash-lite-latest')).toEqual({
+      thinkingLevel: 'MINIMAL',
+    });
+    expect(getGeminiThinkingConfig('gemini-3.5-flash')).toEqual({
+      thinkingLevel: 'MINIMAL',
+    });
+    expect(getGeminiThinkingConfig('gemini-2.5-flash-lite')).toEqual({
+      thinkingBudget: 0,
+    });
+    expect(getGeminiThinkingConfig('gemini-2.0-flash')).toBeUndefined();
+  });
+
+  it('repete uma vez quando o Gemini retorna limitação temporária', async () => {
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ 'Retry-After': '0' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: JSON.stringify({
+            justification: 'A evidência final obrigatória não foi apresentada.',
+            guidance: 'Siga a orientação cadastrada para a ausência confirmada.',
+          }) }] } }],
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Sem foto depois.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBe('Reprovado');
+  });
+
+  it('diferencia cota temporariamente esgotada de erro genérico', async () => {
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: new Headers({ 'Retry-After': '0' }),
+    }));
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'Expressão inteiramente desconhecida da base.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('simulated');
+    expect(response.fallbackReason).toBe('rate_limited');
+    expect(response.decision).toBeNull();
+    expect(response.content).toContain('limite temporário do Gemini');
+  });
+
+  it('usa o modelo reserva somente quando o principal atinge a cota', async () => {
+    const query = 'Não apareceu o momento em que deram torque na virola.';
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ 'Retry-After': '0' }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ 'Retry-After': '0' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: JSON.stringify({
+            mappings: [{
+              ruleId: duringRule.id,
+              sourceQuote: 'Não apareceu o momento em que deram torque na virola',
+              canonicalExpression: 'sem foto durante',
+              stance: 'asserted',
+            }],
+          }) }] } }],
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new GeminiProvider(ruleEngine, {
+      getApiKey: () => 'test-key',
+      getModel: () => 'gemini-flash-latest',
+      getFallbackModel: () => 'gemini-flash-lite-latest',
+    });
+
+    const response = await provider.generateResponse(
+      '',
+      query,
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/gemini-flash-latest:');
+    expect(String(fetchMock.mock.calls[2]?.[0])).toContain('/gemini-flash-lite-latest:');
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBe('Não Conforme');
+  });
+
+  it('poupa a cota quando o backend já possui uma avaliação determinística', async () => {
+    const fetchMock = vi.fn();
+    const provider = new GeminiProvider(ruleEngine, {
+      getApiKey: () => 'test-key',
+      humanizeDeterministicResponses: false,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await provider.generateResponse(
+      '',
+      'Sem foto depois.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.provider).toBe('simulated');
+    expect(response.fallbackReason).toBeUndefined();
+    expect(response.decision).toBe('Reprovado');
   });
 
   it('mantém a decisão determinística quando o modelo tenta alterá-la', async () => {
@@ -266,6 +402,8 @@ describe('GeminiProvider', () => {
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(request.generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'MINIMAL' });
     expect(response.provider).toBe('gemini');
     expect(response.decision).toBe('Não Conforme');
     expect(response.evaluation.semanticInterpretationApplied).toBe(true);

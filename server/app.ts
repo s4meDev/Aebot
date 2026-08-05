@@ -1,6 +1,6 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import type { Socket } from 'node:net';
+import { isIP, type Socket } from 'node:net';
 import { isOriginAllowed, type ServerConfig } from './config';
 import { parseAnalyzeRequest, RequestValidationError } from './contracts';
 import type { AnalysisService } from './analysisService';
@@ -23,10 +23,17 @@ interface RateEntry {
 
 class FixedWindowRateLimiter {
   private readonly clients = new Map<string, RateEntry>();
+  private requestCount = 0;
 
   constructor(private readonly limit: number) {}
 
   allow(key: string, now = Date.now()): boolean {
+    this.requestCount += 1;
+    if (this.requestCount % 100 === 0) {
+      for (const [clientKey, entry] of this.clients) {
+        if (now >= entry.resetAt) this.clients.delete(clientKey);
+      }
+    }
     const current = this.clients.get(key);
     if (!current || now >= current.resetAt) {
       this.clients.set(key, { count: 1, resetAt: now + 60_000 });
@@ -38,7 +45,14 @@ class FixedWindowRateLimiter {
   }
 }
 
-function clientAddress(socket: Socket): string {
+function clientAddress(request: IncomingMessage, socket: Socket, trustProxy: boolean): string {
+  if (trustProxy) {
+    const forwarded = request.headers['x-forwarded-for'];
+    const candidate = (Array.isArray(forwarded) ? forwarded[0] : forwarded)
+      ?.split(',')[0]
+      ?.trim();
+    if (candidate && isIP(candidate)) return candidate;
+  }
   return socket.remoteAddress ?? 'unknown';
 }
 
@@ -80,7 +94,11 @@ async function readJson(request: IncomingMessage, limit: number): Promise<unknow
 
 function hasAuthorization(request: IncomingMessage, token: string): boolean {
   if (!token) return true;
-  return request.headers.authorization === `Bearer ${token}`;
+  const authorization = request.headers.authorization;
+  if (!authorization?.startsWith('Bearer ')) return false;
+  const provided = Buffer.from(authorization.slice(7));
+  const expected = Buffer.from(token);
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
 export function createAebotServer(dependencies: ServerDependencies): Server {
@@ -122,7 +140,7 @@ export function createAebotServer(dependencies: ServerDependencies): Server {
       return;
     }
 
-    if (!limiter.allow(clientAddress(request.socket))) {
+    if (!limiter.allow(clientAddress(request, request.socket, config.trustProxy))) {
       writeJson(response, 429, { error: 'rate_limit_exceeded', requestId }, requestId, origin);
       finish(429);
       return;

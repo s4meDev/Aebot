@@ -180,7 +180,12 @@ export interface AiProviderResponse {
   provider: 'backend' | 'gemini' | 'simulated';
   decision: DecisionType | null;
   evaluation: RuleEvaluationResult;
-  fallbackReason?: 'no_api_key' | 'api_error' | 'invalid_response' | 'backend_error';
+  fallbackReason?:
+    | 'no_api_key'
+    | 'api_error'
+    | 'rate_limited'
+    | 'invalid_response'
+    | 'backend_error';
 }
 
 export interface AiProvider {

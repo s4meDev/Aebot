@@ -532,12 +532,12 @@ button, input, textarea, select {
   width: 100%;
   max-width: 380px;
   padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: calc(100dvh - 24px);
-    overflow-y: auto;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
 
 .modal-header {
   display: flex;
@@ -585,6 +585,21 @@ button, input, textarea, select {
   color: var(--text-muted);
 }
 
+.connection-test-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection-status {
+  font-size: 0.68rem;
+  line-height: 1.25;
+}
+
+.connection-status.success { color: #34d399; }
+.connection-status.warning { color: #fbbf24; }
+.connection-status.error { color: #f87171; }
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -610,6 +625,11 @@ button, input, textarea, select {
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .danger-text { color: #f87171; }

@@ -17,6 +17,7 @@
 - Nunca aceite chave de IA por variável `VITE_*`: esse valor seria incorporado ao bundle da extensão.
 - O backend reutiliza o mesmo `RuleEngine` e a mesma base da extensão; nunca copie decisões ou regras para a API.
 - Chaves de provedor ficam somente em variáveis de ambiente do servidor. Logs do backend não devem registrar perguntas, histórico ou respostas dos analistas.
+- Integrações externas devem transmitir somente pergunta, histórico recente e regras necessárias, com comunicação clara dessa transmissão; nunca envie arquivos ou dados alheios à análise.
 - Em produção, a API exige origem explícita e token de acesso; permissões de host da extensão devem listar somente endpoints concretos.
 - Mudanças no motor exigem testes Vitest, typecheck e build antes da entrega.
 - Mudanças na base exigem versão compatível, validação runtime e casos no corpus de regressão.

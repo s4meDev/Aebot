@@ -7,7 +7,7 @@ import type {
   SemanticRuleMapping,
   ServiceIdentity,
 } from '../types';
-import { GEMINI_MODEL } from '../localConfig';
+import { GEMINI_FALLBACK_MODEL, GEMINI_MODEL } from '../localConfig';
 import { ruleEngine, type RuleEngine } from '../services/RuleEngine';
 import {
   formatEvaluationResponse,
@@ -31,17 +31,47 @@ interface GeminiContent {
   parts: Array<{ text: string }>;
 }
 
-const GEMINI_TIMEOUT_MS = 15_000;
+const GEMINI_TIMEOUT_MS = 20_000;
 const SEMANTIC_CACHE_LIMIT = 100;
+const RETRYABLE_HTTP_STATUS = new Set([429, 500, 502, 503, 504]);
 
 interface GeminiRequestResult {
-  status: 'ok' | 'api_error';
+  status: 'ok' | 'api_error' | 'rate_limited';
   text?: string;
+}
+
+export function getGeminiThinkingConfig(
+  model: string
+): { thinkingLevel: 'MINIMAL' } | { thinkingBudget: 0 } | undefined {
+  if (
+    model === 'gemini-flash-latest' ||
+    model === 'gemini-flash-lite-latest' ||
+    /^gemini-(?:[3-9]|[1-9]\d).*flash/i.test(model)
+  ) {
+    return { thinkingLevel: 'MINIMAL' };
+  }
+  if (/^gemini-2\.5-flash(?:[-.]|$)/i.test(model)) {
+    return { thinkingBudget: 0 };
+  }
+  return undefined;
 }
 
 export interface GeminiProviderConfiguration {
   getApiKey?: () => string;
   getModel?: () => string;
+  getFallbackModel?: () => string;
+  humanizeDeterministicResponses?: boolean;
+}
+
+function retryDelay(response?: Response): number {
+  const seconds = Number(response?.headers.get('Retry-After'));
+  return Number.isFinite(seconds) && seconds >= 0
+    ? Math.min(seconds * 1_000, 2_000)
+    : 500;
+}
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => globalThis.setTimeout(resolve, milliseconds));
 }
 
 async function requestGemini(
@@ -53,30 +83,56 @@ async function requestGemini(
 ): Promise<GeminiRequestResult> {
   const controller = new AbortController();
   const timeoutId = globalThis.setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
+  const thinkingConfig = getGeminiThinkingConfig(model);
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
-      {
-        method: 'POST',
-        signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          generationConfig: {
-            temperature: 0,
-            topK: 8,
-            topP: 0.8,
-            maxOutputTokens,
-            responseMimeType: 'application/json',
-          },
-        }),
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: 'POST',
+            signal: controller.signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents,
+              systemInstruction: { parts: [{ text: systemInstruction }] },
+              generationConfig: {
+                temperature: 0,
+                topK: 8,
+                topP: 0.8,
+                maxOutputTokens,
+                responseMimeType: 'application/json',
+                ...(thinkingConfig ? { thinkingConfig } : {}),
+              },
+            }),
+          }
+        );
+        if (!response.ok) {
+          if (attempt === 0 && RETRYABLE_HTTP_STATUS.has(response.status)) {
+            await wait(retryDelay(response));
+            continue;
+          }
+          return { status: response.status === 429 ? 'rate_limited' : 'api_error' };
+        }
+        const data = await response.json();
+        const parts = data.candidates?.[0]?.content?.parts;
+        const text = Array.isArray(parts)
+          ? parts
+              .filter((part) => part?.thought !== true && typeof part?.text === 'string')
+              .map((part) => part.text)
+              .join('')
+          : undefined;
+        return typeof text === 'string' ? { status: 'ok', text } : { status: 'ok' };
+      } catch (error) {
+        if (attempt === 0 && !controller.signal.aborted) {
+          await wait(retryDelay());
+          continue;
+        }
+        console.warn('Erro ao chamar API do Gemini:', error);
+        return { status: 'api_error' };
       }
-    );
-    if (!response.ok) return { status: 'api_error' };
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    return typeof text === 'string' ? { status: 'ok', text } : { status: 'ok' };
+    }
+    return { status: 'api_error' };
   } catch (error) {
     console.warn('Erro ao chamar API do Gemini:', error);
     return { status: 'api_error' };
@@ -87,6 +143,7 @@ async function requestGemini(
 
 export function normalizeGeminiModel(value: string): string {
   const candidate = value.trim();
+  if (candidate === 'gemini-2.5-flash') return GEMINI_MODEL;
   return /^[a-z0-9][a-z0-9._-]{1,79}$/i.test(candidate) ? candidate : GEMINI_MODEL;
 }
 
@@ -203,6 +260,33 @@ export class GeminiProvider implements AiProvider {
     private readonly configuration: GeminiProviderConfiguration = {}
   ) {}
 
+  private async requestWithModelFallback(
+    apiKey: string,
+    primaryModel: string,
+    fallbackModel: string,
+    contents: GeminiContent[],
+    systemInstruction: string,
+    maxOutputTokens: number
+  ): Promise<GeminiRequestResult> {
+    const primaryResponse = await requestGemini(
+      apiKey,
+      primaryModel,
+      contents,
+      systemInstruction,
+      maxOutputTokens
+    );
+    if (primaryResponse.status !== 'rate_limited' || fallbackModel === primaryModel) {
+      return primaryResponse;
+    }
+    return requestGemini(
+      apiKey,
+      fallbackModel,
+      contents,
+      systemInstruction,
+      maxOutputTokens
+    );
+  }
+
   private getCachedInterpretation(key: string): SemanticInterpretation | undefined {
     const cached = this.semanticCache.get(key);
     if (!cached) return undefined;
@@ -234,7 +318,10 @@ export class GeminiProvider implements AiProvider {
       this.configuration.getModel?.()
         ?? storageAdapter.get<string>(STORAGE_KEYS.GEMINI_MODEL, GEMINI_MODEL)
     );
-    let fallbackReason: AiProviderResponse['fallbackReason'] = apiKey ? 'api_error' : 'no_api_key';
+    const selectedFallbackModel = normalizeGeminiModel(
+      this.configuration.getFallbackModel?.() ?? GEMINI_FALLBACK_MODEL
+    );
+    let fallbackReason: AiProviderResponse['fallbackReason'] = apiKey ? undefined : 'no_api_key';
 
     if (apiKey) {
       if (rawBaseEvaluation.outcome === 'insufficient' && !rawBaseEvaluation.errorCode) {
@@ -245,6 +332,7 @@ export class GeminiProvider implements AiProvider {
             service.id,
             rawBaseEvaluation.ruleStoreVersion,
             selectedModel,
+            selectedFallbackModel,
             rawBaseEvaluation.normalizedQuery,
           ].join('|');
           let interpretation = this.getCachedInterpretation(cacheKey);
@@ -256,9 +344,10 @@ export class GeminiProvider implements AiProvider {
               serviceRecord,
               selection.rules
             );
-            const semanticResponse = await requestGemini(
+            const semanticResponse = await this.requestWithModelFallback(
               apiKey,
               selectedModel,
+              selectedFallbackModel,
               [{ role: 'user', parts: [{ text: semanticPrompt }] }],
               'Extraia somente mapeamentos semânticos aterrados no catálogo fornecido. Nunca decida a conclusão da análise.',
               1024
@@ -275,9 +364,11 @@ export class GeminiProvider implements AiProvider {
                 fallbackReason = 'invalid_response';
               }
             } else {
-              fallbackReason = semanticResponse.status === 'api_error'
-                ? 'api_error'
-                : 'invalid_response';
+              fallbackReason = semanticResponse.status === 'rate_limited'
+                ? 'rate_limited'
+                : semanticResponse.status === 'api_error'
+                  ? 'api_error'
+                  : 'invalid_response';
             }
           }
 
@@ -301,14 +392,15 @@ export class GeminiProvider implements AiProvider {
             fallbackReason = 'invalid_response';
           }
         }
-      } else {
+      } else if (this.configuration.humanizeDeterministicResponses !== false) {
         const augmentedPrompt = buildEvaluationPrompt(prompt, evaluation);
-        const narrativeResponse = await requestGemini(
+        const narrativeResponse = await this.requestWithModelFallback(
           apiKey,
           selectedModel,
+          selectedFallbackModel,
           buildGeminiContents(history, prompt, augmentedPrompt),
           context,
-          512
+          1024
         );
         if (narrativeResponse.status === 'ok') {
           const narrative = narrativeResponse.text
@@ -324,7 +416,9 @@ export class GeminiProvider implements AiProvider {
           }
           fallbackReason = 'invalid_response';
         } else {
-          fallbackReason = 'api_error';
+          fallbackReason = narrativeResponse.status === 'rate_limited'
+            ? 'rate_limited'
+            : 'api_error';
         }
       }
     }
@@ -338,8 +432,9 @@ export class GeminiProvider implements AiProvider {
       evaluation = {
         ...evaluation,
         insufficiencyReason: 'semantic_unavailable',
-        reasoningSummary:
-          'O matching local não encontrou correspondência suficiente e a interpretação semântica não pôde ser concluída ou validada.',
+        reasoningSummary: fallbackReason === 'rate_limited'
+          ? 'O matching local não encontrou correspondência suficiente e o limite temporário do Gemini foi atingido.'
+          : 'O matching local não encontrou correspondência suficiente e a interpretação semântica não pôde ser concluída ou validada.',
         requiresHumanValidation: true,
       };
     }

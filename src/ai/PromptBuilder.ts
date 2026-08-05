@@ -101,6 +101,10 @@ Para cada fato realmente relacionado:
 - ruleId deve existir no catálogo;
 - sourceQuote deve ser um trecho literal e contínuo da pergunta;
 - canonicalExpression deve ser copiada EXATAMENTE de allowedCanonicalExpressions;
+- não exija palavras idênticas entre a pergunta e o catálogo: reconheça paráfrases, sinônimos e descrições informais somente quando description, evidenceConcepts ou examples sustentarem claramente a ligação;
+- evidenceConcepts e examples podem ligar uma ação ou evidência informal à regra, mas a canonicalExpression final ainda deve ser uma expressão permitida da mesma regra;
+- quando o trecho afirmar ausência, falta de registro ou que algo não foi mostrado, escolha na regra ligada uma canonicalExpression permitida que represente essa ausência;
+- mencionar uma evidência ou ação sem afirmar presença, ausência ou hipótese não autoriza tratar a irregularidade como ocorrida;
 - stance deve ser asserted, hypothetical, informational ou negated_or_present;
 - asserted exige que o trecho afirme a ocorrência;
 - hypothetical descreve uma possibilidade;

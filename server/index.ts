@@ -1,7 +1,9 @@
 import { createAebotServer } from './app';
 import { AebotAnalysisService } from './analysisService';
 import { loadServerConfig } from './config';
+import { loadLocalEnvironment } from './environment';
 
+const localEnvironmentLoaded = loadLocalEnvironment();
 const config = loadServerConfig();
 const analysisService = new AebotAnalysisService(config);
 const server = createAebotServer({ config, analysisService });
@@ -12,6 +14,7 @@ server.listen(config.port, config.host, () => {
     host: config.host,
     port: config.port,
     geminiConfigured: Boolean(config.geminiApiKey),
+    localEnvironmentLoaded,
   }));
 });
 

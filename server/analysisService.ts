@@ -21,6 +21,8 @@ export class AebotAnalysisService implements AnalysisService {
     this.provider = new GeminiProvider(engine, {
       getApiKey: () => this.config.geminiApiKey,
       getModel: () => this.config.geminiModel,
+      getFallbackModel: () => this.config.geminiFallbackModel,
+      humanizeDeterministicResponses: this.config.humanizeDeterministicResponses,
     });
   }
 

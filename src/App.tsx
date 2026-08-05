@@ -27,6 +27,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [configurationRevision, setConfigurationRevision] = useState(0);
 
   useEffect(() => {
     void knowledgeService.loadServices().then((result) => {
@@ -112,7 +113,11 @@ export default function App() {
         {selectedService ? (
           <>
             <ServiceDetails service={selectedService} />
-            <ChatPanel service={selectedService} context={chatContext} />
+            <ChatPanel
+              service={selectedService}
+              context={chatContext}
+              configurationRevision={configurationRevision}
+            />
           </>
         ) : (
           <div className="empty-state">Nenhum serviço selecionado.</div>
@@ -125,7 +130,11 @@ export default function App() {
       </footer>
 
       {/* Settings Modal */}
-      <ConfigModal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} />
+      <ConfigModal
+        isOpen={isConfigOpen}
+        onClose={() => setIsConfigOpen(false)}
+        onSaved={() => setConfigurationRevision((revision) => revision + 1)}
+      />
     </div>
   );
 }

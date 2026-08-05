@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { type AiMessage, type ServiceRecord, type DecisionType } from '../types';
-import { assistantProvider, normalizeBackendUrl } from '../ai/BackendProvider';
+import { assistantProvider } from '../ai/BackendProvider';
+import {
+  checkBackendHealth,
+  normalizeBackendUrl,
+  type BackendConnection,
+} from '../ai/BackendClient';
 import { storageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS } from '../constants/storageKeys';
 import { parseNewCaseCommand } from '../services/ConversationContextResolver';
@@ -9,7 +14,10 @@ interface ChatPanelProps {
   service: ServiceRecord;
   /** System instruction já construído para este serviço (ver App.tsx / KnowledgeService). */
   context: string;
+  configurationRevision: number;
 }
+
+type BackendUiState = BackendConnection | { state: 'checking' };
 
 function createWelcomeMessage(serviceName: string, isNewCase = false): AiMessage {
   return {
@@ -22,10 +30,17 @@ function createWelcomeMessage(serviceName: string, isNewCase = false): AiMessage
   };
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({
+  service,
+  context,
+  configurationRevision,
+}) => {
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [backendConnection, setBackendConnection] = useState<BackendUiState>({
+    state: 'not_configured',
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const isGeminiKeyConfigured = Boolean(
@@ -34,6 +49,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
   const isBackendConfigured = Boolean(normalizeBackendUrl(
     storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
   ));
+
+  useEffect(() => {
+    const backendUrl = storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '');
+    if (!backendUrl.trim()) {
+      setBackendConnection({ state: 'not_configured' });
+      return;
+    }
+    let active = true;
+    setBackendConnection({ state: 'checking' });
+    void checkBackendHealth(backendUrl).then((connection) => {
+      if (active) setBackendConnection(connection);
+    });
+    return () => {
+      active = false;
+    };
+  }, [configurationRevision]);
 
   useEffect(() => {
     setMessages([createWelcomeMessage(service.name)]);
@@ -86,6 +117,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
         requestHistory
       );
 
+      if (isBackendConfigured && response.fallbackReason === 'backend_error') {
+        setBackendConnection({
+          state: 'offline',
+          message: 'O backend não respondeu; o modo local foi utilizado.',
+        });
+      } else if (isBackendConfigured) {
+        const backendUrl = storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '');
+        void checkBackendHealth(backendUrl).then(setBackendConnection);
+      }
+
       setMessages((current) => {
         const messagesWithContext = response.evaluation.contextApplied
           ? current.map((message) =>
@@ -132,6 +173,54 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
     }
   };
 
+  const engineStatus = (() => {
+    if (backendConnection.state === 'checking') {
+      return {
+        label: 'Verificando',
+        className: 'sim-mode',
+        title: 'Verificando a conexão com o backend configurado',
+      };
+    }
+    if (backendConnection.state === 'online') {
+      if (backendConnection.health.geminiConfigured) {
+        return {
+          label: 'Backend + IA',
+          className: 'api-mode',
+          title: `Backend conectado, Gemini central ativo e base ${backendConnection.health.ruleStoreVersion}`,
+        };
+      }
+      return isGeminiKeyConfigured
+        ? {
+            label: 'Backend + IA local',
+            className: 'api-mode',
+            title: 'Backend conectado; como o servidor está sem Gemini, este Chrome usa a chave local',
+          }
+        : {
+            label: 'Backend sem IA',
+            className: 'sim-mode',
+            title: 'Backend conectado, mas a chave Gemini não está configurada no servidor',
+          };
+    }
+    if (backendConnection.state === 'offline') {
+      return {
+        label: 'Local • backend off',
+        className: isGeminiKeyConfigured ? 'api-mode' : 'sim-mode',
+        title: `${backendConnection.message} As análises usarão o modo local.`,
+      };
+    }
+    return isGeminiKeyConfigured
+      ? {
+          label: 'Gemini local',
+          className: 'api-mode',
+          title: 'Interpretação Gemini local ativa; decisões validadas pelo motor de regras',
+        }
+      : {
+          label: 'Motor local',
+          className: 'sim-mode',
+          title: 'Somente matching determinístico, sem interpretação semântica',
+        };
+  })();
+
   return (
     <section className="card chat-shell">
       <div className="chat-hero">
@@ -149,15 +238,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ service, context }) => {
           >
             ↻ Novo caso
           </button>
-          <span
-            className={`engine-pill ${isBackendConfigured || isGeminiKeyConfigured ? 'api-mode' : 'sim-mode'}`}
-            title={isBackendConfigured
-              ? 'Backend central ativo; regras e IA são processadas pelo servidor'
-              : isGeminiKeyConfigured
-                ? 'Interpretação semântica Gemini ativa; decisões validadas pelo motor de regras'
-                : 'Modo local: somente matching determinístico, sem interpretação semântica'}
-          >
-            {isBackendConfigured ? 'Backend' : isGeminiKeyConfigured ? 'Gemini API' : 'Simulador'}
+          <span className={`engine-pill ${engineStatus.className}`} title={engineStatus.title}>
+            {engineStatus.label}
           </span>
         </div>
       </div>

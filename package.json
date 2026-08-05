@@ -1,6 +1,6 @@
 {
   "name": "field-service-assistant",
-  "version": "2.1.0",
+  "version": "2.1.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,10 @@
     "build": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build",
     "build:server": "tsc -p tsconfig.server.json --noEmit && vite build --config vite.server.config.ts",
     "build:all": "npm run build && npm run build:server",
+    "server:setup": "node scripts/setup-local-server.mjs",
+    "server:local": "npm run build:server && node server-dist/index.js",
     "server:start": "node server-dist/index.js",
+    "server:check": "node scripts/check-server.mjs",
     "validate": "npm test && npm run build:all && node scripts/validate-extension.mjs && node scripts/validate-server.mjs",
     "preview": "vite preview"
   },
