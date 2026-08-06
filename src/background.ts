@@ -15,7 +15,7 @@ async function openSidePanel(tab: { id?: number } | undefined) {
   try {
     await chrome.sidePanel?.open({ tabId: tab.id });
   } catch (error) {
-    console.warn('Unable to open side panel', error);
+    console.warn('Não foi possível abrir o painel lateral.', error);
   }
 }
 

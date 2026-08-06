@@ -1,4 +1,5 @@
 import type {
+  DecisionType,
   EvaluationConflict,
   MatchedRule,
   RuleConclusionMeta,
@@ -9,6 +10,8 @@ function compareRules(
   right: MatchedRule,
   conclusionPriority: Map<string, number>
 ): number {
+  // A ordem segue o contrato do produto. Gravidade só desempata regras
+  // que já provaram ter a mesma qualidade de correspondência.
   if (left.factMatchQuality !== right.factMatchQuality) {
     return right.factMatchQuality - left.factMatchQuality;
   }
@@ -17,8 +20,8 @@ function compareRules(
   if (left.priority !== right.priority) return left.priority - right.priority;
 
   const severityDifference =
-    (conclusionPriority.get(left.severity) ?? Number.MAX_SAFE_INTEGER) -
-    (conclusionPriority.get(right.severity) ?? Number.MAX_SAFE_INTEGER);
+    ((left.severity ? conclusionPriority.get(left.severity) : undefined) ?? Number.MAX_SAFE_INTEGER) -
+    ((right.severity ? conclusionPriority.get(right.severity) : undefined) ?? Number.MAX_SAFE_INTEGER);
   if (severityDifference !== 0) return severityDifference;
   return left.id.localeCompare(right.id);
 }
@@ -34,7 +37,11 @@ export function resolveConflicts(
     compareRules(left, right, conclusionPriority)
   );
   const primaryRule = rankedRules[0] ?? null;
-  const decisions = [...new Set(rankedRules.map((rule) => rule.severity))];
+  const decisions = [...new Set(
+    rankedRules
+      .map((rule) => rule.severity)
+      .filter((decision): decision is DecisionType => decision !== null)
+  )];
 
   const conflicts: EvaluationConflict[] =
     primaryRule && decisions.length > 1

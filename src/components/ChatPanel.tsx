@@ -2,17 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { type AiMessage, type ServiceRecord, type DecisionType } from '../types';
 import { assistantProvider } from '../ai/BackendProvider';
 import {
-  checkBackendHealth,
-  normalizeBackendUrl,
+  checkBackendAccess,
+  getPackagedBackendUrl,
+  resolveBackendUrl,
   type BackendConnection,
 } from '../ai/BackendClient';
 import { storageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS } from '../constants/storageKeys';
 import { parseNewCaseCommand } from '../services/ConversationContextResolver';
+import { FeedbackModal } from './FeedbackModal';
 
 interface ChatPanelProps {
   service: ServiceRecord;
-  /** System instruction já construído para este serviço (ver App.tsx / KnowledgeService). */
+  /** Instrução da IA já montada para o serviço selecionado. */
   context: string;
   configurationRevision: number;
 }
@@ -38,28 +40,35 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [backendConnection, setBackendConnection] = useState<BackendUiState>({
     state: 'not_configured',
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isGeminiKeyConfigured = Boolean(
+  const isGeminiKeyConfigured = !getPackagedBackendUrl() && Boolean(
     storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, '').trim()
   );
-  const isBackendConfigured = Boolean(normalizeBackendUrl(
+  const isBackendConfigured = Boolean(resolveBackendUrl(
     storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
   ));
 
   useEffect(() => {
-    const backendUrl = storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '');
+    const backendUrl = resolveBackendUrl(
+      storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
+    );
     if (!backendUrl.trim()) {
       setBackendConnection({ state: 'not_configured' });
       return;
     }
     let active = true;
     setBackendConnection({ state: 'checking' });
-    void checkBackendHealth(backendUrl).then((connection) => {
-      if (active) setBackendConnection(connection);
+    const backendToken = storageAdapter.get<string>(STORAGE_KEYS.BACKEND_TOKEN, '');
+    void checkBackendAccess(backendUrl, backendToken).then((connection) => {
+      if (!active) return;
+      setBackendConnection(connection.state === 'online'
+        ? { state: 'online', health: connection.health }
+        : connection);
     });
     return () => {
       active = false;
@@ -91,6 +100,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
 
     const textToSend = newCaseCommand.remainingPrompt ?? submittedText;
+    // A mensagem atual vai separada. Assim ela não aparece duas vezes no backend.
     const requestHistory = newCaseCommand.isNewCase ? [] : messages;
     const initialMessages = newCaseCommand.isNewCase
       ? [createWelcomeMessage(service.name, true)]
@@ -123,8 +133,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           message: 'O backend não respondeu; o modo local foi utilizado.',
         });
       } else if (isBackendConfigured) {
-        const backendUrl = storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '');
-        void checkBackendHealth(backendUrl).then(setBackendConnection);
+        const backendUrl = resolveBackendUrl(
+          storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
+        );
+        const backendToken = storageAdapter.get<string>(STORAGE_KEYS.BACKEND_TOKEN, '');
+        void checkBackendAccess(backendUrl, backendToken).then((connection) => {
+          setBackendConnection(connection.state === 'online'
+            ? { state: 'online', health: connection.health }
+            : connection);
+        });
       }
 
       setMessages((current) => {
@@ -182,23 +199,33 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       };
     }
     if (backendConnection.state === 'online') {
-      if (backendConnection.health.geminiConfigured) {
+      if (backendConnection.health.aiConfigured) {
+        const isOllama = backendConnection.health.aiProvider === 'ollama';
+        const isWorkersAi = backendConnection.health.aiProvider === 'workers-ai';
         return {
-          label: 'Backend + IA',
+          label: isOllama
+            ? 'Backend + IA local'
+            : isWorkersAi
+              ? 'Backend + Workers AI'
+              : 'Backend + Gemini',
           className: 'api-mode',
-          title: `Backend conectado, Gemini central ativo e base ${backendConnection.health.ruleStoreVersion}`,
+          title: isOllama
+            ? `Backend conectado, modelo Ollama local configurado e base ${backendConnection.health.ruleStoreVersion}`
+            : isWorkersAi
+              ? `API online conectada, Workers AI configurado e base ${backendConnection.health.ruleStoreVersion}`
+              : `Backend conectado, Gemini central configurado e base ${backendConnection.health.ruleStoreVersion}`,
         };
       }
       return isGeminiKeyConfigured
         ? {
-            label: 'Backend + IA local',
+            label: 'Backend + Gemini do Chrome',
             className: 'api-mode',
             title: 'Backend conectado; como o servidor está sem Gemini, este Chrome usa a chave local',
           }
         : {
             label: 'Backend sem IA',
             className: 'sim-mode',
-            title: 'Backend conectado, mas a chave Gemini não está configurada no servidor',
+            title: 'Backend conectado, mas nenhum interpretador semântico está configurado',
           };
     }
     if (backendConnection.state === 'offline') {
@@ -232,6 +259,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           <button
             type="button"
             className="new-case-btn"
+            onClick={() => setIsFeedbackOpen(true)}
+            title="Enviar uma sugestão ou informar um problema"
+          >
+            Feedback
+          </button>
+          <button
+            type="button"
+            className="new-case-btn"
             disabled={isThinking}
             onClick={startNewCase}
             title="Descartar o contexto atual e iniciar outra Ordem de Serviço"
@@ -244,7 +279,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      {/* Suggested Prompt Chips */}
+      {/* Perguntas sugeridas */}
       {service.suggestedQuestions && service.suggestedQuestions.length > 0 && (
         <div className="prompt-suggestions">
           <div className="prompt-row">
@@ -262,7 +297,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       )}
 
-      {/* Message List */}
+      {/* Conversa */}
       <div className="message-list">
         {messages.map((message) => (
           <div key={message.id} className={`message-wrapper ${message.role}`}>
@@ -294,7 +329,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Form */}
+      {/* Campo de envio */}
       <div className="input-box-container">
         <textarea
           className="chat-textarea"
@@ -318,6 +353,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           Enviar
         </button>
       </div>
+
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        serviceId={service.id}
+        serviceName={service.name}
+        onClose={() => setIsFeedbackOpen(false)}
+      />
     </section>
   );
 };

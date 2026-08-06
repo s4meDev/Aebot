@@ -389,5 +389,106 @@
     "outcome": "informational",
     "decision": null,
     "minimumMatches": 0
+  },
+  {
+    "name": "fachada ampla ausente",
+    "serviceId": "reparo-cavalete",
+    "query": "Sem foto ampla da fachada.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "troca exclusiva de registro com tipo incorreto",
+    "serviceId": "reparo-cavalete",
+    "query": "Só trocaram o registro mas a OS ficou como reparo de cavalete.",
+    "intent": "indefinida",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "serviço executado no ramal",
+    "serviceId": "reparo-cavalete",
+    "query": "O serviço foi executado no ramal.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "pergunta sobre componente do cavalete",
+    "serviceId": "reparo-cavalete",
+    "query": "Para que serve o tubete?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "pergunta sobre troca de hidrômetro avariado",
+    "serviceId": "reparo-cavalete",
+    "query": "Quem deve trocar um hidrômetro quebrado?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "foto vertical não inventa conclusão",
+    "serviceId": "reparo-cavalete",
+    "query": "A foto foi feita na vertical.",
+    "intent": "indefinida",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "croqui ausente não inventa conclusão",
+    "serviceId": "reparo-cavalete",
+    "query": "Não preencheram o croqui de acesso à rede.",
+    "intent": "indefinida",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "dúvida sobre dano no corpo do cavalete",
+    "serviceId": "reparo-cavalete",
+    "query": "O que fazer quando há trinca no corpo do cavalete?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "linguagem informal sem registro da equipe trabalhando",
+    "serviceId": "reparo-cavalete",
+    "query": "A equipe fez tudo mas ninguém registrou eles trabalhando.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "registro informal do aperto ausente",
+    "serviceId": "reparo-cavalete",
+    "query": "Não apareceu o registro do aperto durante o serviço.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "foto antes e ação durante sem evidência",
+    "serviceId": "reparo-cavalete",
+    "query": "Não mostrou o aperto da virola, mas também não tem foto antes.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 3
   }
 ]

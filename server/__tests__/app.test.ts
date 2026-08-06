@@ -23,9 +23,13 @@ function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig {
     allowChromeExtensionOrigins: false,
     trustProxy: false,
     apiToken: 'token-de-teste',
+    analystTokens: [],
     geminiApiKey: '',
     geminiModel: 'gemini-test',
     geminiFallbackModel: 'gemini-fallback-test',
+    aiProvider: 'auto',
+    ollamaBaseUrl: 'http://127.0.0.1:11434',
+    ollamaModel: '',
     humanizeDeterministicResponses: false,
     bodyLimitBytes: 32_768,
     rateLimitPerMinute: 60,
@@ -48,7 +52,12 @@ function service(): AnalysisService {
       ...item,
       ruleCount: ruleEngine.getRulesForService(item.id).length,
     })),
-    status: () => ({ ruleStoreVersion: ruleEngine.getRuleStoreVersion(), geminiConfigured: false }),
+    status: () => ({
+      ruleStoreVersion: ruleEngine.getRuleStoreVersion(),
+      aiConfigured: false,
+      aiProvider: 'none',
+      geminiConfigured: false,
+    }),
   };
 }
 
@@ -76,11 +85,67 @@ describe('API AEBOT', () => {
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body).toMatchObject({ status: 'ok', service: 'aebot-api', geminiConfigured: false });
+    expect(body.aiMetrics).toBeUndefined();
   });
 
   it('exige token nos endpoints operacionais', async () => {
     const { url } = await start();
     expect((await fetch(`${url}/v1/services`)).status).toBe(401);
+  });
+
+  it('entrega catálogo central autenticado com a versão da base', async () => {
+    const { url } = await start();
+    const response = await fetch(`${url}/v1/services`, {
+      headers: { Authorization: 'Bearer token-de-teste' },
+    });
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.ruleStoreVersion).toBe(ruleEngine.getRuleStoreVersion());
+    expect(body.services).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'reparo-cavalete', ruleCount: 20 }),
+    ]));
+  });
+
+  it('identifica token individual sem registrar o conteúdo da análise', async () => {
+    const { url, logger } = await start(testConfig({
+      apiToken: '',
+      analystTokens: [{ analystId: 'analista-01', token: 'token-individual-seguro' }],
+    }));
+    const response = await fetch(`${url}/v1/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer token-individual-seguro',
+      },
+      body: JSON.stringify({
+        serviceId: 'reparo-cavalete',
+        prompt: 'sem foto depois',
+        history: [],
+      }),
+    });
+    expect(response.status).toBe(200);
+    const logs = JSON.stringify(vi.mocked(logger.info).mock.calls);
+    expect(logs).toContain('analista-01');
+    expect(logs).not.toContain('sem foto depois');
+  });
+
+  it('aplica a capacidade por analista mesmo quando compartilham a mesma rede', async () => {
+    const { url } = await start(testConfig({
+      apiToken: '',
+      rateLimitPerMinute: 1,
+      analystTokens: [
+        { analystId: 'analista-01', token: 'token-individual-01' },
+        { analystId: 'analista-02', token: 'token-individual-02' },
+      ],
+    }));
+    const first = await fetch(`${url}/v1/services`, {
+      headers: { Authorization: 'Bearer token-individual-01' },
+    });
+    const second = await fetch(`${url}/v1/services`, {
+      headers: { Authorization: 'Bearer token-individual-02' },
+    });
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
   });
 
   it('avalia pelo mesmo motor determinístico e não registra a pergunta', async () => {
@@ -126,5 +191,30 @@ describe('API AEBOT', () => {
     expect((await fetch(`${trusted.url}/health`, {
       headers: { 'X-Forwarded-For': '203.0.113.11' },
     })).status).toBe(200);
+
+    const cloudflare = await start(testConfig({ trustProxy: true, rateLimitPerMinute: 1 }));
+    expect((await fetch(`${cloudflare.url}/health`, {
+      headers: { 'CF-Connecting-IP': '203.0.113.20' },
+    })).status).toBe(200);
+    expect((await fetch(`${cloudflare.url}/health`, {
+      headers: { 'CF-Connecting-IP': '203.0.113.21' },
+    })).status).toBe(200);
+  });
+
+  it('protege o diagnóstico operacional por autenticação', async () => {
+    const { url } = await start();
+    expect((await fetch(`${url}/v1/status`)).status).toBe(401);
+    const response = await fetch(`${url}/v1/status`, {
+      headers: { Authorization: 'Bearer token-de-teste' },
+    });
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      status: 'ok',
+      ruleStoreVersion: ruleEngine.getRuleStoreVersion(),
+      aiConfigured: false,
+    });
+    expect(body.uptimeSeconds).toEqual(expect.any(Number));
+    expect(JSON.stringify(body)).not.toContain('token-de-teste');
   });
 });

@@ -1,74 +1,153 @@
 # AEBOT
 
-Extensão Chrome Manifest V3 para apoiar analistas na revisão de serviços de campo. A decisão é calculada pelo motor de regras; a IA apenas interpreta linguagem livre e torna a explicação mais natural.
+Assistente de Análise para revisão de Ordens de Serviço executadas por equipes de campo.
 
-## O que existe hoje
+O AEBOT é uma extensão Chrome Manifest V3 exibida no painel lateral do navegador. Ele ajuda o analista a interpretar situações escritas em linguagem natural, consultar as regras cadastradas e chegar a uma orientação curta e fundamentada.
 
-- Side panel em React, TypeScript e Vite com interface dark.
-- Motor determinístico orientado por `src/data/rulesStore.json`.
-- Normalização de linguagem informal, sinônimos cadastrados, intenção, contexto, ranking e conflitos.
-- Resultados oficiais somente `Conforme`, `Não Conforme` e `Reprovado`; sem regra suficiente retorna decisão nula.
-- Gemini opcional e aterrado às regras, sem autorização para trocar a decisão.
-- Backend Node opcional que centraliza a chave, a base e o processamento para vários analistas.
-- Fallback local: se o backend estiver indisponível, a extensão informa isso e usa o motor embarcado.
-- Corpus de regressão e validação runtime da base.
+## O que o sistema faz
 
-## Rodar como extensão local
+- entende perguntas e relatos escritos de forma natural ou informal;
+- considera o serviço selecionado e o contexto explícito da conversa;
+- localiza todas as regras realmente relacionadas ao caso;
+- resolve conflitos de forma determinística;
+- explica a decisão e informa as regras utilizadas;
+- reconhece quando faltam regras ou informações;
+- recebe feedback dos analistas sem copiar automaticamente o chat.
 
-Pré-requisito: Node.js 22.12 ou superior.
+As únicas conclusões oficiais são:
 
-1. Execute `npm install`.
-2. Execute `npm run build`.
-3. Abra `chrome://extensions` e ative o modo desenvolvedor.
-4. Clique em “Carregar sem compactação” e selecione a pasta `dist`.
-5. Após cada novo build, clique em “Atualizar” no cartão da extensão.
+- **Conforme**: serviço aprovado e correto;
+- **Não Conforme**: serviço aprovado, mas com correção ou problema que deve ser pontuado;
+- **Reprovado**: serviço sem execução válida, no local incorreto, sem evidência suficiente ou com falha grave.
 
-Sem backend, a chave opcional do Gemini pode ser informada nas configurações da extensão. Ela fica somente no perfil local do Chrome e nunca deve ser adicionada ao repositório ou a uma variável `VITE_*`.
+Quando a base não sustenta uma conclusão, o sistema retorna **sem decisão** e recomenda validação humana. Ele nunca usa uma decisão padrão para aprovar.
 
-## Rodar o backend local
+## Como funciona
 
-1. Execute `npm run server:setup`. Isso cria `.env.local` sem sobrescrever um arquivo existente.
-2. Abra `.env.local` e preencha `GEMINI_API_KEY` se desejar interpretação semântica central. Não envie nem versione essa chave.
-3. Execute `npm run server:local`. Esse comando valida, compila e inicia o backend.
-4. Em outro terminal, execute `npm run server:check` para conferir servidor, base e Gemini.
-5. Nas configurações da extensão, informe `http://127.0.0.1:8787` como URL do backend.
-6. Clique em `Testar conexão`. A extensão informa separadamente se o servidor está ativo e se o Gemini central foi configurado.
+```text
+Pergunta do analista
+  -> serviço selecionado
+  -> interpretação do texto e do contexto
+  -> recuperação das regras cadastradas
+  -> avaliação determinística
+  -> explicação curta e fundamentada
+```
 
-O endpoint público `GET /health` informa se o servidor está ativo. `GET /v1/services` lista os serviços e `POST /v1/analyze` executa a análise.
+O motor de regras escolhe a decisão. A inteligência artificial é opcional e serve para conectar linguagem informal aos termos cadastrados e organizar a explicação; ela não pode criar regras nem alterar a conclusão calculada.
 
-O indicador no chat usa o estado real do servidor: `Backend + IA`, `Backend + IA local`, `Backend sem IA` ou `Local • backend off`. Se o servidor estiver sem Gemini, mas este Chrome tiver uma chave local, a interpretação semântica local continua disponível. Se o backend cair, a resposta informa o fallback e o motor embarcado continua funcionando.
+## Situação atual
 
-Quando o Gemini está ativo, a pergunta do analista, até seis mensagens recentes e as regras relacionadas ao serviço são transmitidas ao Google para interpretação e humanização. A decisão oficial continua sendo calculada localmente pelo motor determinístico; arquivos do computador não são enviados.
+- extensão React + TypeScript + Vite pronta para Chrome;
+- backend online publicado em Cloudflare Workers;
+- base central compartilhada entre extensão, Worker e servidor Node;
+- autenticação individual preparada para 40 analistas;
+- teste de capacidade para 3.000 avaliações;
+- feedback persistente em Cloudflare D1;
+- painel administrativo protegido por credencial separada;
+- Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
+- serviço **Reparo de Cavalete** cadastrado na base atual.
 
-Por padrão, o backend chama o Gemini somente quando o matching local é insuficiente e precisa interpretar linguagem livre. Isso reduz latência e consumo de cota. Defina `AEBOT_HUMANIZE_DETERMINISTIC=true` apenas se também quiser que respostas já resolvidas pelo motor sejam reescritas pelo Gemini.
+## Carregar a extensão no Chrome
 
-Se o modelo principal atingir o limite temporário de uso, o backend tenta uma vez o modelo reserva configurado em `GEMINI_FALLBACK_MODEL`. Ambos apenas interpretam a frase usando o catálogo enviado; a decisão continua sendo calculada pelo mesmo motor de regras.
+Pré-requisito para gerar o pacote: Node.js 22.12 ou superior.
 
-### Produção
+```powershell
+npm install
+npm run build
+```
 
-Em produção, o servidor exige:
+Depois:
 
-- `NODE_ENV=production`;
-- `AEBOT_ALLOWED_ORIGINS` com o endereço exato da extensão (`chrome-extension://ID`);
-- `AEBOT_API_TOKEN` com um token forte;
-- `AEBOT_TRUST_PROXY=true` somente quando a hospedagem possuir proxy reverso confiável;
-- `GEMINI_API_KEY` configurada somente no servidor;
-- HTTPS por proxy ou plataforma de hospedagem.
+1. Abra `chrome://extensions`.
+2. Ative o **Modo do desenvolvedor**.
+3. Clique em **Carregar sem compactação**.
+4. Selecione a pasta `dist` deste projeto.
+5. Após gerar uma nova versão, clique em **Atualizar** no cartão do AEBOT.
 
-Copie `.env.example` apenas como referência; o projeto não carrega esse arquivo automaticamente. Nunca versione um `.env` real. O domínio HTTPS definitivo também precisa ser incluído explicitamente nas permissões e na CSP do `manifest.json` antes de distribuir a extensão.
+O pacote oficial para os analistas deve ser criado com `npm run build:production`, pois esse comando restringe a extensão à API de produção.
 
-## Comandos de qualidade
+## Ambiente online
 
-- `npm test`: executa testes do motor, corpus, providers e API.
-- `npm run typecheck`: verifica frontend, build e backend com TypeScript estrito.
-- `npm run build`: gera somente a extensão em `dist`.
-- `npm run build:server`: gera somente a API em `server-dist`.
-- `npm run build:all`: gera extensão e API.
-- `npm run server:setup`: cria a configuração local ignorada pelo Git.
-- `npm run server:local`: compila e inicia o servidor usando `.env.local`.
-- `npm run server:check`: diagnostica a conexão e as capacidades do servidor.
-- `npm run validate`: executa testes, builds e inspeções de segurança dos dois pacotes.
+- API: [aebot-api.pedrolucasbotelho.workers.dev](https://aebot-api.pedrolucasbotelho.workers.dev)
+- Painel de feedback: [aebot-api.pedrolucasbotelho.workers.dev/admin](https://aebot-api.pedrolucasbotelho.workers.dev/admin)
 
-## Limites atuais
+O procedimento completo de publicação, geração de credenciais e instalação está em [Implantação para 40 analistas](docs/DEPLOYMENT-40-USERS.md).
 
-A qualidade das respostas depende da cobertura da base cadastrada. Hoje a base ainda contém poucos serviços. O token compartilhado protege o MVP, mas não identifica cada analista; autenticação individual, auditoria e atualização central da base são evoluções recomendadas para a próxima sprint.
+## Desenvolvimento local
+
+Para iniciar somente a interface:
+
+```powershell
+npm run dev
+```
+
+Para usar a API Node local de contingência:
+
+```powershell
+npm run server:setup
+npm run server:local
+```
+
+Em outro terminal, execute `npm run server:check`. As configurações privadas ficam em `.env.local` e nunca devem ser enviadas ao Git.
+
+## Comandos principais
+
+| Comando | Finalidade |
+| --- | --- |
+| `npm test` | Executa os testes automatizados regulares |
+| `npm run test:capacity` | Executa isoladamente o teste de 3.000 avaliações |
+| `npm run typecheck` | Verifica o TypeScript da extensão, Node e Worker |
+| `npm run rules:audit` | Audita estrutura, lacunas e conflitos da base |
+| `npm run build` | Gera a extensão local em `dist` |
+| `npm run build:production` | Gera e valida o pacote oficial da extensão |
+| `npm run build:server` | Gera a API Node em `server-dist` |
+| `npm run build:worker` | Valida o pacote do Worker sem publicar |
+| `npm run worker:deploy` | Publica o backend no Cloudflare |
+| `npm run deployment:check -- URL` | Valida a produção de ponta a ponta |
+| `npm run tokens:generate -- --count 40` | Gera credenciais individuais dos analistas |
+| `npm run admin:token:generate` | Gera a credencial do painel administrativo |
+
+## Onde alterar cada parte
+
+- regras dos serviços: `src/data/rulesStore.json`;
+- equivalências gerais de linguagem: `src/data/languageAliases.json`;
+- exemplos de regressão: `src/data/regressionCases.json`;
+- motor de análise: `src/services`;
+- interface da extensão: `src/components` e `src/styles.css`;
+- API online: `worker`;
+- servidor local: `server`;
+- scripts de publicação e validação: `scripts`.
+
+O fluxo completo do código e a finalidade de cada arquivo estão documentados em [Arquitetura do AEBOT](ARQUITETURA.md).
+
+## Documentação
+
+- [Arquitetura do AEBOT](ARQUITETURA.md): ordem de execução, responsabilidades e manutenção do código.
+- [Projeto e planejamento](PROJETO.md): requisitos do produto e evolução por sprints.
+- [Implantação para 40 analistas](docs/DEPLOYMENT-40-USERS.md): publicação, credenciais e instalação.
+- [Capacidade para 3.000 OS por dia](docs/CAPACITY-3000-OS.md): volume, limites e critérios de validação.
+- [Entrada de regras](docs/RULE-INTAKE.md): processo para cadastrar e revisar conhecimento.
+
+## Segurança e privacidade
+
+- regras de negócio ficam no JSON, sem duplicação no código;
+- chaves de IA permanecem somente no servidor ou na configuração local autorizada;
+- tokens armazenados no Worker ficam em formato de hash;
+- logs do backend não registram perguntas, histórico ou respostas;
+- o feedback armazena somente o texto enviado conscientemente pelo analista;
+- arquivos privados ficam em `.aebot-private` ou `.env.local`, ambos fora do Git.
+
+Nunca adicione chaves em variáveis `VITE_*`, pois elas seriam incorporadas ao pacote público da extensão.
+
+## Limitações conhecidas
+
+- a base atual contém apenas o serviço Reparo de Cavalete;
+- os acessos técnicos ainda precisam ser associados aos analistas reais durante o piloto;
+- serviços e regras novas precisam ser cadastrados e protegidos por testes de regressão;
+- cotas gratuitas de provedores de IA não são consideradas ilimitadas.
+
+## Créditos
+
+Projeto idealizado e conduzido por **Pedro Lucas Botelho**.
+
+Desenvolvido para apoiar uma análise de Ordens de Serviço mais rápida, consistente e fundamentada.

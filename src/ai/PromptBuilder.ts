@@ -17,7 +17,7 @@ export function buildServiceSystemInstruction(
   const ruleCatalog = rules
     .map(
       (rule) =>
-        `[${rule.id}] ${rule.title}\nConclusão: ${rule.severity}\nDescrição: ${rule.description}\nOrientação: ${rule.guidance ?? rule.message}`
+        `[${rule.id}] ${rule.title}\nConclusão: ${rule.severity ?? 'não definida na regra'}\nDescrição: ${rule.description}\nOrientação: ${rule.guidance ?? rule.message}\nFonte opcional: ${(rule.sourceReferences ?? []).join('; ') || 'regra cadastrada diretamente'}`
     )
     .join('\n\n');
 
@@ -43,7 +43,7 @@ export function buildEvaluationPrompt(
   const rules = evaluation.matchedRules.map((rule) => ({
     id: rule.id,
     title: rule.title,
-    conclusion: rule.severity,
+    conclusion: rule.severity ?? null,
     message: rule.message,
     guidance: rule.guidance,
   }));
@@ -91,6 +91,7 @@ export function buildSemanticInterpretationPrompt(
     ],
     evidenceConcepts: rule.relatedEvidence ?? [],
     examples: rule.examples ?? [],
+    sourceReferences: rule.sourceReferences ?? [],
   }));
 
   return `Você é um extrator semântico, não um decisor.

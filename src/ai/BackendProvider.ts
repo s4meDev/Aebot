@@ -9,14 +9,16 @@ import type {
 import { STORAGE_KEYS } from '../constants/storageKeys';
 import { storageAdapter } from '../storage/StorageAdapter';
 import { GeminiProvider } from './GeminiProvider';
-import { normalizeBackendUrl } from './BackendClient';
+import { resolveBackendUrl } from './BackendClient';
+import { ruleEngine } from '../services/RuleEngine';
+import { formatEvaluationResponse } from '../services/ResponseFormatter';
 
 const BACKEND_TIMEOUT_MS = 25_000;
 const OFFICIAL_DECISIONS = new Set<DecisionType>(['Conforme', 'Não Conforme', 'Reprovado']);
 const VALID_FALLBACK_REASONS = new Set<NonNullable<AiProviderResponse['fallbackReason']>>([
   'no_api_key',
-    'api_error',
-    'rate_limited',
+  'api_error',
+  'rate_limited',
   'invalid_response',
   'backend_error',
 ]);
@@ -63,6 +65,52 @@ function parseBackendResponse(value: unknown, serviceId: string): AiProviderResp
   };
 }
 
+function canUseEmbeddedFallback(serviceId: string): boolean {
+  const centralVersion = storageAdapter.get<string>(
+    STORAGE_KEYS.BACKEND_RULE_STORE_VERSION,
+    ''
+  );
+  // Sem uma versão central conhecida não dá para afirmar que a cópia local está atualizada.
+  const sameKnownVersion = Boolean(centralVersion) &&
+    centralVersion === ruleEngine.getRuleStoreVersion();
+  const serviceExistsLocally = ruleEngine.getServices().some((service) => service.id === serviceId);
+  return sameKnownVersion && serviceExistsLocally;
+}
+
+function createBackendUnavailableResponse(
+  prompt: string,
+  service: ServiceIdentity
+): AiProviderResponse {
+  const centralVersion = storageAdapter.get<string>(
+    STORAGE_KEYS.BACKEND_RULE_STORE_VERSION,
+    ''
+  );
+  const base = ruleEngine.evaluatePrompt(prompt, service.id);
+  const evaluation: RuleEvaluationResult = {
+    ...base,
+    ruleStoreVersion: centralVersion || base.ruleStoreVersion,
+    outcome: 'insufficient',
+    decision: null,
+    hasSufficientEvidence: false,
+    matchedRules: [],
+    primaryRule: null,
+    conflicts: [],
+    confidence: 'insuficiente',
+    reasoningSummary:
+      'O backend central está indisponível e a base embarcada não é compatível com o catálogo central selecionado.',
+    requiresHumanValidation: true,
+    insufficiencyReason: 'backend_unavailable',
+    errorCode: undefined,
+  };
+  return {
+    provider: 'simulated',
+    content: formatEvaluationResponse(evaluation),
+    decision: null,
+    evaluation,
+    fallbackReason: 'backend_error',
+  };
+}
+
 export class BackendProvider implements AiProvider {
   constructor(private readonly fallbackProvider: AiProvider = new GeminiProvider()) {}
 
@@ -73,7 +121,7 @@ export class BackendProvider implements AiProvider {
     history: AiMessage[] = []
   ): Promise<AiProviderResponse> {
     const configuredUrl = storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '');
-    const backendUrl = normalizeBackendUrl(configuredUrl);
+    const backendUrl = resolveBackendUrl(configuredUrl);
     if (!backendUrl) {
       return this.fallbackProvider.generateResponse(context, prompt, service, history);
     }
@@ -100,6 +148,10 @@ export class BackendProvider implements AiProvider {
       if (!response.ok) throw new Error(`Backend respondeu HTTP ${response.status}`);
       const parsed = parseBackendResponse(await response.json(), service.id);
       if (!parsed) throw new Error('Contrato inválido retornado pelo backend');
+      storageAdapter.set(
+        STORAGE_KEYS.BACKEND_RULE_STORE_VERSION,
+        parsed.evaluation.ruleStoreVersion
+      );
       const localGeminiKey = storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, '').trim();
       if (parsed.fallbackReason === 'no_api_key' && localGeminiKey) {
         const localResponse = await this.fallbackProvider.generateResponse(
@@ -118,6 +170,10 @@ export class BackendProvider implements AiProvider {
       return parsed;
     } catch (error) {
       console.warn('Backend AEBOT indisponível:', error);
+      // A contingência só pode decidir quando serviço e versão são exatamente os mesmos.
+      if (!canUseEmbeddedFallback(service.id)) {
+        return createBackendUnavailableResponse(prompt, service);
+      }
       const fallback = await this.fallbackProvider.generateResponse(
         context,
         prompt,

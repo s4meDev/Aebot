@@ -1,24 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KnowledgeService } from './services/KnowledgeService';
-import { serviceRepository } from './repositories/serviceRepository';
 import { ChatPanel } from './components/ChatPanel';
 import { ServiceSelector } from './components/ServiceSelector';
 import { ServiceDetails } from './components/ServiceDetails';
 import { ConfigModal } from './components/ConfigModal';
 import { usePersistentState } from './state/usePersistentState';
 import { STORAGE_KEYS } from './constants/storageKeys';
+import { serviceCatalogService } from './services/ServiceCatalogService';
 import type { ServiceRecord } from './types';
 
-// Instância única do KnowledgeService para toda a aplicação — evita recriar a
-// mesma dependência em múltiplos componentes (antes também era instanciado
-// dentro do ChatPanel, gerando duas instâncias equivalentes sem necessidade).
-const knowledgeService = new KnowledgeService(serviceRepository);
+const knowledgeService = new KnowledgeService();
 
 export default function App() {
-  // Sem valor-semente fixo: o serviço realmente selecionado é sempre resolvido
-  // a partir da lista carregada (ver `selectedService` abaixo). Um id "chutado"
-  // aqui ficava dessincronizado do id real cadastrado em rulesStore.json assim
-  // que a base de serviços mudasse.
+  // Começa vazio para nunca escolher um serviço que não veio do catálogo atual.
   const [selectedServiceId, setSelectedServiceId] = usePersistentState<string>(
     STORAGE_KEYS.SELECTED_SERVICE_ID,
     ''
@@ -28,17 +22,34 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [configurationRevision, setConfigurationRevision] = useState(0);
+  const [catalogStatus, setCatalogStatus] = useState<{
+    source: 'backend' | 'local';
+    version?: string;
+    warning?: string;
+  }>({ source: 'local' });
 
   useEffect(() => {
-    void knowledgeService.loadServices().then((result) => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    void serviceCatalogService.load().then((result) => {
+      if (!active) return;
       if (result.type === 'success' && result.services) {
         setServices(result.services);
+        setCatalogStatus({
+          source: result.source ?? 'local',
+          version: result.ruleStoreVersion,
+          warning: result.warning,
+        });
       } else {
         setError(result.message ?? 'Falha ao carregar catálogo de serviços AEGEA.');
       }
       setLoading(false);
     });
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [configurationRevision]);
 
   useEffect(() => {
     if (!selectedServiceId && services[0]) {
@@ -48,9 +59,7 @@ export default function App() {
 
   const selectedService = services.find((service) => service.id === selectedServiceId);
 
-  // Contexto (system instruction) calculado uma única vez por serviço selecionado
-  // e passado como prop para o ChatPanel — evita que o componente de chat precise
-  // ter sua própria instância de KnowledgeService só para recalcular o mesmo dado.
+  // O contexto só é remontado quando o serviço muda.
   const chatContext = useMemo(
     () => (selectedService ? knowledgeService.getServiceContext(selectedService) : ''),
     [selectedService]
@@ -80,7 +89,7 @@ export default function App() {
 
   return (
     <div className="sidepanel-shell">
-      {/* Top extension header */}
+      {/* Cabeçalho da extensão */}
       <header className="app-header">
         <div className="brand-group">
           <div className="brand-logo">
@@ -102,13 +111,24 @@ export default function App() {
         </button>
       </header>
 
-      {/* Main Content Area */}
+      {/* Serviço e área principal de análise */}
       <main className="main-content">
         <ServiceSelector
           services={services}
           selectedServiceId={selectedServiceId}
           onSelect={setSelectedServiceId}
         />
+
+        <div
+          className={`catalog-status ${catalogStatus.warning ? 'warning' : ''}`}
+          title={catalogStatus.warning}
+        >
+          {catalogStatus.warning ?? (
+            catalogStatus.source === 'backend'
+              ? `Catálogo central${catalogStatus.version ? ` • base ${catalogStatus.version}` : ''}`
+              : 'Catálogo local embarcado'
+          )}
+        </div>
 
         {selectedService ? (
           <>
@@ -124,12 +144,12 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer info */}
+      {/* Rodapé */}
       <footer className="app-footer">
         <span>AEBOT • Análise baseada em regras</span>
       </footer>
 
-      {/* Settings Modal */}
+      {/* Configurações */}
       <ConfigModal
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}

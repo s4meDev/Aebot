@@ -8,5 +8,6 @@ export const STORAGE_KEYS = {
   GEMINI_MODEL: 'aegea_gemini_model',
   BACKEND_URL: 'aebot_backend_url',
   BACKEND_TOKEN: 'aebot_backend_token',
+  BACKEND_RULE_STORE_VERSION: 'aebot_backend_rule_store_version',
   SELECTED_SERVICE_ID: 'selectedServiceId',
 } as const;

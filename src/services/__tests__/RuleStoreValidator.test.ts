@@ -16,6 +16,8 @@ describe('RuleStoreValidator', () => {
     expect(store.version).toBe(CURRENT_RULE_STORE_VERSION);
     expect(store.services.length).toBeGreaterThan(0);
     expect(store.rules.length).toBeGreaterThan(0);
+    expect(store.rules.some((rule) => rule.severity === undefined)).toBe(true);
+    expect(store.rules.some((rule) => rule.sourceReferences?.length)).toBe(true);
   });
 
   it('rejeita uma quarta conclusão oficial', () => {
@@ -49,6 +51,25 @@ describe('RuleStoreValidator', () => {
     const rules = store.rules as Array<Record<string, unknown>>;
     rules[0].topicKeywords = ['tema válido', ''];
     expect(() => parseRuleStore(store)).toThrow(/topicKeywords/);
+  });
+
+  it('valida referências documentais opcionais das regras', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    rules[0].sourceReferences = ['fonte válida', ''];
+    expect(() => parseRuleStore(store)).toThrow(/sourceReferences/);
+  });
+
+  it('rejeita regra agregadora que referencia grupo factual inexistente', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    const aggregate = rules.find((rule) => rule.id === 'RULE-RC-02');
+    expect(aggregate).toBeTruthy();
+    aggregate!.matchPolicy = {
+      minimumMatchedFactGroups: { count: 2, groups: ['antes', 'grupo-inexistente'] },
+    };
+
+    expect(() => parseRuleStore(store)).toThrow(/factGroup inexistente/);
   });
 
   it('migra base legada v1 removendo decisão padrão e conclusão extra', () => {

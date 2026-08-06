@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0",
+  "version": "2.5.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -29,18 +29,236 @@
         "Falta de duas ou mais etapas resulta em Reprovado.",
         "Foto do chassi sem número de hidrômetro visível resulta em Não Conforme.",
         "Ausência de evidência da troca do lacre resulta em Não Conforme.",
-        "Serviço em local incorreto ou sem necessidade resulta em Reprovado."
+        "Serviço em local incorreto ou sem necessidade resulta em Reprovado.",
+        "Fachada ampla, chassi, ponto do vazamento, execução e finalização compõem o padrão fotográfico.",
+        "Troca exclusiva do registro exige o serviço Substituição de Registro de Cavalete (122003).",
+        "Intervenção no ramal ou na rede exige troca do tipo de serviço e registro de Não Conformidade.",
+        "Troca de hidrômetro quebrado ou avariado deve ser encaminhada ao setor Comercial mediante Vistoria de Irregularidade."
       ],
       "suggestedQuestions": [
         "Sem foto depois da execução, qual a decisão?",
         "Faltou a foto antes e também a foto do chassi, qual a conclusão?",
         "Faltou apenas a foto durante a execução, como classificar?",
         "Faltaram as fotos antes e durante, qual o resultado?",
-        "Se faltar a foto do chassi e a foto final, qual regra prevalece?"
+        "Se faltar a foto do chassi e a foto final, qual regra prevalece?",
+        "Quando devo trocar o serviço para Substituição de Registro de Cavalete?",
+        "Quem deve trocar um hidrômetro quebrado?",
+        "Quais fotos são obrigatórias no reparo de cavalete?"
       ]
     }
   ],
   "rules": [
+    {
+      "id": "RULE-RC-10",
+      "serviceId": "reparo-cavalete",
+      "title": "Foto da fachada ausente ou sem visão ampla",
+      "description": "A fachada do imóvel deve ser registrada de forma ampla para identificar corretamente o local da intervenção e vinculá-lo à Ordem de Serviço.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Qualidade fotográfica",
+      "topicKeywords": ["fachada", "foto da fachada", "fachada ampla", "identificação do imóvel"],
+      "relatedEvidence": ["foto da fachada", "fachada", "fachada ampla", "visão ampla do imóvel"],
+      "conditionKeywords": [
+        "sem foto da fachada",
+        "falta foto da fachada",
+        "foto da fachada ausente",
+        "sem foto ampla da fachada",
+        "fachada não aparece inteira"
+      ],
+      "equivalentExpressions": [
+        "não apresentou a fachada",
+        "foto da fachada muito fechada",
+        "não mostrou o imóvel de forma ampla"
+      ],
+      "positiveSignals": ["sem", "falta", "faltou", "ausente", "não apresentou", "não mostrou", "muito fechada"],
+      "negativeSignals": ["fachada ampla apresentada", "foto ampla da fachada presente"],
+      "examples": ["A foto da fachada ficou muito fechada e não identifica o imóvel."],
+      "message": "A fachada não foi evidenciada com amplitude suficiente para identificar o local do serviço.",
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da qualidade fotográfica.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slide 5",
+        "IT - Reparo de Cavalete.docx, página 5, Fachada Inicial"
+      ]
+    },
+    {
+      "id": "RULE-RC-11",
+      "serviceId": "reparo-cavalete",
+      "title": "Troca exclusiva do registro cadastrada como reparo",
+      "description": "Quando houve somente a troca do registro, o serviço correto é Substituição de Registro de Cavalete, código 122003, e não Reparo de Cavalete de Água, código 119001.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Classificação do serviço",
+      "topicKeywords": ["troca do registro", "substituição do registro", "código 122003", "troca de serviço"],
+      "relatedEvidence": ["somente troca do registro", "registro do cavalete", "serviço 122003", "serviço 119001"],
+      "conditionKeywords": [
+        "troca exclusiva do registro cadastrada como reparo de cavalete",
+        "trocaram somente o registro e mantiveram reparo de cavalete",
+        "só trocaram o registro mas a os ficou como reparo de cavalete"
+      ],
+      "equivalentExpressions": [
+        "foi feita apenas a substituição do registro no serviço 119001",
+        "troca somente do registro sem alterar para o código 122003"
+      ],
+      "negativeSignals": ["serviço alterado para 122003", "substituição de registro cadastrada corretamente"],
+      "examples": ["Só trocaram o registro, mas a OS permaneceu como reparo de cavalete."],
+      "message": "A execução corresponde à Substituição de Registro de Cavalete, mas permaneceu classificada como Reparo de Cavalete.",
+      "guidance": "Altere o tipo para o código 122003 e registre a Não Conformidade da classificação do serviço.",
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slides 7, 8 e 11"]
+    },
+    {
+      "id": "RULE-RC-12",
+      "serviceId": "reparo-cavalete",
+      "title": "Intervenção no ramal ou na rede cadastrada como reparo de cavalete",
+      "description": "Quando as evidências mostram que o serviço foi executado no ramal predial ou na rede, o tipo de serviço da OS deve ser alterado e a divergência registrada no FORMES.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Classificação do serviço",
+      "topicKeywords": ["serviço no ramal", "serviço na rede", "troca do tipo de serviço", "FORMES"],
+      "relatedEvidence": ["ramal", "rede", "fora do cavalete", "tipo de serviço"],
+      "conditionKeywords": [
+        "serviço executado no ramal",
+        "serviço executado na rede",
+        "reparo feito no ramal",
+        "reparo feito na rede"
+      ],
+      "equivalentExpressions": [
+        "a intervenção foi no ramal e não no cavalete",
+        "a equipe trabalhou na rede mas a os ficou como reparo de cavalete",
+        "serviço foi executado no ramal",
+        "serviço foi executado na rede"
+      ],
+      "negativeSignals": ["serviço executado no cavalete", "tipo de serviço corrigido"],
+      "examples": ["O serviço foi executado no ramal, embora a OS esteja como reparo de cavalete."],
+      "message": "A intervenção ocorreu no ramal ou na rede e exige correção do tipo de serviço.",
+      "guidance": "Altere o tipo de serviço da OS e registre a Não Conformidade no FORMES.",
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slides 11 e 13"]
+    },
+    {
+      "id": "RULE-RC-INFO-01",
+      "serviceId": "reparo-cavalete",
+      "title": "Validação da origem, matrícula e endereço da OS",
+      "description": "Antes da análise, deve-se verificar a origem da OS matriz, confirmar se o endereço corresponde ao da OS mãe e consultar a matrícula. Em campo, a equipe valida georreferência, endereço, imóvel, ligação e cavalete correto.",
+      "priority": 4,
+      "category": "Validação cadastral",
+      "topicKeywords": ["os matriz", "os mãe", "origem da os", "matrícula", "georreferência"],
+      "relatedEvidence": ["origem da os matriz", "endereço da os mãe", "consulta da matrícula", "georreferência"],
+      "conditionKeywords": ["consultar a matrícula", "verificar a origem da os matriz", "confirmar o endereço da os mãe"],
+      "equivalentExpressions": ["conferir a os de origem", "validar matrícula e endereço antes da análise"],
+      "message": "A análise deve conferir a OS de origem, o endereço da OS mãe e a matrícula; a execução deve ocorrer no ativo correto.",
+      "guidance": "Consulte a matrícula e confronte origem, endereço e ativo antes de avaliar as evidências.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slide 3",
+        "IT - Reparo de Cavalete.docx, página 5, item 5.3.1"
+      ]
+    },
+    {
+      "id": "RULE-RC-INFO-02",
+      "serviceId": "reparo-cavalete",
+      "title": "Componentes do cavalete",
+      "description": "O cavalete inclui registro de esfera ou borboleta, tubos ou canos, joelhos de 90 graus, tubetes longo e curto com virolas, porcas, vedações, adaptadores e lacre de proteção.",
+      "priority": 4,
+      "category": "Conhecimento técnico",
+      "topicKeywords": ["componentes do cavalete", "registro de esfera", "registro borboleta", "tubete", "virola", "porca", "vedante", "adaptador", "lacre de proteção"],
+      "relatedEvidence": ["registro de esfera", "registro borboleta", "tubos", "canos", "joelhos", "tubetes", "virolas", "porcas", "vedantes", "adaptadores", "lacre de proteção"],
+      "conditionKeywords": ["tubete liga o hidrômetro aos tubos", "registro permite interromper o fluxo", "lacre protege contra violação"],
+      "equivalentExpressions": ["quais são as peças do cavalete", "do que é formado o cavalete"],
+      "message": "O cavalete é formado por registros, tubos, joelhos, tubetes e virolas, porcas e vedações, adaptadores e lacre de proteção.",
+      "guidance": "Use a identificação do componente para conferir se o reparo descrito e o material informado são compatíveis.",
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 4"]
+    },
+    {
+      "id": "RULE-RC-INFO-03",
+      "serviceId": "reparo-cavalete",
+      "title": "Métodos permitidos para o reparo",
+      "description": "Vazamentos nas conexões podem ser corrigidos por reaperto, reposicionamento ou substituição das vedações, com fotos antes e depois que demonstrem a eliminação do vazamento. Fissura, trinca, deformação ou ressecamento no corpo das tubulações exige substituição completa do conjunto afetado.",
+      "priority": 4,
+      "category": "Execução técnica",
+      "topicKeywords": ["reaperto", "reposicionamento", "troca de vedação", "reparo de conexões", "corpo do cavalete", "trinca", "fissura", "ressecamento"],
+      "relatedEvidence": ["conexões", "borrachas de vedação", "virolas", "corpo das tubulações", "substituição completa"],
+      "conditionKeywords": ["reaperto das conexões", "substituição das vedações", "substituição completa do corpo do cavalete"],
+      "equivalentExpressions": ["apertar a virola para eliminar o vazamento", "trocar o conjunto quando o tubo está trincado"],
+      "message": "Conexões admitem reaperto ou correção das vedações; danos no corpo do cavalete exigem substituição completa do conjunto afetado.",
+      "guidance": "Confira se o método executado corresponde ao componente danificado e se o resultado foi evidenciado antes e depois.",
+      "sourceReferences": ["IT - Reparo de Cavalete.docx, página 5, item 5.3.2"]
+    },
+    {
+      "id": "RULE-RC-INFO-04",
+      "serviceId": "reparo-cavalete",
+      "title": "Padrão fotográfico completo do reparo",
+      "description": "O registro fotográfico deve mostrar fachada ampla, local do reparo, chassi ou número do hidrômetro e lacre inicial, ponto exato do vazamento, execução e método, novo lacre quando aplicável e cavalete finalizado, ligado e com registro aberto.",
+      "priority": 4,
+      "category": "Padrão de evidências",
+      "topicKeywords": ["padrão de fotos", "fotos obrigatórias", "sequência de fotos", "fachada", "local do reparo", "ponto de vazamento", "finalização"],
+      "relatedEvidence": ["fachada", "local do reparo", "chassi", "lacre inicial", "ponto do vazamento", "execução", "novo lacre", "cavalete finalizado"],
+      "conditionKeywords": ["fachada local chassi vazamento execução e finalização", "padrão fotográfico do reparo de cavalete"],
+      "equivalentExpressions": ["quais fotos precisam ser apresentadas", "qual é a sequência de evidências"],
+      "message": "O padrão exige evidências do local, identificação, defeito, execução e estado final do cavalete.",
+      "guidance": "Confira cada etapa e aplique as regras de decisão específicas somente para as ausências realmente confirmadas.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slides 5, 6, 9, 10 e 12",
+        "IT - Reparo de Cavalete.docx, páginas 5 a 7"
+      ]
+    },
+    {
+      "id": "RULE-RC-INFO-05",
+      "serviceId": "reparo-cavalete",
+      "title": "Divergência entre o hidrômetro encontrado e o cadastrado",
+      "description": "Quando o número do hidrômetro encontrado no cavalete for diferente do número cadastrado na Ordem de Serviço, a equipe deve registrar obrigatoriamente a divergência no parecer.",
+      "priority": 4,
+      "category": "Rastreabilidade",
+      "topicKeywords": ["hidrômetro diferente", "hd divergente", "número diferente", "divergência no parecer"],
+      "relatedEvidence": ["número do hidrômetro", "número cadastrado", "parecer de campo", "divergência"],
+      "conditionKeywords": ["hidrômetro diferente do cadastrado", "número do hd divergente da os", "registrar divergência no parecer"],
+      "equivalentExpressions": ["o hd encontrado não é o mesmo da ordem", "chassi diferente do cadastrado"],
+      "message": "A divergência entre o hidrômetro encontrado e o cadastrado deve ser informada no parecer de campo.",
+      "guidance": "Confirme os dois números e verifique se a equipe registrou a divergência no parecer.",
+      "sourceReferences": ["IT - Reparo de Cavalete.docx, página 4, item 5.2"]
+    },
+    {
+      "id": "RULE-RC-INFO-06",
+      "serviceId": "reparo-cavalete",
+      "title": "Vistoria de Irregularidade e troca de hidrômetro",
+      "description": "A equipe deve abrir Vistoria de Irregularidade quando identificar anomalia durante o serviço ou necessidade de trocar hidrômetro quebrado ou avariado. A troca do hidrômetro deve ser executada pelo setor Comercial.",
+      "priority": 4,
+      "category": "Fluxo operacional",
+      "topicKeywords": ["vistoria de irregularidade", "anomalia", "hidrômetro quebrado", "hidrômetro avariado", "troca de hd", "setor comercial"],
+      "relatedEvidence": ["anomalia", "equipamento quebrado", "equipamento avariado", "necessidade de troca do hidrômetro", "setor comercial"],
+      "conditionKeywords": ["abrir vistoria de irregularidade", "troca do hidrômetro pelo setor comercial", "hidrômetro quebrado ou avariado"],
+      "equivalentExpressions": ["quem troca o hd quebrado", "o que fazer quando o hidrômetro está avariado"],
+      "message": "Anomalias exigem Vistoria de Irregularidade; hidrômetro quebrado ou avariado deve ser trocado pelo setor Comercial.",
+      "guidance": "Oriente a abertura da vistoria e encaminhe a troca do hidrômetro ao setor Comercial.",
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 13"]
+    },
+    {
+      "id": "RULE-RC-INFO-07",
+      "serviceId": "reparo-cavalete",
+      "title": "Segurança, limpeza e registro de acesso à rede",
+      "description": "A área deve ser isolada quando necessário, a equipe deve usar os EPI e EPC aplicáveis, limpar entulho e material excedente ao final e preencher o croqui quando houver acesso direto à rede.",
+      "priority": 4,
+      "category": "Execução operacional",
+      "topicKeywords": ["epi", "epc", "isolamento", "cones", "fita zebrada", "limpeza", "entulho", "croqui", "acesso à rede", "ferramentas"],
+      "relatedEvidence": ["preparação do local", "isolamento", "equipamentos de proteção", "limpeza final", "croqui"],
+      "conditionKeywords": ["limpeza final do entulho", "preencher o croqui de acesso à rede", "isolar a área com cones e fita zebrada"],
+      "equivalentExpressions": ["quais epis são obrigatórios", "quando precisa preencher o croqui", "como deixar o local depois do reparo"],
+      "message": "O procedimento exige segurança operacional, limpeza final e croqui quando a equipe acessa diretamente a rede.",
+      "guidance": "Verifique os registros aplicáveis ao caso; estes documentos não definem uma conclusão oficial automática para a ausência desses itens.",
+      "sourceReferences": ["IT - Reparo de Cavalete.docx, páginas 4, 5, 7 e 8"]
+    },
+    {
+      "id": "RULE-RC-INFO-08",
+      "serviceId": "reparo-cavalete",
+      "title": "Orientação de enquadramento das fotos",
+      "description": "Sempre que for possível, as fotos do serviço devem ser registradas na horizontal para melhorar o enquadramento e a leitura das evidências.",
+      "priority": 4,
+      "category": "Qualidade fotográfica",
+      "topicKeywords": ["foto horizontal", "fotos na horizontal", "orientação da foto", "enquadramento"],
+      "relatedEvidence": ["registro horizontal", "foto deitada", "enquadramento da imagem"],
+      "conditionKeywords": ["registrar fotos na horizontal", "sempre que possível foto horizontal", "foto feita na vertical"],
+      "equivalentExpressions": ["tirar a foto deitada", "qual é a orientação correta da foto", "a imagem foi registrada em pé", "foto foi feita na vertical"],
+      "message": "As fotos devem ser feitas na horizontal sempre que isso for possível.",
+      "guidance": "Prefira fotos na horizontal sempre que possível; o documento não define conclusão oficial apenas por a foto estar vertical.",
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 14"]
+    },
     {
       "id": "RULE-RC-01",
       "serviceId": "reparo-cavalete",
@@ -49,6 +267,7 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Evidência de execução",
+      "factGroup": "depois",
       "topicKeywords": ["depois", "foto crítica", "evidência final", "conclusão da execução", "foto do fim", "foto depois"],
       "relatedEvidence": ["foto depois", "foto final", "serviço finalizado", "estado final"],
       "conditionKeywords": [
@@ -92,6 +311,10 @@
       "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
       "negativeSignals": ["todas as etapas presentes", "nenhuma foto faltou"],
       "matchPolicy": {
+        "minimumMatchedFactGroups": {
+          "count": 2,
+          "groups": ["antes", "durante", "depois"]
+        },
         "minimumGroups": {
           "count": 2,
           "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou"],
@@ -103,9 +326,15 @@
           ]
         }
       },
-      "examples": ["Faltaram as fotos antes e durante."],
+      "examples": [
+        "Faltaram as fotos antes e durante.",
+        "Não mostrou o aperto da virola e também não tem foto antes."
+      ],
       "message": "Não foi evidenciada a execução do serviço em etapas suficientes.",
-      "guidance": "Reprove a Ordem de Serviço e registre quais etapas não foram evidenciadas."
+      "guidance": "Reprove a Ordem de Serviço e registre quais etapas não foram evidenciadas.",
+      "sourceReferences": [
+        "Orientação operacional — 2026-08-06 — responsável do projeto: duas etapas de execução sem evidência resultam em Reprovado"
+      ]
     },
     {
       "id": "RULE-RC-03",
@@ -121,7 +350,11 @@
       "negativeSignals": ["local correto", "endereço confirmado"],
       "examples": ["O reparo foi executado em outro endereço."],
       "message": "O serviço foi executado em local incorreto.",
-      "guidance": "Reprove a Ordem de Serviço e registre a divergência de local."
+      "guidance": "Reprove a Ordem de Serviço e registre a divergência de local.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slide 3",
+        "IT - Reparo de Cavalete.docx, página 5, item 5.3.1"
+      ]
     },
     {
       "id": "RULE-RC-04",
@@ -162,7 +395,11 @@
       "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "ilegível", "não aparece", "não tem", "não veio", "esqueceram"],
       "negativeSignals": ["chassi legível", "número do hidrômetro visível"],
       "message": "A identificação do hidrômetro na foto do chassi está ausente ou ilegível.",
-      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da identificação."
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da identificação.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slide 6",
+        "IT - Reparo de Cavalete.docx, página 6, padrão de fotos"
+      ]
     },
     {
       "id": "RULE-RC-06",
@@ -172,6 +409,7 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Evidência de execução",
+      "factGroup": "antes",
       "topicKeywords": ["antes", "etapa antes", "evidência anterior", "foto antes"],
       "relatedEvidence": ["foto antes", "antes da execução"],
       "conditionKeywords": ["sem foto antes", "falta foto antes", "faltou a foto antes", "foto antes ausente"],
@@ -179,7 +417,11 @@
       "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não foi apresentada", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
       "negativeSignals": ["não faltou foto antes", "foto antes foi apresentada", "foto antes presente"],
       "message": "A foto anterior à execução não foi apresentada.",
-      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência anterior."
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência anterior.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slides 9 e 10",
+        "IT - Reparo de Cavalete.docx, páginas 5 a 7, padrão de fotos"
+      ]
     },
     {
       "id": "RULE-RC-07",
@@ -189,6 +431,7 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Evidência de execução",
+      "factGroup": "durante",
       "topicKeywords": [
         "durante",
         "etapa durante",
@@ -200,6 +443,7 @@
         "virola"
       ],
       "relatedEvidence": [
+        "registro do aperto",
         "foto durante",
         "durante a execução",
         "foto fazendo",
@@ -227,39 +471,66 @@
         "não mostrou apertando a virola"
       ],
       "equivalentExpressions": [
+        "não apareceu o registro do aperto",
+        "o registro do aperto não apareceu",
         "a foto durante não foi apresentada",
         "não apresentou a foto durante",
         "faltaram as fotos antes e durante",
         "não mostrou o serviço sendo feito",
         "não apresentou foto fazendo o reparo",
         "não evidenciou o reparo em andamento",
-        "não registrou a execução do reparo"
+        "não registrou a execução do reparo",
+        "ninguém registrou eles trabalhando",
+        "ninguém registrou a equipe trabalhando",
+        "não registraram a equipe trabalhando"
       ],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não foi apresentada", "não apresentou", "não mostrou", "não evidenciou", "não registrou", "não tem", "não tiver", "não veio", "esqueceram"],
+      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apareceu", "não foi apresentada", "não apresentou", "não mostrou", "não evidenciou", "não registrou", "não tem", "não tiver", "não veio", "esqueceram"],
       "negativeSignals": ["não faltou foto durante", "foto durante foi apresentada", "foto durante presente"],
       "examples": [
         "Não mostrou a equipe apertando a virola.",
         "Sem foto fazendo o reparo."
       ],
       "message": "A execução do reparo em andamento não foi evidenciada.",
-      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência intermediária."
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência intermediária.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slide 5",
+        "IT - Reparo de Cavalete.docx, páginas 6 e 7, execução do reparo",
+        "Orientação operacional — 2026-08-06 — responsável do projeto: ausência de evidência durante é Não Conforme"
+      ]
     },
     {
       "id": "RULE-RC-08",
       "serviceId": "reparo-cavalete",
       "title": "Falta de evidência da troca do lacre",
-      "description": "Ausência de foto que comprove a substituição ou instalação do lacre do hidrômetro.",
+      "description": "Ausência de foto que identifique o lacre encontrado e o lacre final instalado quando houve manipulação ou desmontagem do cavalete.",
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Evidência complementar",
-      "topicKeywords": ["troca do lacre", "evidência do lacre", "foto do lacre"],
-      "relatedEvidence": ["foto do lacre", "troca do lacre", "lacre"],
-      "conditionKeywords": ["sem foto do lacre", "falta foto do lacre", "troca do lacre não evidenciada"],
-      "equivalentExpressions": ["não comprovou a troca do lacre", "evidência do lacre ausente", "não botaram foto do lacre"],
+      "topicKeywords": ["troca do lacre", "evidência do lacre", "foto do lacre", "lacre antes e depois", "novo lacre"],
+      "relatedEvidence": ["foto do lacre", "troca do lacre", "lacre", "lacre inicial", "lacre final", "novo lacre"],
+      "conditionKeywords": [
+        "sem foto do lacre",
+        "falta foto do lacre",
+        "troca do lacre não evidenciada",
+        "sem foto do lacre inicial",
+        "sem foto do lacre final",
+        "novo lacre não evidenciado"
+      ],
+      "equivalentExpressions": [
+        "não comprovou a troca do lacre",
+        "evidência do lacre ausente",
+        "não botaram foto do lacre",
+        "não mostrou o lacre antes e depois",
+        "não evidenciou o novo lacre instalado"
+      ],
       "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não evidenciada", "não comprovou", "não tem", "não veio", "não botaram", "esqueceram"],
-      "negativeSignals": ["troca do lacre comprovada", "foto do lacre presente"],
+      "negativeSignals": ["troca do lacre comprovada", "foto do lacre presente", "lacres antes e depois presentes"],
       "message": "Não foi apresentada evidência da troca do lacre.",
-      "guidance": "Aprove com a correção cabível e registre a Não Conformidade do lacre."
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade do lacre.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slide 12",
+        "IT - Reparo de Cavalete.docx, páginas 4 e 7"
+      ]
     },
     {
       "id": "RULE-RC-09",
@@ -283,7 +554,11 @@
       ],
       "negativeSignals": ["evidência ausente", "foto ausente", "execução incorreta"],
       "message": "A execução correta e todas as evidências obrigatórias foram confirmadas.",
-      "guidance": "Aprove a Ordem de Serviço como Conforme."
+      "guidance": "Aprove a Ordem de Serviço como Conforme.",
+      "sourceReferences": [
+        "Procedimentos - Reparo de Cavalete.ppt, slides 9 e 10",
+        "IT - Reparo de Cavalete.docx, páginas 5 a 7"
+      ]
     }
   ]
 }

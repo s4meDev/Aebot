@@ -14,6 +14,7 @@ export type InsufficiencyReason =
   | 'missing_information'
   | 'no_matching_rule'
   | 'semantic_unavailable'
+  | 'backend_unavailable'
   | 'service_not_found';
 
 export interface RuleConditionGroup {
@@ -33,6 +34,14 @@ export interface RuleMatchPolicy {
     negativeSignals?: string[];
     groups: RuleConditionGroup[];
   };
+  /**
+   * Exige fatos já confirmados por outras regras em grupos distintos.
+   * Permite compor regras sem duplicar todos os sinônimos das regras-base.
+   */
+  minimumMatchedFactGroups?: {
+    count: number;
+    groups: string[];
+  };
 }
 
 export interface DataRule {
@@ -40,7 +49,8 @@ export interface DataRule {
   serviceId: string;
   title: string;
   description: string;
-  severity: DecisionType;
+  /** Conclusão oficial. Ausente em orientações que não definem classificação da OS. */
+  severity?: DecisionType;
   priority: number;
   /** Frases que, sozinhas, descrevem o cenário da regra. */
   conditionKeywords: string[];
@@ -58,6 +68,10 @@ export interface DataRule {
   relatedEvidence?: string[];
   /** Termos usados somente para localizar a regra em perguntas informativas. */
   topicKeywords?: string[];
+  /** Referências opcionais; regras informadas pelos responsáveis não dependem de documento formal. */
+  sourceReferences?: string[];
+  /** Grupo factual reutilizável por regras agregadoras do mesmo serviço. */
+  factGroup?: string;
   matchPolicy?: RuleMatchPolicy;
 }
 
@@ -86,7 +100,7 @@ export interface RuleStoreSchema {
 export interface MatchedRule {
   id: string;
   title: string;
-  severity: DecisionType;
+  severity: DecisionType | null;
   priority: number;
   /** Pontuação técnica de 0 a 10, usada apenas para ordenação. */
   score: number;
@@ -95,6 +109,8 @@ export interface MatchedRule {
   relevance: number;
   matchReasons: string[];
   matchedTerms: string[];
+  /** Regras-base cujos fatos distintos sustentaram uma regra agregadora. */
+  supportingRuleIds?: string[];
   guidance?: string;
   message: string;
 }
@@ -165,6 +181,16 @@ export interface ServiceRepositoryResult {
   message?: string;
 }
 
+export interface ServiceCatalogResult {
+  type: 'success' | 'error';
+  services?: ServiceRecord[];
+  source?: 'backend' | 'local';
+  ruleStoreVersion?: string;
+  /** Aviso operacional quando o catálogo local foi usado como contingência. */
+  warning?: string;
+  message?: string;
+}
+
 export interface AiMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -175,9 +201,16 @@ export interface AiMessage {
   decision?: DecisionType;
 }
 
+/** Contrato compartilhado pela API Node, Cloudflare Worker e testes. */
+export interface AnalysisRequest {
+  serviceId: string;
+  prompt: string;
+  history: AiMessage[];
+}
+
 export interface AiProviderResponse {
   content: string;
-  provider: 'backend' | 'gemini' | 'simulated';
+  provider: 'backend' | 'gemini' | 'ollama' | 'workers-ai' | 'simulated';
   decision: DecisionType | null;
   evaluation: RuleEvaluationResult;
   fallbackReason?:

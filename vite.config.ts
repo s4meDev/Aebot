@@ -10,11 +10,7 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      // Copia apenas arquivos que não passam pelo pipeline de bundle do Rollup
-      // (o manifest é um arquivo estático de configuração da extensão).
-      // O background service worker agora é compilado a partir de
-      // `src/background.ts` via rollupOptions.input abaixo — não é mais
-      // copiado manualmente, eliminando o risco de arquivos divergentes.
+      // O manifest é estático e precisa ser copiado para a pasta final.
       name: 'copy-extension-files',
       closeBundle() {
         const distDir = path.resolve(projectRoot, 'dist');
@@ -38,9 +34,7 @@ export default defineConfig({
         background: path.resolve(projectRoot, 'src/background.ts'),
       },
       output: {
-        // O manifest.json espera "background.js" na raiz do dist (side_panel/MV3
-        // exigem o service worker fora de /assets). Os demais entries seguem
-        // para /assets normalmente.
+        // O Manifest V3 procura background.js na raiz da extensão.
         entryFileNames: (chunkInfo) =>
           chunkInfo.name === 'background' ? 'background.js' : 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',

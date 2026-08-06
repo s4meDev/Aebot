@@ -1,7 +1,12 @@
 node_modules/
 dist/
 server-dist/
+worker-dist/
+.wrangler/
 .vite/
 .env
 .env.local
+.dev.vars
+.dev.vars.*
 *.local
+.aebot-private/

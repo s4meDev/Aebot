@@ -21,3 +21,16 @@
 - Em produção, a API exige origem explícita e token de acesso; permissões de host da extensão devem listar somente endpoints concretos.
 - Mudanças no motor exigem testes Vitest, typecheck e build antes da entrega.
 - Mudanças na base exigem versão compatível, validação runtime e casos no corpus de regressão.
+- Procedimentos que orientam o trabalho, mas não definem uma conclusão oficial, devem ser cadastrados sem `severity`; relatos sobre eles permanecem com `decision: null` até existir regra classificatória explícita.
+- Quando o backend estiver configurado, ele é a fonte preferencial do catálogo. O fallback embarcado só pode decidir se conhece o serviço e possui a mesma versão central conhecida da base.
+- Regras escritas ou informadas pelos responsáveis do produto são válidas por si mesmas e podem definir conclusão oficial. Documento formal e `sourceReferences` são metadados opcionais, nunca pré-requisitos para cadastrar ou aplicar uma regra.
+- Para escala gratuita, priorize respostas determinísticas, chaves de cache sem texto bruto, retenção limitada em memória e IA local opcional. Cotas de provedores externos nunca devem ser descritas como ilimitadas.
+- Em instalações com vários analistas, prefira tokens individuais e registre somente a identidade operacional e metadados técnicos, nunca o conteúdo das conversas.
+- O pacote empresarial deve conter uma única origem HTTPS no manifest; a extensão deriva dela o backend, desativa Gemini direto no Chrome e exige somente o token individual na instalação.
+- Métricas operacionais podem contar cache, chamadas e resultados técnicos, mas nunca armazenar texto de perguntas, histórico, respostas ou tokens.
+- Para 40 analistas remotos, o destino principal do MVP é a API Cloudflare Worker; o backend Node permanece como ambiente local e contingência, sempre compartilhando o mesmo `AnalysisService`.
+- O Worker armazena somente hashes SHA-256 dos tokens individuais em secret. Tokens legíveis ficam com seus analistas e continuam válidos até rotação ou revogação.
+- A distribuição para várias máquinas exige ID estável da extensão por chave pública no manifest ou Chrome Web Store; nunca versione a chave privada.
+- Feedback é persistido no D1 somente quando o analista envia o formulário. Nunca anexe automaticamente pergunta, resposta ou histórico do chat.
+- A leitura de feedback usa token administrativo separado e armazenado como hash em secret; tokens comuns de analistas nunca autorizam rotas administrativas.
+- Conteúdo do feedback pode ser exibido apenas com renderização segura e nunca deve ser incluído em logs operacionais.

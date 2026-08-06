@@ -28,6 +28,7 @@ class FixedWindowRateLimiter {
   constructor(private readonly limit: number) {}
 
   allow(key: string, now = Date.now()): boolean {
+    // A limpeza periódica impede que IPs antigos fiquem guardados para sempre.
     this.requestCount += 1;
     if (this.requestCount % 100 === 0) {
       for (const [clientKey, entry] of this.clients) {
@@ -47,6 +48,13 @@ class FixedWindowRateLimiter {
 
 function clientAddress(request: IncomingMessage, socket: Socket, trustProxy: boolean): string {
   if (trustProxy) {
+    const cloudflareAddress = request.headers['cf-connecting-ip'];
+    const cloudflareCandidate = Array.isArray(cloudflareAddress)
+      ? cloudflareAddress[0]
+      : cloudflareAddress;
+    if (cloudflareCandidate && isIP(cloudflareCandidate.trim())) {
+      return cloudflareCandidate.trim();
+    }
     const forwarded = request.headers['x-forwarded-for'];
     const candidate = (Array.isArray(forwarded) ? forwarded[0] : forwarded)
       ?.split(',')[0]
@@ -92,13 +100,24 @@ async function readJson(request: IncomingMessage, limit: number): Promise<unknow
   }
 }
 
-function hasAuthorization(request: IncomingMessage, token: string): boolean {
-  if (!token) return true;
+function tokensEqual(provided: string, expected: string): boolean {
+  const providedBuffer = Buffer.from(provided);
+  const expectedBuffer = Buffer.from(expected);
+  return providedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(providedBuffer, expectedBuffer);
+}
+
+function authorizedIdentity(request: IncomingMessage, config: ServerConfig): string | null {
+  // Sem tokens configurados, o servidor Node fica em modo de desenvolvimento local.
+  if (!config.apiToken && config.analystTokens.length === 0) return 'development';
   const authorization = request.headers.authorization;
-  if (!authorization?.startsWith('Bearer ')) return false;
-  const provided = Buffer.from(authorization.slice(7));
-  const expected = Buffer.from(token);
-  return provided.length === expected.length && timingSafeEqual(provided, expected);
+  if (!authorization?.startsWith('Bearer ')) return null;
+  const provided = authorization.slice(7);
+  if (config.apiToken && tokensEqual(provided, config.apiToken)) return 'shared';
+  for (const access of config.analystTokens) {
+    if (tokensEqual(provided, access.token)) return access.analystId;
+  }
+  return null;
 }
 
 export function createAebotServer(dependencies: ServerDependencies): Server {
@@ -140,16 +159,30 @@ export function createAebotServer(dependencies: ServerDependencies): Server {
       return;
     }
 
-    if (!limiter.allow(clientAddress(request, request.socket, config.trustProxy))) {
-      writeJson(response, 429, { error: 'rate_limit_exceeded', requestId }, requestId, origin);
-      finish(429);
+    const isPublicEndpoint = path === '/' || path === '/health';
+    const analystId = isPublicEndpoint ? undefined : authorizedIdentity(request, config);
+    if (!isPublicEndpoint && !analystId) {
+      const unauthorizedKey = `unauthorized:${clientAddress(
+        request,
+        request.socket,
+        config.trustProxy
+      )}`;
+      if (!limiter.allow(unauthorizedKey)) {
+        writeJson(response, 429, { error: 'rate_limit_exceeded', requestId }, requestId, origin);
+        finish(429);
+        return;
+      }
+      writeJson(response, 401, { error: 'unauthorized', requestId }, requestId, origin);
+      finish(401);
       return;
     }
 
-    const isPublicEndpoint = path === '/' || path === '/health';
-    if (!isPublicEndpoint && !hasAuthorization(request, config.apiToken)) {
-      writeJson(response, 401, { error: 'unauthorized', requestId }, requestId, origin);
-      finish(401);
+    const rateLimitKey = analystId
+      ? `analyst:${analystId}`
+      : `public:${clientAddress(request, request.socket, config.trustProxy)}`;
+    if (!limiter.allow(rateLimitKey)) {
+      writeJson(response, 429, { error: 'rate_limit_exceeded', requestId }, requestId, origin);
+      finish(429);
       return;
     }
 
@@ -167,10 +200,17 @@ export function createAebotServer(dependencies: ServerDependencies): Server {
       }
 
       if (request.method === 'GET' && path === '/health') {
+        const status = analysisService.status();
         writeJson(response, 200, {
           status: 'ok',
           service: 'aebot-api',
-          ...analysisService.status(),
+          ruleStoreVersion: status.ruleStoreVersion,
+          aiConfigured: status.aiConfigured,
+          aiProvider: status.aiProvider,
+          geminiConfigured: status.geminiConfigured,
+          accessConfigured: Boolean(config.apiToken || config.analystTokens.length),
+          feedbackConfigured: false,
+          adminConfigured: false,
           requestId,
         }, requestId, origin);
         finish(200);
@@ -178,11 +218,24 @@ export function createAebotServer(dependencies: ServerDependencies): Server {
       }
 
       if (request.method === 'GET' && path === '/v1/services') {
+        const status = analysisService.status();
         writeJson(response, 200, {
+          ruleStoreVersion: status.ruleStoreVersion,
           services: analysisService.listServices(),
           requestId,
         }, requestId, origin);
         finish(200);
+        return;
+      }
+
+      if (request.method === 'GET' && path === '/v1/status') {
+        writeJson(response, 200, {
+          status: 'ok',
+          uptimeSeconds: Math.floor(process.uptime()),
+          ...analysisService.status(),
+          requestId,
+        }, requestId, origin);
+        finish(200, { analystId });
         return;
       }
 
@@ -197,6 +250,7 @@ export function createAebotServer(dependencies: ServerDependencies): Server {
           outcome: result.evaluation.outcome,
           decision: result.decision,
           provider: result.provider,
+          analystId,
         });
         return;
       }

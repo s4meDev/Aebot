@@ -7,7 +7,7 @@ import type {
   RuleStoreSchema,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.3.0';
+export const CURRENT_RULE_STORE_VERSION = '2.5.0';
 const OFFICIAL_DECISIONS: DecisionType[] = ['Conforme', 'Não Conforme', 'Reprovado'];
 type UnknownRecord = Record<string, unknown>;
 
@@ -138,7 +138,37 @@ function parseMatchPolicy(
       }
     }
   }
-  return { allOf, minimumGroups };
+  let minimumMatchedFactGroups: RuleMatchPolicy['minimumMatchedFactGroups'];
+  if (source.minimumMatchedFactGroups !== undefined) {
+    const minimumSource = record(source.minimumMatchedFactGroups);
+    if (!minimumSource) {
+      issues.push(`${path}.minimumMatchedFactGroups deve ser objeto`);
+    } else {
+      const count = requiredPositiveInteger(
+        minimumSource,
+        'count',
+        `${path}.minimumMatchedFactGroups`,
+        issues
+      );
+      const groups = stringArray(
+        minimumSource.groups,
+        `${path}.minimumMatchedFactGroups.groups`,
+        issues,
+        true
+      ) ?? [];
+      if (!groups.length) {
+        issues.push(`${path}.minimumMatchedFactGroups.groups não pode ser vazia`);
+      }
+      if (new Set(groups).size !== groups.length) {
+        issues.push(`${path}.minimumMatchedFactGroups.groups possui valores duplicados`);
+      }
+      if (count > groups.length) {
+        issues.push(`${path}.minimumMatchedFactGroups.count não pode exceder a quantidade de grupos`);
+      }
+      minimumMatchedFactGroups = { count, groups };
+    }
+  }
+  return { allOf, minimumGroups, minimumMatchedFactGroups };
 }
 
 function migrateLegacyStore(value: unknown): unknown {
@@ -258,8 +288,10 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
             priority: 1, conditionKeywords: [], message: '',
           };
         }
-        const severityValue = requiredString(item, 'severity', path, issues);
-        if (!OFFICIAL_DECISIONS.includes(severityValue as DecisionType)) {
+        const severityValue = item.severity === undefined
+          ? undefined
+          : requiredString(item, 'severity', path, issues);
+        if (severityValue && !OFFICIAL_DECISIONS.includes(severityValue as DecisionType)) {
           issues.push(`${path}.severity não é uma conclusão oficial`);
         }
         const parsedRule: DataRule = {
@@ -267,9 +299,9 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           serviceId: requiredString(item, 'serviceId', path, issues),
           title: requiredString(item, 'title', path, issues),
           description: requiredString(item, 'description', path, issues),
-          severity: OFFICIAL_DECISIONS.includes(severityValue as DecisionType)
+          severity: severityValue && OFFICIAL_DECISIONS.includes(severityValue as DecisionType)
             ? severityValue as DecisionType
-            : 'Conforme',
+            : undefined,
           priority: requiredPositiveInteger(item, 'priority', path, issues),
           conditionKeywords: stringArray(
             item.conditionKeywords,
@@ -288,6 +320,8 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           category: optionalString(item, 'category', path, issues),
           relatedEvidence: stringArray(item.relatedEvidence, `${path}.relatedEvidence`, issues),
           topicKeywords: stringArray(item.topicKeywords, `${path}.topicKeywords`, issues),
+          sourceReferences: stringArray(item.sourceReferences, `${path}.sourceReferences`, issues),
+          factGroup: optionalString(item, 'factGroup', path, issues),
           matchPolicy: parseMatchPolicy(item.matchPolicy, `${path}.matchPolicy`, issues),
         };
         const hasMatchingData =
@@ -295,6 +329,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           Boolean(parsedRule.equivalentExpressions?.length) ||
           Boolean(parsedRule.matchPolicy?.allOf?.length) ||
           Boolean(parsedRule.matchPolicy?.minimumGroups) ||
+          Boolean(parsedRule.matchPolicy?.minimumMatchedFactGroups) ||
           Boolean(parsedRule.positiveSignals?.length && parsedRule.relatedEvidence?.length);
         if (!hasMatchingData) issues.push(`${path} não possui condições de matching`);
         return parsedRule;
@@ -308,6 +343,23 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
     ruleIds.add(rule.id);
     if (!serviceIds.has(rule.serviceId)) {
       issues.push(`regra ${rule.id} referencia serviço inexistente: ${rule.serviceId}`);
+    }
+    if (rule.factGroup && !/^[a-z0-9][a-z0-9._-]*$/i.test(rule.factGroup)) {
+      issues.push(`regra ${rule.id} possui factGroup inválido`);
+    }
+    const aggregatePolicy = rule.matchPolicy?.minimumMatchedFactGroups;
+    if (aggregatePolicy) {
+      const availableGroups = new Set(
+        rules
+          .filter((candidate) => candidate.serviceId === rule.serviceId && candidate.id !== rule.id)
+          .map((candidate) => candidate.factGroup)
+          .filter((group): group is string => Boolean(group))
+      );
+      for (const group of aggregatePolicy.groups) {
+        if (!availableGroups.has(group)) {
+          issues.push(`regra ${rule.id} referencia factGroup inexistente: ${group}`);
+        }
+      }
     }
   }
 

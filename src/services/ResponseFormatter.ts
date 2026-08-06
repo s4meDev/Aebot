@@ -41,15 +41,21 @@ export function formatEvaluationResponse(
   }
 
   if (!evaluation.decision || !evaluation.hasSufficientEvidence) {
+    const guidanceOnly = evaluation.matchedRules.length > 0 &&
+      evaluation.matchedRules.every((rule) => rule.severity === null);
     const reason = evaluation.errorCode === 'SERVICE_NOT_FOUND'
       ? 'O serviço selecionado não existe na base de regras.'
       : evaluation.reasoningSummary;
-    const guidance = evaluation.insufficiencyReason === 'missing_information'
+    const guidance = guidanceOnly
+      ? `${evaluation.matchedRules[0].guidance ?? evaluation.matchedRules[0].message} Como não há conclusão oficial cadastrada para esse fato, valide a classificação com o responsável.`
+      : evaluation.insufficiencyReason === 'missing_information'
       ? 'Informe quais evidências foram apresentadas, quais faltaram e se a execução do serviço estava correta.'
       : evaluation.insufficiencyReason === 'semantic_unavailable'
         ? 'Tente novamente. Se o problema persistir, valide o caso com o responsável; não altere a base somente por esta falha técnica.'
       : evaluation.insufficiencyReason === 'service_not_found'
         ? 'Selecione um serviço válido antes de realizar a análise.'
+      : evaluation.insufficiencyReason === 'backend_unavailable'
+        ? 'Restabeleça o backend central ou peça suporte. Esta análise não usará uma base local possivelmente desatualizada.'
         : 'Valide com o responsável e cadastre ou atualize a regra necessária na base.';
     return `Não foi possível recomendar uma conclusão com segurança.\n\nMotivo:\n${reason}\n\nOrientação ao analista:\n${guidance}`;
   }

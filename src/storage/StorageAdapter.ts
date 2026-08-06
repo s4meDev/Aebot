@@ -27,7 +27,7 @@ class BrowserStorageAdapter implements StorageAdapter {
         return this.parse(window.localStorage.getItem(key), fallback);
       }
     } catch {
-      // fallback to memory storage
+      // Se o navegador bloquear o storage, a sessão ainda funciona em memória.
     }
 
     return this.parse(this.memory.get(key) ?? null, fallback);
@@ -42,7 +42,7 @@ class BrowserStorageAdapter implements StorageAdapter {
         window.localStorage.setItem(key, serialized);
       }
     } catch {
-      // ignore storage write errors
+      // A cópia em memória já foi atualizada.
     }
   }
 
@@ -54,7 +54,7 @@ class BrowserStorageAdapter implements StorageAdapter {
         window.localStorage.removeItem(key);
       }
     } catch {
-      // ignore removal errors
+      // A cópia em memória já foi removida.
     }
   }
 }

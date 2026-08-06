@@ -118,7 +118,7 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
   return {
     id: rule.id,
     title: rule.title,
-    severity: rule.severity,
+    severity: rule.severity ?? null,
     priority: rule.priority,
     score,
     factMatchQuality,
@@ -136,10 +136,74 @@ export function retrieveRules(
   intent: QueryIntent,
   rules: DataRule[]
 ): MatchedRule[] {
-  return rules.flatMap((rule) => {
+  const directMatches = rules.flatMap((rule) => {
     const match = matchRule(query, intent, rule);
     return match ? [match] : [];
   });
+  const sourceRulesById = new Map(rules.map((rule) => [rule.id, rule]));
+  const matchesById = new Map(directMatches.map((match) => [match.id, match]));
+
+  // Segunda passagem: combina fatos que outras regras já confirmaram. Exemplo:
+  // uma regra reconhece "antes", outra reconhece "durante" e a regra agregadora
+  // decide o que acontece quando os dois grupos aparecem juntos.
+  for (const aggregateRule of rules) {
+    const policy = aggregateRule.matchPolicy?.minimumMatchedFactGroups;
+    if (!policy) continue;
+
+    const bestMatchByGroup = new Map<string, MatchedRule>();
+    for (const match of directMatches) {
+      if (match.id === aggregateRule.id) continue;
+      const sourceRule = sourceRulesById.get(match.id);
+      const group = sourceRule?.factGroup;
+      if (!group || !policy.groups.includes(group) || !sourceRule?.severity) continue;
+      const current = bestMatchByGroup.get(group);
+      if (!current || match.score > current.score) bestMatchByGroup.set(group, match);
+    }
+
+    if (bestMatchByGroup.size < policy.count) continue;
+    const supportingMatches = [...bestMatchByGroup.values()];
+    const specificity = Math.max(1, bestMatchByGroup.size * 4);
+    const factMatchQuality = Math.min(...supportingMatches.map((match) => match.factMatchQuality));
+    const relevance = 1;
+    const aggregateMatch: MatchedRule = {
+      id: aggregateRule.id,
+      title: aggregateRule.title,
+      severity: aggregateRule.severity ?? null,
+      priority: aggregateRule.priority,
+      score: Math.round(Math.min(
+        10,
+        relevance * 6 + factMatchQuality * 2 + specificity * 0.4
+      ) * 10) / 10,
+      factMatchQuality,
+      specificity,
+      relevance,
+      matchReasons: [
+        `${bestMatchByGroup.size} grupos de fatos distintos foram confirmados por regras relacionadas`,
+      ],
+      matchedTerms: unique(supportingMatches.flatMap((match) => match.matchedTerms)),
+      supportingRuleIds: supportingMatches.map((match) => match.id),
+      guidance: aggregateRule.guidance,
+      message: aggregateRule.message,
+    };
+    const directAggregate = matchesById.get(aggregateRule.id);
+    // Se a mesma regra também casou pelo texto, preserva os melhores dados dos dois caminhos.
+    matchesById.set(aggregateRule.id, directAggregate
+      ? {
+          ...aggregateMatch,
+          score: Math.max(aggregateMatch.score, directAggregate.score),
+          factMatchQuality: Math.max(
+            aggregateMatch.factMatchQuality,
+            directAggregate.factMatchQuality
+          ),
+          specificity: Math.max(aggregateMatch.specificity, directAggregate.specificity),
+          relevance: Math.max(aggregateMatch.relevance, directAggregate.relevance),
+          matchReasons: unique([...directAggregate.matchReasons, ...aggregateMatch.matchReasons]),
+          matchedTerms: unique([...directAggregate.matchedTerms, ...aggregateMatch.matchedTerms]),
+        }
+      : aggregateMatch);
+  }
+
+  return [...matchesById.values()];
 }
 
 function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedRule | null {
@@ -149,7 +213,7 @@ function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedR
     ...(rule.topicKeywords ?? []),
     ...(rule.relatedEvidence ?? []),
     rule.title,
-    rule.severity,
+    ...(rule.severity ? [rule.severity] : []),
     ...(rule.category ? [rule.category] : []),
   ]);
   const topicMatches = findExpressions(topicQuery, topicExpressions);
@@ -165,7 +229,7 @@ function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedR
   return {
     id: rule.id,
     title: rule.title,
-    severity: rule.severity,
+    severity: rule.severity ?? null,
     priority: rule.priority,
     score,
     factMatchQuality: 0,

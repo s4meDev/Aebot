@@ -45,7 +45,7 @@ function scoreRule(queryTokens: Set<string>, rule: DataRule): number {
 }
 
 /**
- * Recuperação local prévia ao Gemini. Reduz o catálogo enviado ao provider sem
+ * Recuperação local prévia ao modelo. Reduz o catálogo enviado ao provider sem
  * transformar similaridade lexical em decisão de negócio.
  */
 export function selectSemanticRuleCandidates(

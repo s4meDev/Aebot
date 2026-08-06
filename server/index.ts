@@ -13,7 +13,7 @@ server.listen(config.port, config.host, () => {
     event: 'server_started',
     host: config.host,
     port: config.port,
-    geminiConfigured: Boolean(config.geminiApiKey),
+    aiProvider: analysisService.status().aiProvider,
     localEnvironmentLoaded,
   }));
 });

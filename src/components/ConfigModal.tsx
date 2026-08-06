@@ -4,7 +4,8 @@ import { STORAGE_KEYS } from '../constants/storageKeys';
 import { GEMINI_MODEL } from '../localConfig';
 import { normalizeGeminiModel } from '../ai/GeminiProvider';
 import {
-  checkBackendHealth,
+  checkBackendAccess,
+  getPackagedBackendUrl,
   normalizeBackendUrl,
   type BackendConnection,
 } from '../ai/BackendClient';
@@ -18,6 +19,7 @@ interface ConfigModalProps {
 type ConnectionTestState = BackendConnection | { state: 'idle' | 'checking' };
 
 export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSaved }) => {
+  const packagedBackendUrl = getPackagedBackendUrl();
   const [apiKey, setApiKey] = useState('');
   const [model, setModel] = useState(GEMINI_MODEL);
   const [backendUrl, setBackendUrl] = useState('');
@@ -32,7 +34,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
       setModel(normalizeGeminiModel(
         storageAdapter.get<string>(STORAGE_KEYS.GEMINI_MODEL, GEMINI_MODEL)
       ));
-      setBackendUrl(storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, ''));
+      setBackendUrl(
+        packagedBackendUrl || storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
+      );
       setBackendToken(storageAdapter.get<string>(STORAGE_KEYS.BACKEND_TOKEN, ''));
       setSaved(false);
       setBackendError('');
@@ -49,10 +53,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
       setBackendError('Use HTTPS ou, neste computador, localhost/127.0.0.1 com HTTP.');
       return;
     }
+    const previousBackendUrl = normalizeBackendUrl(
+      storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
+    );
     storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, apiKey.trim());
     storageAdapter.set(STORAGE_KEYS.GEMINI_MODEL, model);
     storageAdapter.set(STORAGE_KEYS.BACKEND_URL, normalizedBackendUrl ?? '');
     storageAdapter.set(STORAGE_KEYS.BACKEND_TOKEN, backendToken.trim());
+    if (previousBackendUrl !== normalizedBackendUrl) {
+      storageAdapter.remove(STORAGE_KEYS.BACKEND_RULE_STORE_VERSION);
+    }
     setBackendUrl(normalizedBackendUrl ?? '');
     setBackendError('');
     setSaved(true);
@@ -78,7 +88,16 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
     }
     setBackendError('');
     setConnectionTest({ state: 'checking' });
-    setConnectionTest(await checkBackendHealth(normalizedBackendUrl));
+    const access = await checkBackendAccess(normalizedBackendUrl, backendToken);
+    if (access.state !== 'online') {
+      setConnectionTest(access);
+      return;
+    }
+    storageAdapter.set(
+      STORAGE_KEYS.BACKEND_RULE_STORE_VERSION,
+      access.catalog.ruleStoreVersion
+    );
+    setConnectionTest({ state: 'online', health: access.health });
   };
 
   return (
@@ -102,6 +121,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
               className="input-field"
               placeholder="http://127.0.0.1:8787"
               value={backendUrl}
+              readOnly={Boolean(packagedBackendUrl)}
               onChange={(e) => {
                 setBackendUrl(e.target.value);
                 setBackendError('');
@@ -109,7 +129,9 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
               }}
             />
             <span className="help-text">
-              Quando informada, a extensão usa a base e a IA centralizadas no servidor. HTTPS é obrigatório fora do computador local.
+              {packagedBackendUrl
+                ? 'Endereço fixado com segurança no pacote empresarial.'
+                : 'Quando informada, a extensão usa a base e a IA centralizadas no servidor. HTTPS é obrigatório fora do computador local.'}
             </span>
             {backendError && <span className="help-text danger-text">{backendError}</span>}
           </label>
@@ -121,17 +143,21 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
               disabled={connectionTest.state === 'checking'}
               onClick={() => void handleTestConnection()}
             >
-              {connectionTest.state === 'checking' ? 'Testando…' : 'Testar conexão'}
+              {connectionTest.state === 'checking' ? 'Testando…' : 'Testar acesso completo'}
             </button>
             {connectionTest.state === 'online' && (
-              <span className={connectionTest.health.geminiConfigured
+              <span className={connectionTest.health.aiConfigured
                 ? 'connection-status success'
                 : 'connection-status warning'}>
-                {connectionTest.health.geminiConfigured
-                  ? 'Backend e Gemini central ativos.'
+                {connectionTest.health.aiConfigured
+                  ? connectionTest.health.aiProvider === 'ollama'
+                    ? 'Backend, token e catálogo acessíveis; IA local configurada.'
+                    : connectionTest.health.aiProvider === 'workers-ai'
+                      ? 'API online, token e catálogo acessíveis; Workers AI configurado.'
+                      : 'Backend, token e catálogo acessíveis; Gemini central configurado.'
                   : apiKey.trim()
-                    ? 'Backend ativo; Gemini será usado localmente.'
-                    : 'Backend ativo, mas sem Gemini central.'}
+                    ? 'Backend, token e catálogo ativos; Gemini será usado localmente.'
+                    : 'Backend, token e catálogo ativos, mas sem IA central.'}
               </span>
             )}
             {connectionTest.state === 'offline' && (
@@ -150,7 +176,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
             />
           </label>
 
-          <label className="form-group">
+          {!packagedBackendUrl && <label className="form-group">
             <span className="label-text">Chave de API do Gemini (Google AI Studio)</span>
             <input
               type="password"
@@ -165,9 +191,15 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
             <span className="help-text">
               Com o Gemini ativo, a pergunta, até 6 mensagens recentes e as regras relacionadas são enviadas ao Google para interpretação e humanização.
             </span>
-          </label>
+          </label>}
 
-          <label className="form-group">
+          {packagedBackendUrl && (
+            <span className="help-text">
+              Pacote empresarial: a IA e a base são centralizadas no backend. Nenhuma chave de IA é armazenada neste Chrome.
+            </span>
+          )}
+
+          {!packagedBackendUrl && <label className="form-group">
             <span className="label-text">Modelo Selecionado</span>
             <input
               type="text"
@@ -178,12 +210,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
               required
               onChange={(e) => setModel(e.target.value)}
             />
-          </label>
+          </label>}
 
           {saved && <div className="toast-success">✓ Configurações salvas com sucesso!</div>}
 
           <div className="modal-footer">
-            {apiKey && (
+            {apiKey && !packagedBackendUrl && (
               <button type="button" className="secondary-btn danger-text" onClick={handleClear}>
                 Remover Chave
               </button>

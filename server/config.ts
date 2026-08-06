@@ -1,4 +1,12 @@
 import { GEMINI_FALLBACK_MODEL, GEMINI_MODEL } from '../src/localConfig';
+import { normalizeOllamaBaseUrl, normalizeOllamaModel } from '../src/ai/OllamaModelClient';
+
+export type ServerAiProvider = 'auto' | 'gemini' | 'ollama';
+
+export interface AnalystAccessToken {
+  analystId: string;
+  token: string;
+}
 
 export interface ServerConfig {
   host: string;
@@ -7,9 +15,13 @@ export interface ServerConfig {
   allowChromeExtensionOrigins: boolean;
   trustProxy: boolean;
   apiToken: string;
+  analystTokens: AnalystAccessToken[];
   geminiApiKey: string;
   geminiModel: string;
   geminiFallbackModel: string;
+  aiProvider: ServerAiProvider;
+  ollamaBaseUrl: string;
+  ollamaModel: string;
   humanizeDeterministicResponses: boolean;
   bodyLimitBytes: number;
   rateLimitPerMinute: number;
@@ -46,6 +58,37 @@ function normalizeAllowedOrigin(value: string, isProduction: boolean): string {
   }
 }
 
+function parseAnalystTokens(value: string | undefined, isProduction: boolean): AnalystAccessToken[] {
+  const candidate = value?.trim();
+  if (!candidate) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(candidate);
+  } catch {
+    throw new Error('AEBOT_API_TOKENS deve ser um objeto JSON válido.');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('AEBOT_API_TOKENS deve mapear analystId para token.');
+  }
+  const entries = Object.entries(parsed as Record<string, unknown>);
+  if (!entries.length || entries.length > 100) {
+    throw new Error('AEBOT_API_TOKENS deve conter entre 1 e 100 analistas.');
+  }
+  const tokens = entries.map(([analystId, token]) => {
+    if (!/^[a-z0-9][a-z0-9._-]{1,63}$/i.test(analystId)) {
+      throw new Error(`analystId inválido em AEBOT_API_TOKENS: ${analystId}`);
+    }
+    if (typeof token !== 'string' || !token.trim() || (isProduction && token.trim().length < 32)) {
+      throw new Error(`Token inválido para ${analystId} em AEBOT_API_TOKENS.`);
+    }
+    return { analystId, token: token.trim() };
+  });
+  if (new Set(tokens.map((entry) => entry.token)).size !== tokens.length) {
+    throw new Error('AEBOT_API_TOKENS não pode reutilizar o mesmo token para analistas diferentes.');
+  }
+  return tokens;
+}
+
 export function loadServerConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const isProduction = env.NODE_ENV === 'production';
   const allowedOrigins = (env.AEBOT_ALLOWED_ORIGINS ?? '')
@@ -54,15 +97,34 @@ export function loadServerConfig(env: NodeJS.ProcessEnv = process.env): ServerCo
     .filter(Boolean)
     .map((origin) => normalizeAllowedOrigin(origin, isProduction));
   const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
+  const analystTokens = parseAnalystTokens(env.AEBOT_API_TOKENS, isProduction);
 
   if (isProduction && uniqueAllowedOrigins.length === 0) {
     throw new Error('AEBOT_ALLOWED_ORIGINS é obrigatório em produção.');
   }
-  if (isProduction && !env.AEBOT_API_TOKEN?.trim()) {
-    throw new Error('AEBOT_API_TOKEN é obrigatório em produção.');
+  if (isProduction && !env.AEBOT_API_TOKEN?.trim() && analystTokens.length === 0) {
+    throw new Error('AEBOT_API_TOKEN ou AEBOT_API_TOKENS é obrigatório em produção.');
   }
-  if (isProduction && (env.AEBOT_API_TOKEN?.trim().length ?? 0) < 32) {
+  if (
+    isProduction &&
+    env.AEBOT_API_TOKEN?.trim() &&
+    env.AEBOT_API_TOKEN.trim().length < 32
+  ) {
     throw new Error('AEBOT_API_TOKEN deve possuir ao menos 32 caracteres em produção.');
+  }
+
+  const aiProviderValue = env.AEBOT_AI_PROVIDER?.trim().toLowerCase() || 'auto';
+  if (!['auto', 'gemini', 'ollama'].includes(aiProviderValue)) {
+    throw new Error('AEBOT_AI_PROVIDER deve ser auto, gemini ou ollama.');
+  }
+  const rawOllamaUrl = env.OLLAMA_BASE_URL?.trim() || 'http://127.0.0.1:11434';
+  const ollamaBaseUrl = normalizeOllamaBaseUrl(rawOllamaUrl);
+  const rawOllamaModel = env.OLLAMA_MODEL?.trim() ?? '';
+  const ollamaModel = rawOllamaModel ? normalizeOllamaModel(rawOllamaModel) : '';
+  if (!ollamaBaseUrl) throw new Error('OLLAMA_BASE_URL deve apontar para o Ollama local.');
+  if (rawOllamaModel && !ollamaModel) throw new Error('OLLAMA_MODEL inválido.');
+  if (aiProviderValue === 'ollama' && !ollamaModel) {
+    throw new Error('OLLAMA_MODEL é obrigatório quando AEBOT_AI_PROVIDER=ollama.');
   }
 
   return {
@@ -72,9 +134,13 @@ export function loadServerConfig(env: NodeJS.ProcessEnv = process.env): ServerCo
     allowChromeExtensionOrigins: !isProduction,
     trustProxy: env.AEBOT_TRUST_PROXY?.trim().toLowerCase() === 'true',
     apiToken: env.AEBOT_API_TOKEN?.trim() ?? '',
+    analystTokens,
     geminiApiKey: env.GEMINI_API_KEY?.trim() ?? '',
     geminiModel: env.GEMINI_MODEL?.trim() || GEMINI_MODEL,
     geminiFallbackModel: env.GEMINI_FALLBACK_MODEL?.trim() || GEMINI_FALLBACK_MODEL,
+    aiProvider: aiProviderValue as ServerAiProvider,
+    ollamaBaseUrl,
+    ollamaModel: ollamaModel || '',
     humanizeDeterministicResponses:
       env.AEBOT_HUMANIZE_DETERMINISTIC?.trim().toLowerCase() === 'true',
     bodyLimitBytes: positiveInteger(env.AEBOT_BODY_LIMIT_BYTES, 32_768),

@@ -29,6 +29,57 @@ function allowedExpressions(rule: DataRule): Set<string> {
   ]);
 }
 
+function resolveAllowedExpression(rule: DataRule, proposed: string): string | null {
+  const allowed = [...allowedExpressions(rule)];
+  if (allowed.includes(proposed)) return proposed;
+  const normalizedProposed = normalizeText(proposed).value;
+  return allowed.find(
+    (expression) => normalizeText(expression).value === normalizedProposed
+  ) ?? null;
+}
+
+interface TokenSpan {
+  normalized: string;
+  start: number;
+  end: number;
+}
+
+function tokenSpans(text: string): TokenSpan[] {
+  return [...text.matchAll(/[\p{L}\p{N}]+/gu)].flatMap((match) => {
+    const normalized = normalizeText(match[0]).tokens[0];
+    const start = match.index;
+    return normalized && start !== undefined
+      ? [{ normalized, start, end: start + match[0].length }]
+      : [];
+  });
+}
+
+/** Reconcilia acentos/caixa sem aceitar uma citação que não exista na pergunta. */
+function resolveLiteralQuote(originalQuery: string, proposedQuote: string): string | null {
+  const exactIndex = originalQuery
+    .toLocaleLowerCase('pt-BR')
+    .indexOf(proposedQuote.toLocaleLowerCase('pt-BR'));
+  if (exactIndex >= 0) {
+    return originalQuery.slice(exactIndex, exactIndex + proposedQuote.length);
+  }
+
+  const originalTokens = tokenSpans(originalQuery);
+  const proposedTokens = normalizeText(proposedQuote).tokens;
+  if (proposedTokens.length < 2 || proposedTokens.length > originalTokens.length) return null;
+  for (let start = 0; start <= originalTokens.length - proposedTokens.length; start += 1) {
+    const matches = proposedTokens.every(
+      (token, offset) => originalTokens[start + offset].normalized === token
+    );
+    if (matches) {
+      return originalQuery.slice(
+        originalTokens[start].start,
+        originalTokens[start + proposedTokens.length - 1].end
+      );
+    }
+  }
+  return null;
+}
+
 function buildCanonicalPrompt(mappings: SemanticRuleMapping[]): string | null {
   if (!mappings.length || mappings.every((item) => item.stance === 'negated_or_present')) {
     return null;
@@ -64,7 +115,7 @@ export function parseSemanticInterpretation(
     const mappings: SemanticRuleMapping[] = [];
 
     for (const rawMapping of parsed.mappings) {
-      if (!rawMapping || typeof rawMapping !== 'object' || Array.isArray(rawMapping)) return null;
+      if (!rawMapping || typeof rawMapping !== 'object' || Array.isArray(rawMapping)) continue;
       const source = rawMapping as Record<string, unknown>;
       if (
         typeof source.ruleId !== 'string' ||
@@ -73,24 +124,26 @@ export function parseSemanticInterpretation(
         typeof source.stance !== 'string' ||
         !ALLOWED_STANCES.has(source.stance as SemanticMappingStance)
       ) {
-        return null;
+        continue;
       }
 
       const rule = rulesById.get(source.ruleId);
-      if (!rule || !allowedExpressions(rule).has(source.canonicalExpression)) return null;
-      const quote = source.sourceQuote.trim();
+      if (!rule) continue;
+      const canonicalExpression = resolveAllowedExpression(rule, source.canonicalExpression);
+      if (!canonicalExpression) continue;
+      const proposedQuote = source.sourceQuote.trim();
+      const quote = resolveLiteralQuote(originalQuery, proposedQuote);
       if (
         !quote ||
-        normalizeText(quote).tokens.length < 2 ||
-        !originalQuery.toLocaleLowerCase('pt-BR').includes(quote.toLocaleLowerCase('pt-BR'))
+        normalizeText(quote).tokens.length < 2
       ) {
-        return null;
+        continue;
       }
 
       mappings.push({
         ruleId: rule.id,
         sourceQuote: quote,
-        canonicalExpression: source.canonicalExpression,
+        canonicalExpression,
         stance: source.stance as SemanticMappingStance,
       });
     }

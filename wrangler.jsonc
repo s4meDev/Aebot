@@ -1,0 +1,50 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "aebot-api",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "ai": {
+    "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "FEEDBACK_DB",
+      "database_name": "aebot-feedback",
+      "database_id": "f2a5431d-175e-471f-a4d9-ca64a8c10792",
+      "migrations_dir": "worker/migrations"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "ANALYST_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 240,
+        "period": 60
+      }
+    },
+    {
+      "name": "UNAUTHORIZED_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
+      "name": "PUBLIC_RATE_LIMITER",
+      "namespace_id": "1003",
+      "simple": {
+        "limit": 240,
+        "period": 60
+      }
+    }
+  ],
+  "vars": {
+    "AEBOT_WORKERS_AI_MODEL": "@cf/meta/llama-3.2-3b-instruct",
+    "AEBOT_BODY_LIMIT_BYTES": "32768",
+    "AEBOT_HUMANIZE_DETERMINISTIC": "false"
+  }
+}

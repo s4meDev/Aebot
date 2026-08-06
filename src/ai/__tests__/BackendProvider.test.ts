@@ -23,6 +23,7 @@ afterEach(() => {
   storageAdapter.remove(STORAGE_KEYS.BACKEND_URL);
   storageAdapter.remove(STORAGE_KEYS.BACKEND_TOKEN);
   storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+  storageAdapter.remove(STORAGE_KEYS.BACKEND_RULE_STORE_VERSION);
   vi.unstubAllGlobals();
 });
 
@@ -60,7 +61,7 @@ describe('BackendProvider', () => {
     expect(JSON.parse(String(init.body)).history).toHaveLength(1);
   });
 
-  it('não confia em decisão divergente e volta ao motor local', async () => {
+  it('não decide localmente se a resposta é inválida e a versão central é desconhecida', async () => {
     storageAdapter.set(STORAGE_KEYS.BACKEND_URL, 'http://localhost:8787');
     const response = localResponse();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
@@ -72,8 +73,28 @@ describe('BackendProvider', () => {
       'sem foto depois',
       { id: 'reparo-cavalete', name: 'Reparo de Cavalete' }
     );
-    expect(result.provider).toBe('simulated');
+    expect(result.decision).toBeNull();
+    expect(result.evaluation.insufficiencyReason).toBe('backend_unavailable');
     expect(result.fallbackReason).toBe('backend_error');
+    expect(local.generateResponse).not.toHaveBeenCalled();
+  });
+
+  it('usa a contingência local quando a versão central conhecida é igual', async () => {
+    storageAdapter.set(STORAGE_KEYS.BACKEND_URL, 'http://localhost:8787');
+    storageAdapter.set(
+      STORAGE_KEYS.BACKEND_RULE_STORE_VERSION,
+      ruleEngine.getRuleStoreVersion()
+    );
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    const local = fallback();
+
+    const result = await new BackendProvider(local).generateResponse(
+      '',
+      'sem foto depois',
+      { id: 'reparo-cavalete', name: 'Reparo de Cavalete' }
+    );
+
+    expect(result.decision).toBe('Reprovado');
     expect(result.content).toContain('modo local');
     expect(local.generateResponse).toHaveBeenCalledOnce();
   });
@@ -101,5 +122,23 @@ describe('BackendProvider', () => {
     expect(result.provider).toBe('gemini');
     expect(result.content).toContain('interpretação de IA foi feita localmente');
     expect(local.generateResponse).toHaveBeenCalledOnce();
+  });
+
+  it('não usa regras embarcadas quando a versão central conhecida é diferente', async () => {
+    storageAdapter.set(STORAGE_KEYS.BACKEND_URL, 'http://localhost:8787');
+    storageAdapter.set(STORAGE_KEYS.BACKEND_RULE_STORE_VERSION, '99.0.0');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+    const local = fallback();
+
+    const result = await new BackendProvider(local).generateResponse(
+      '',
+      'sem foto depois',
+      { id: 'reparo-cavalete', name: 'Reparo de Cavalete' }
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.evaluation.insufficiencyReason).toBe('backend_unavailable');
+    expect(result.content).toContain('possivelmente desatualizada');
+    expect(local.generateResponse).not.toHaveBeenCalled();
   });
 });

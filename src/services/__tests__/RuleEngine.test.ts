@@ -275,6 +275,41 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(result.decision).toBe('Não Conforme');
   });
 
+  it('compõe fatos confirmados por regras-base sem duplicar seus sinônimos', () => {
+    const engine = new RuleEngine(store([
+      rule({
+        id: 'stage-alpha',
+        severity: 'Não Conforme',
+        conditionKeywords: ['sem evidência alfa'],
+        factGroup: 'alpha',
+      }),
+      rule({
+        id: 'stage-beta',
+        severity: 'Não Conforme',
+        conditionKeywords: ['trabalho beta não mostrado'],
+        factGroup: 'beta',
+      }),
+      rule({
+        id: 'aggregate',
+        severity: 'Reprovado',
+        priority: 1,
+        conditionKeywords: [],
+        matchPolicy: {
+          minimumMatchedFactGroups: { count: 2, groups: ['alpha', 'beta'] },
+        },
+      }),
+    ]));
+
+    const result = engine.evaluatePrompt(
+      'Sem evidência alfa e trabalho beta não mostrado.',
+      'service-a'
+    );
+
+    expect(result.decision).toBe('Reprovado');
+    expect(result.primaryRule?.id).toBe('aggregate');
+    expect(result.primaryRule?.supportingRuleIds).toEqual(['stage-alpha', 'stage-beta']);
+  });
+
   it('usa somente as regras do serviceId selecionado', () => {
     const engine = new RuleEngine(store([
       rule({ id: 'a', serviceId: 'service-a', severity: 'Reprovado' }),

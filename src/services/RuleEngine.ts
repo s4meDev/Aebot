@@ -44,6 +44,7 @@ export class RuleEngine {
   }
 
   evaluatePrompt(prompt: string, serviceId: string): RuleEvaluationResult {
+    // 1. Entende a forma da pergunta sem decidir nada ainda.
     const normalized = normalizeText(prompt);
     const intent = classifyQueryIntent(normalized);
     const service = this.store.services.find((item) => item.id === serviceId);
@@ -75,10 +76,14 @@ export class RuleEngine {
       insights: service.insights,
     };
 
+    // 2. Procura somente nas regras do serviço realmente selecionado.
     const serviceRules = this.getRulesForService(serviceId);
     const candidates = retrieveRules(normalized, intent, serviceRules);
     const topicalCandidates = retrieveInformationalRules(normalized, serviceRules);
+    const decisionCandidates = candidates.filter((rule) => rule.severity !== null);
+    const guidanceCandidates = candidates.filter((rule) => rule.severity === null);
 
+    // 3. Perguntas sobre a regra recebem explicação, não conclusão de uma OS real.
     if (intent === 'pergunta_informativa') {
       const candidatesById = new Map<string, (typeof candidates)[number]>();
       for (const rule of [...candidates, ...topicalCandidates]) {
@@ -107,7 +112,9 @@ export class RuleEngine {
           primaryRule,
           conflicts: [],
           confidence: confidenceFromScore(primaryRule.score),
-          reasoningSummary: `A regra ${primaryRule.id} — ${primaryRule.title} prevê ${primaryRule.severity} quando o cenário nela descrito for confirmado.${additionalRules}`,
+          reasoningSummary: primaryRule.severity
+            ? `A regra ${primaryRule.id} — ${primaryRule.title} prevê ${primaryRule.severity} quando o cenário nela descrito for confirmado.${additionalRules}`
+            : `${primaryRule.message}${additionalRules}`,
           requiresHumanValidation: false,
           serviceContext,
         };
@@ -135,19 +142,27 @@ export class RuleEngine {
       }
     }
 
+    // 4. Apenas regras aplicáveis entram no ranking e no desempate final.
     const { rankedRules, primaryRule, conflicts } = resolveConflicts(
-      candidates,
+      decisionCandidates,
       this.getConclusions()
     );
 
-    if (!primaryRule) {
+    if (!primaryRule || !primaryRule.severity) {
+      const relatedById = new Map<string, (typeof candidates)[number]>();
+      for (const rule of [...guidanceCandidates, ...topicalCandidates]) {
+        const current = relatedById.get(rule.id);
+        if (!current || rule.score > current.score) relatedById.set(rule.id, rule);
+      }
       const { rankedRules: relatedRules } = resolveConflicts(
-        topicalCandidates,
+        [...relatedById.values()],
         this.getConclusions()
       );
       const hasRelatedRules = relatedRules.length > 0;
       const reasoningSummary =
-        hasRelatedRules
+        guidanceCandidates.length > 0
+          ? `A base descreve a orientação aplicável (${guidanceCandidates.map((rule) => rule.id).join(', ')}), mas os documentos não definem uma conclusão oficial para esse fato.`
+          : hasRelatedRules
           ? `Foram encontradas regras relacionadas (${relatedRules.map((rule) => rule.id).join(', ')}), mas os fatos informados não são suficientes para recomendar uma conclusão.`
           : intent === 'pergunta_informativa'
           ? 'A pergunta não descreve um fato ou cenário que corresponda a uma regra cadastrada.'
