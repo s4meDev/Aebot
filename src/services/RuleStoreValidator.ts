@@ -1,13 +1,18 @@
 import type {
+  CatalogNameStatus,
   DataRule,
   DataService,
   DecisionType,
   RuleConclusionMeta,
   RuleMatchPolicy,
   RuleStoreSchema,
+  ServiceAnalysisStatus,
+  ServiceParameterization,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.5.0';
+export const CURRENT_RULE_STORE_VERSION = '2.8.0';
+const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
+const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];
 const OFFICIAL_DECISIONS: DecisionType[] = ['Conforme', 'Não Conforme', 'Reprovado'];
 type UnknownRecord = Record<string, unknown>;
 
@@ -74,6 +79,41 @@ function optionalString(
 ): string | undefined {
   if (source[key] === undefined) return undefined;
   return requiredString(source, key, path, issues) || undefined;
+}
+
+function parseParameterization(
+  value: unknown,
+  path: string,
+  issues: string[]
+): ServiceParameterization | undefined {
+  if (value === undefined) return undefined;
+  const source = record(value);
+  if (!source) {
+    issues.push(`${path} deve ser objeto`);
+    return undefined;
+  }
+
+  const supportedKeys = [
+    'serviceExchange',
+    'executedAdditional',
+    'subsequentAdditional',
+  ] as const;
+  for (const key of Object.keys(source)) {
+    if (!supportedKeys.includes(key as typeof supportedKeys[number])) {
+      issues.push(`${path}.${key} não é uma parametrização suportada`);
+    }
+  }
+
+  const parameterization: ServiceParameterization = {};
+  for (const key of supportedKeys) {
+    const values = stringArray(source[key], `${path}.${key}`, issues);
+    if (!values) continue;
+    if (new Set(values).size !== values.length) {
+      issues.push(`${path}.${key} possui serviços duplicados`);
+    }
+    parameterization[key] = values;
+  }
+  return parameterization;
 }
 
 function parseMatchPolicy(
@@ -253,6 +293,22 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           issues.push(`${path} deve ser objeto`);
           return { id: '', name: '', category: '', summary: '', insights: [] };
         }
+        const analysisStatus = service.analysisStatus === undefined
+          ? 'active'
+          : requiredString(service, 'analysisStatus', path, issues);
+        if (!SERVICE_ANALYSIS_STATUSES.includes(analysisStatus as ServiceAnalysisStatus)) {
+          issues.push(`${path}.analysisStatus inválido`);
+        }
+        const catalogNameStatus = service.catalogNameStatus === undefined
+          ? 'confirmed'
+          : requiredString(service, 'catalogNameStatus', path, issues);
+        if (!CATALOG_NAME_STATUSES.includes(catalogNameStatus as CatalogNameStatus)) {
+          issues.push(`${path}.catalogNameStatus inválido`);
+        }
+        const sourceLabel = optionalString(service, 'sourceLabel', path, issues);
+        if (catalogNameStatus === 'needs_confirmation' && !sourceLabel) {
+          issues.push(`${path}.sourceLabel é obrigatório quando o nome precisa de confirmação`);
+        }
         return {
           id: requiredString(service, 'id', path, issues),
           name: requiredString(service, 'name', path, issues),
@@ -264,6 +320,18 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
             `${path}.suggestedQuestions`,
             issues
           ),
+          analysisStatus: SERVICE_ANALYSIS_STATUSES.includes(analysisStatus as ServiceAnalysisStatus)
+            ? analysisStatus as ServiceAnalysisStatus
+            : 'active',
+          parameterization: parseParameterization(
+            service.parameterization,
+            `${path}.parameterization`,
+            issues
+          ),
+          catalogNameStatus: CATALOG_NAME_STATUSES.includes(catalogNameStatus as CatalogNameStatus)
+            ? catalogNameStatus as CatalogNameStatus
+            : 'confirmed',
+          sourceLabel,
         };
       })
     : [];
@@ -274,6 +342,18 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
   for (const service of services) {
     if (serviceIds.has(service.id)) issues.push(`serviceId duplicado: ${service.id}`);
     serviceIds.add(service.id);
+  }
+  for (const service of services) {
+    if (!service.parameterization) continue;
+    for (const [relation, targetIds] of Object.entries(service.parameterization)) {
+      for (const targetId of targetIds ?? []) {
+        if (targetId === service.id) {
+          issues.push(`serviço ${service.id} referencia a si mesmo em ${relation}`);
+        } else if (!serviceIds.has(targetId)) {
+          issues.push(`serviço ${service.id} referencia serviço inexistente em ${relation}: ${targetId}`);
+        }
+      }
+    }
   }
 
   const rawRules = source.rules;
@@ -297,6 +377,11 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
         const parsedRule: DataRule = {
           id: requiredString(item, 'id', path, issues),
           serviceId: requiredString(item, 'serviceId', path, issues),
+          applicableServiceIds: stringArray(
+            item.applicableServiceIds,
+            `${path}.applicableServiceIds`,
+            issues
+          ),
           title: requiredString(item, 'title', path, issues),
           description: requiredString(item, 'description', path, issues),
           severity: severityValue && OFFICIAL_DECISIONS.includes(severityValue as DecisionType)
@@ -344,6 +429,17 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
     if (!serviceIds.has(rule.serviceId)) {
       issues.push(`regra ${rule.id} referencia serviço inexistente: ${rule.serviceId}`);
     }
+    const applicableServiceIds = rule.applicableServiceIds ?? [];
+    if (new Set(applicableServiceIds).size !== applicableServiceIds.length) {
+      issues.push(`regra ${rule.id} possui serviços aplicáveis duplicados`);
+    }
+    for (const applicableServiceId of applicableServiceIds) {
+      if (applicableServiceId === rule.serviceId) {
+        issues.push(`regra ${rule.id} repete o serviço principal em applicableServiceIds`);
+      } else if (!serviceIds.has(applicableServiceId)) {
+        issues.push(`regra ${rule.id} referencia serviço aplicável inexistente: ${applicableServiceId}`);
+      }
+    }
     if (rule.factGroup && !/^[a-z0-9][a-z0-9._-]*$/i.test(rule.factGroup)) {
       issues.push(`regra ${rule.id} possui factGroup inválido`);
     }
@@ -351,7 +447,12 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
     if (aggregatePolicy) {
       const availableGroups = new Set(
         rules
-          .filter((candidate) => candidate.serviceId === rule.serviceId && candidate.id !== rule.id)
+          .filter((candidate) => {
+            if (candidate.id === rule.id) return false;
+            const ruleServices = new Set([rule.serviceId, ...(rule.applicableServiceIds ?? [])]);
+            return [candidate.serviceId, ...(candidate.applicableServiceIds ?? [])]
+              .some((serviceId) => ruleServices.has(serviceId));
+          })
           .map((candidate) => candidate.factGroup)
           .filter((group): group is string => Boolean(group))
       );

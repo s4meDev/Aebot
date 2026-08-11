@@ -62,6 +62,7 @@ O fallback embarcado só pode decidir quando conhece o serviço e comprova que a
 - `src/services/TextNormalizer.ts` remove diferenças de acento, caixa, pontuação e espaços sem usar substring ingênua.
 - `src/services/QueryIntentClassifier.ts` separa relato afirmativo, hipótese, pergunta informativa e intenção insuficiente.
 - `src/services/SemanticInterpreter.ts` permite que um modelo associe linguagem livre somente a expressões cadastradas.
+- `src/services/ServiceParameterization.ts` consulta Troca, Adicional Executado e Adicional Posterior diretamente das relações cadastradas.
 
 ### 2.5 Recuperação e decisão
 
@@ -155,7 +156,7 @@ Regras que evitam acoplamento:
 
 #### `src/data`
 
-- `rulesStore.json`: serviços e regras de negócio; é a fonte de verdade funcional.
+- `rulesStore.json`: serviços e regras de negócio; é a fonte de verdade funcional. Regras idênticas entre variações usam `applicableServiceIds`, evitando cópias que poderiam divergir.
 - `languageAliases.json`: abreviações e equivalências gerais de linguagem.
 - `regressionCases.json`: frases reais que protegem o comportamento esperado da base.
 
@@ -171,8 +172,9 @@ Regras que evitam acoplamento:
 - `ConflictResolver.ts`: escolhe a regra principal sem descartar as demais.
 - `RuleEngine.ts`: coordena o resultado determinístico tipado.
 - `ResponseFormatter.ts`: formata respostas sem depender de IA.
-- `RuleStoreValidator.ts`: valida a estrutura da base em tempo de execução.
+- `RuleStoreValidator.ts`: valida a estrutura da base em tempo de execução, inclusive os serviços compartilhados por uma regra.
 - `ServiceCatalogService.ts`: expõe catálogo e versão da base.
+- `ServiceParameterization.ts`: transforma as relações entre serviços em respostas informativas, sem calcular decisão.
 - `KnowledgeService.ts`: consulta detalhes e regras de um serviço.
 - `__tests__`: testes unitários e corpus de regressão do motor.
 
@@ -256,6 +258,7 @@ Os testes ficam perto da parte que protegem:
 - `src/services/__tests__/SemanticInterpreter.test.ts`: limites da interpretação feita pelo modelo.
 - `src/services/__tests__/SemanticRuleRetriever.test.ts`: união segura de matches textuais e semânticos.
 - `src/services/__tests__/ServiceCatalogService.test.ts`: catálogo e versão central.
+- `src/services/__tests__/ServiceParameterization.test.ts`: relações, desdobros e proteção contra correspondência parcial.
 - `src/ai/__tests__/BackendClient.test.ts`: requisições, respostas e falhas HTTP.
 - `src/ai/__tests__/BackendProvider.test.ts`: backend preferencial e regras do fallback.
 - `src/ai/__tests__/GeminiProvider.test.ts`: decisão imutável, histórico e humanização.
@@ -298,7 +301,9 @@ Não escreva a regra em TypeScript para “ajudar” o motor.
 
 ### Adicionar um serviço
 
-Cadastre o serviço e suas regras no `rulesStore.json`, crie regressões próprias e valide a seleção pelo `serviceId`. Nenhum fallback deve apontar para o primeiro serviço.
+Cadastre o serviço uma única vez no `rulesStore.json`. Se as regras ainda não foram fornecidas, use `analysisStatus: "rules_pending"`; o serviço já poderá ser referenciado como original ou parametrizado, mas não produzirá decisão. Quando as regras forem cadastradas, altere o status para `active`, crie regressões próprias e valide a seleção pelo `serviceId`. Nenhum fallback deve apontar para o primeiro serviço.
+
+As opções de outro serviço devem referenciar o ID já existente em `parameterization.serviceExchange`, `executedAdditional` ou `subsequentAdditional`. Não copie o cadastro do serviço para cada lista. Se uma captura cortar o nome, registre `catalogNameStatus: "needs_confirmation"` e preserve o trecho visível em `sourceLabel` até receber o rótulo completo.
 
 ### Melhorar entendimento de linguagem
 

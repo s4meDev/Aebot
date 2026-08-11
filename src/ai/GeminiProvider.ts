@@ -485,7 +485,10 @@ export class GeminiProvider implements AiProvider {
             fallbackReason = 'invalid_response';
           }
         }
-      } else if (this.configuration.humanizeDeterministicResponses !== false) {
+      } else if (
+        !rawBaseEvaluation.errorCode &&
+        this.configuration.humanizeDeterministicResponses !== false
+      ) {
         const augmentedPrompt = buildEvaluationPrompt(prompt, evaluation);
         this.metrics.modelRequests += 1;
         const narrativeResponse = await modelClient.request(

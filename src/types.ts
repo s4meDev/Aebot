@@ -15,7 +15,18 @@ export type InsufficiencyReason =
   | 'no_matching_rule'
   | 'semantic_unavailable'
   | 'backend_unavailable'
+  | 'service_rules_pending'
   | 'service_not_found';
+
+export type ServiceAnalysisStatus = 'active' | 'rules_pending';
+export type CatalogNameStatus = 'confirmed' | 'needs_confirmation';
+
+/** Relações permitidas no sistema. Adicional também pode ser chamado de desdobro. */
+export interface ServiceParameterization {
+  serviceExchange?: string[];
+  executedAdditional?: string[];
+  subsequentAdditional?: string[];
+}
 
 export interface RuleConditionGroup {
   label: string;
@@ -46,7 +57,10 @@ export interface RuleMatchPolicy {
 
 export interface DataRule {
   id: string;
+  /** Serviço principal da regra. */
   serviceId: string;
+  /** Outros serviços que compartilham exatamente a mesma regra, sem duplicá-la na base. */
+  applicableServiceIds?: string[];
   title: string;
   description: string;
   /** Conclusão oficial. Ausente em orientações que não definem classificação da OS. */
@@ -82,6 +96,13 @@ export interface DataService {
   summary: string;
   insights: string[];
   suggestedQuestions?: string[];
+  /** Impede análise oficial enquanto as regras próprias do serviço não foram cadastradas. */
+  analysisStatus?: ServiceAnalysisStatus;
+  /** Opções configuradas para este serviço quando ele é a OS original. */
+  parameterization?: ServiceParameterization;
+  /** A captura pode cortar o final do nome; isso fica explícito até a confirmação. */
+  catalogNameStatus?: CatalogNameStatus;
+  sourceLabel?: string;
 }
 
 export interface RuleConclusionMeta {
@@ -162,7 +183,7 @@ export interface RuleEvaluationResult {
     summary: string;
     insights: string[];
   };
-  errorCode?: 'SERVICE_NOT_FOUND';
+  errorCode?: 'SERVICE_NOT_FOUND' | 'SERVICE_RULES_PENDING';
 }
 
 /** Identidade mínima do serviço selecionado na interface. */

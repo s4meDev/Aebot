@@ -105,7 +105,7 @@ export default function App() {
           type="button"
           className="config-trigger-btn"
           onClick={() => setIsConfigOpen(true)}
-          title="Configurações do Gemini"
+          title="Configurações do AEBOT"
         >
           Config
         </button>
@@ -132,7 +132,7 @@ export default function App() {
 
         {selectedService ? (
           <>
-            <ServiceDetails service={selectedService} />
+            <ServiceDetails service={selectedService} services={services} />
             <ChatPanel
               service={selectedService}
               context={chatContext}

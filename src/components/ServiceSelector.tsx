@@ -32,7 +32,7 @@ export const ServiceSelector: React.FC<ServiceSelectorProps> = ({
         )}
         {services.map((svc) => (
           <option key={svc.id} value={svc.id}>
-            {svc.name}
+            {svc.name}{svc.analysisStatus === 'rules_pending' ? ' — regras em preparação' : ''}
           </option>
         ))}
       </select>

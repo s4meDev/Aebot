@@ -17,11 +17,13 @@ Uma orientação que ensina como executar ou conferir o serviço, mas não defin
 
 1. Confirmar com o responsável qual cenário e conclusão devem ser cadastrados.
 2. Editar somente `src/data/rulesStore.json`; nunca copiar a decisão para TypeScript.
-3. Se houver documento ou observação útil, registrá-la opcionalmente em `sourceReferences`.
-4. Cadastrar expressões equivalentes específicas da regra e exemplos informais.
-5. Adicionar casos positivos e negativos em `src/data/regressionCases.json`.
-6. Executar `npm run rules:audit`, `npm test`, `npm run typecheck` e `npm run build`.
-7. Incrementar a versão da base quando o conteúdo entrar em uso.
+3. Se o serviço já estiver no catálogo com `analysisStatus: "rules_pending"`, manter o mesmo ID e completar o cadastro existente em vez de criar outro serviço.
+   Quando a mesma orientação valer integralmente para variações do serviço, mantenha uma regra principal e liste as demais em `applicableServiceIds`.
+4. Se houver documento ou observação útil, registrá-la opcionalmente em `sourceReferences`.
+5. Cadastrar expressões equivalentes específicas da regra e exemplos informais.
+6. Adicionar casos positivos e negativos em `src/data/regressionCases.json`.
+7. Executar `npm run rules:audit`, `npm test`, `npm run typecheck` e `npm run build`.
+8. Incrementar a versão da base quando o conteúdo entrar em uso.
 
 ## Critério de aceite
 

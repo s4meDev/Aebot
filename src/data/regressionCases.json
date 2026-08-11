@@ -490,5 +490,116 @@
     "outcome": "decision",
     "decision": "Reprovado",
     "minimumMatches": 3
+  },
+  {
+    "name": "consulta informal sobre trocas parametrizadas",
+    "serviceId": "reparo-cavalete",
+    "query": "Quais trocas eu posso fazer nesse serviço?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 0
+  },
+  {
+    "name": "serviço cadastrado com regras ainda pendentes",
+    "serviceId": "repavimentacao-calcada",
+    "query": "A calçada foi refeita corretamente.",
+    "intent": "indefinida",
+    "outcome": "insufficient",
+    "insufficiencyReason": "service_rules_pending",
+    "decision": null,
+    "minimumMatches": 0
+  },
+  {
+    "name": "padrão fotográfico do reparo de ramal",
+    "serviceId": "reparo-ramal-agua-asfalto",
+    "query": "Quais fotos comprovam o reparo de ramal?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "intervenção no ramal não evidenciada sem decisão inventada",
+    "serviceId": "reparo-ramal-agua-calcada",
+    "query": "Só mostrou o cavalete e não provou o conserto do ramal.",
+    "intent": "indefinida",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "padrão fotográfico do reaterro",
+    "serviceId": "reaterro-valas-terra",
+    "query": "Quais fotos comprovam o reaterro?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "compactação por camadas ausente sem classificação cadastrada",
+    "serviceId": "reaterro-valas-calcada",
+    "query": "Não mostrou compactando a vala camada por camada.",
+    "intent": "relato_afirmativo",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "troca exclusiva do registro usa substituição de registro",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual serviço usar quando foi trocado apenas o registro?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "registro e tubete permanecem reparo de cavalete",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual serviço usar quando trocaram o registro e o tubete?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "cavalete e ramal geram ramal executado",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual serviço usar se substituiu o registro e mexeu no cavalete e no ramal?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "intervenção somente no ramal usa reparo de ramal",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual serviço usar se mexeu somente no ramal?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "avaria causada pelo cliente usa hd com custo",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual serviço usar? O cliente quebrou o hidrômetro.",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "hidrômetro furtado usa hd sem custo",
+    "serviceId": "reparo-cavalete",
+    "query": "Qual serviço usar quando o hidrômetro foi furtado?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
   }
 ]

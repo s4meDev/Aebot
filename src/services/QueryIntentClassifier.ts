@@ -76,8 +76,22 @@ export function classifyQueryIntent(query: NormalizedText): QueryIntent {
       query.value.startsWith(`${normalizeMarker(marker)} `)
   );
   if (startsAsQuestion) return 'pergunta_informativa';
+  // Uma pergunta curta pode conter "sem" ou "falta" apenas para consultar
+  // o enquadramento. Em contexto acumulado, porém, um fato afirmado numa
+  // frase anterior continua sendo fato mesmo quando a continuação é curta.
+  if (query.original.includes('?')) {
+    const earlierSegments = query.segments.slice(0, -1);
+    const hasEarlierFact = earlierSegments.some(
+      (segment) => findExpressions({
+        original: segment,
+        value: segment,
+        tokens: segment.split(' '),
+        segments: [segment],
+      }, FACT_MARKERS).length > 0
+    );
+    return hasEarlierFact ? 'relato_afirmativo' : 'pergunta_informativa';
+  }
   if (findExpressions(query, FACT_MARKERS).length) return 'relato_afirmativo';
-  if (query.original.includes('?')) return 'pergunta_informativa';
   return 'indefinida';
 }
 

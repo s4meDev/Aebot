@@ -18,6 +18,35 @@ describe('RuleStoreValidator', () => {
     expect(store.rules.length).toBeGreaterThan(0);
     expect(store.rules.some((rule) => rule.severity === undefined)).toBe(true);
     expect(store.rules.some((rule) => rule.sourceReferences?.length)).toBe(true);
+    expect(store.services).toHaveLength(28);
+    expect(store.services.filter((service) => service.analysisStatus === 'rules_pending'))
+      .toHaveLength(16);
+    expect(store.rules.some((rule) => rule.applicableServiceIds?.length)).toBe(true);
+    const repair = store.services.find((service) => service.id === 'reparo-cavalete');
+    expect(repair?.parameterization?.serviceExchange).toHaveLength(10);
+    expect(repair?.parameterization?.executedAdditional).toHaveLength(9);
+    expect(repair?.parameterization?.subsequentAdditional).toHaveLength(16);
+    expect(store.services).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'substituicao-hd-com-custo', analysisStatus: 'active' }),
+      expect.objectContaining({ id: 'substituicao-hd-sem-custo', analysisStatus: 'active' }),
+    ]));
+  });
+
+  it('rejeita parametrização com serviço inexistente ou repetido', () => {
+    const store = cloneStore();
+    const services = store.services as Array<Record<string, unknown>>;
+    services[0].parameterization = {
+      serviceExchange: ['servico-inexistente', 'servico-inexistente'],
+    };
+    expect(() => parseRuleStore(store)).toThrow(/duplicados|inexistente/);
+  });
+
+  it('exige o rótulo visível quando o nome precisa de confirmação', () => {
+    const store = cloneStore();
+    const services = store.services as Array<Record<string, unknown>>;
+    services[1].catalogNameStatus = 'needs_confirmation';
+    delete services[1].sourceLabel;
+    expect(() => parseRuleStore(store)).toThrow(/sourceLabel/);
   });
 
   it('rejeita uma quarta conclusão oficial', () => {
@@ -36,6 +65,13 @@ describe('RuleStoreValidator', () => {
     const rules = store.rules as Array<Record<string, unknown>>;
     rules.push({ ...rules[0], serviceId: 'inexistente' });
     expect(() => parseRuleStore(store)).toThrow(/duplicado|inexistente/);
+  });
+
+  it('rejeita serviço compartilhado inexistente ou repetido na regra', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    rules[0].applicableServiceIds = [rules[0].serviceId, 'servico-inexistente'];
+    expect(() => parseRuleStore(store)).toThrow(/applicableServiceIds|aplicável inexistente/);
   });
 
   it('rejeita hierarquia oficial de gravidade invertida', () => {

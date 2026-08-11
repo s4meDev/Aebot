@@ -38,6 +38,18 @@ const CONTINUATION_EXPRESSIONS = [
 
 const SHORT_CONTINUATIONS = new Set(['por que', 'porque', 'e agora', 'e ai']);
 
+const CARRIED_FACT_PREFIXES = [
+  ['nao foi apresentada', 'não foi apresentada'],
+  ['nao apresentou', 'não apresentou'],
+  ['nao mostrou', 'não mostrou'],
+  ['nao tem', 'não tem'],
+  ['faltaram', 'faltaram'],
+  ['faltou', 'faltou'],
+  ['faltam', 'faltam'],
+  ['falta', 'falta'],
+  ['sem', 'sem'],
+] as const;
+
 const CORRECTION_PREFIXES = [
   'na verdade',
   'corrigindo',
@@ -114,6 +126,21 @@ function lastUserMessage(history: AiMessage[]): AiMessage | undefined {
   return undefined;
 }
 
+function expandAdditiveContinuation(previousText: string, current: string): string {
+  const normalizedPrevious = normalizeText(previousText).value;
+  const normalizedCurrent = normalizeText(current).value;
+  if (!normalizedCurrent.startsWith('e ') || !normalizedCurrent.includes(' tambem')) {
+    return current;
+  }
+  const carriedPrefix = CARRIED_FACT_PREFIXES.find(
+    ([marker]) => normalizedPrevious === marker || normalizedPrevious.startsWith(`${marker} `)
+  );
+  if (!carriedPrefix) return current;
+
+  const withoutLeadingConnector = current.trim().replace(/^e\s+/iu, '');
+  return `${carriedPrefix[1]} ${withoutLeadingConnector}`;
+}
+
 /**
  * Une somente continuações linguísticas explícitas à última pergunta do analista.
  * A função não interpreta fatos nem decisões; apenas resolve a referência textual.
@@ -137,8 +164,11 @@ export function resolveContextualQuery(
     return { query: current, contextApplied: false };
   }
 
+  const expandedCurrent = expandAdditiveContinuation(previousText, current);
   return {
-    query: `${previousText} ${current}`,
+    // Mantém a fronteira entre a mensagem anterior e a continuação. Isso
+    // evita que a interrogação da frase nova transforme o fato anterior em pergunta.
+    query: `${previousText}. ${expandedCurrent}`,
     contextApplied: true,
     mode: isCorrection ? 'correction' : 'continuation',
     sourceMessageId: previous.id,

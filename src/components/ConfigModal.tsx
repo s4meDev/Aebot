@@ -26,6 +26,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
   const [backendToken, setBackendToken] = useState('');
   const [saved, setSaved] = useState(false);
   const [backendError, setBackendError] = useState('');
+  const [tokenError, setTokenError] = useState('');
   const [connectionTest, setConnectionTest] = useState<ConnectionTestState>({ state: 'idle' });
 
   useEffect(() => {
@@ -40,28 +41,58 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
       setBackendToken(storageAdapter.get<string>(STORAGE_KEYS.BACKEND_TOKEN, ''));
       setSaved(false);
       setBackendError('');
+      setTokenError('');
       setConnectionTest({ state: 'idle' });
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    let validatedRuleStoreVersion: string | undefined;
     const normalizedBackendUrl = normalizeBackendUrl(backendUrl);
     if (backendUrl.trim() && !normalizedBackendUrl) {
       setBackendError('Use HTTPS ou, neste computador, localhost/127.0.0.1 com HTTP.');
       return;
     }
+    const normalizedToken = backendToken.trim();
+    if (packagedBackendUrl && !normalizedToken) {
+      setTokenError('Informe o token individual entregue a este analista.');
+      return;
+    }
+    if (packagedBackendUrl && normalizedBackendUrl) {
+      setConnectionTest({ state: 'checking' });
+      const access = await checkBackendAccess(normalizedBackendUrl, normalizedToken);
+      if (access.state !== 'online') {
+        setConnectionTest(access);
+        setTokenError(access.state === 'offline'
+          ? access.message
+          : 'Não foi possível validar este acesso.');
+        return;
+      }
+      validatedRuleStoreVersion = access.catalog.ruleStoreVersion;
+      setConnectionTest({ state: 'online', health: access.health });
+    }
     const previousBackendUrl = normalizeBackendUrl(
       storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
     );
-    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, apiKey.trim());
+    if (packagedBackendUrl) {
+      storageAdapter.remove(STORAGE_KEYS.GEMINI_API_KEY);
+    } else {
+      storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, apiKey.trim());
+    }
     storageAdapter.set(STORAGE_KEYS.GEMINI_MODEL, model);
     storageAdapter.set(STORAGE_KEYS.BACKEND_URL, normalizedBackendUrl ?? '');
-    storageAdapter.set(STORAGE_KEYS.BACKEND_TOKEN, backendToken.trim());
+    storageAdapter.set(STORAGE_KEYS.BACKEND_TOKEN, normalizedToken);
     if (previousBackendUrl !== normalizedBackendUrl) {
       storageAdapter.remove(STORAGE_KEYS.BACKEND_RULE_STORE_VERSION);
+    }
+    if (validatedRuleStoreVersion) {
+      storageAdapter.set(
+        STORAGE_KEYS.BACKEND_RULE_STORE_VERSION,
+        validatedRuleStoreVersion
+      );
     }
     setBackendUrl(normalizedBackendUrl ?? '');
     setBackendError('');
@@ -105,8 +136,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>
-            <span className="eyebrow-inline">Configurações de IA</span>
-            <h3>Conexões do assistente</h3>
+            <span className="eyebrow-inline">Configuração do AEBOT</span>
+            <h3>{packagedBackendUrl ? 'Acesso do analista' : 'Conexões do assistente'}</h3>
           </div>
           <button className="icon-btn" onClick={onClose} title="Fechar">
             ✕
@@ -166,14 +197,25 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
           </div>
 
           <label className="form-group">
-            <span className="label-text">Token do backend (opcional)</span>
+            <span className="label-text">
+              {packagedBackendUrl ? 'Token individual do analista' : 'Token do backend (opcional)'}
+            </span>
             <input
               type="password"
               className="input-field"
-              placeholder="Somente se configurado no servidor"
+              placeholder={packagedBackendUrl
+                ? 'Cole o token recebido para este analista'
+                : 'Somente se configurado no servidor'}
               value={backendToken}
-              onChange={(e) => setBackendToken(e.target.value)}
+              required={Boolean(packagedBackendUrl)}
+              autoComplete="off"
+              onChange={(e) => {
+                setBackendToken(e.target.value);
+                setTokenError('');
+                setConnectionTest({ state: 'idle' });
+              }}
             />
+            {tokenError && <span className="help-text danger-text">{tokenError}</span>}
           </label>
 
           {!packagedBackendUrl && <label className="form-group">
@@ -223,8 +265,12 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
             <button type="button" className="secondary-btn" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="primary-btn">
-              Salvar Alterações
+            <button
+              type="submit"
+              className="primary-btn"
+              disabled={connectionTest.state === 'checking'}
+            >
+              {connectionTest.state === 'checking' ? 'Validando…' : 'Salvar Alterações'}
             </button>
           </div>
         </form>

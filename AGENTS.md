@@ -34,3 +34,7 @@
 - Feedback é persistido no D1 somente quando o analista envia o formulário. Nunca anexe automaticamente pergunta, resposta ou histórico do chat.
 - A leitura de feedback usa token administrativo separado e armazenado como hash em secret; tokens comuns de analistas nunca autorizam rotas administrativas.
 - Conteúdo do feedback pode ser exibido apenas com renderização segura e nunca deve ser incluído em logs operacionais.
+- Serviços de Troca, Adicional Executado e Adicional Posterior são entidades únicas do catálogo e também podem ser a OS original; as listas de parametrização devem referenciar seus IDs, nunca duplicar seus cadastros.
+- Serviço já conhecido, mas ainda sem regras próprias, usa `analysisStatus: rules_pending` e sempre retorna `decision: null` até que as regras sejam fornecidas e o status passe para `active`.
+- Regras realmente idênticas entre variações de um serviço devem ser cadastradas uma vez com `applicableServiceIds`; diferenças por revestimento ou execução continuam orientadas pelos dados, nunca por ramificações no motor.
+- Enquadramento atual: somente registro = Substituição de Registro; registro mais outra peça do cavalete = Reparo de Cavalete; cavalete mais ramal = Reparo de Cavalete com Reparo de Ramal executado; somente ramal = Reparo de Ramal. Substituição de HD é com custo apenas quando a avaria é atribuída ao cliente e sem custo nos demais motivos, inclusive erro, quebra ou furto.

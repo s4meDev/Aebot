@@ -15,7 +15,7 @@ describe('ConversationContextResolver', () => {
   it('liga continuação explícita somente à última mensagem do analista', () => {
     const result = resolveContextualQuery('E durante também?', history);
     expect(result).toEqual({
-      query: 'Faltou a foto antes E durante também?',
+      query: 'Faltou a foto antes. faltou durante também?',
       contextApplied: true,
       mode: 'continuation',
       sourceMessageId: 'previous-user',
@@ -60,7 +60,7 @@ describe('ConversationContextResolver', () => {
 
     const result = resolveContextualQuery('E depois também?', chainedHistory);
     expect(result.contextApplied).toBe(true);
-    expect(result.query).toBe('faltou a foto antes e durante tambem E depois também?');
+    expect(result.query).toBe('faltou a foto antes e durante tambem. faltou depois também?');
     expect(result.sourceMessageId).toBe('second-user');
   });
 

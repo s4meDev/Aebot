@@ -209,6 +209,11 @@ export function retrieveRules(
 function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedRule | null {
   const lastSegment = query.segments[query.segments.length - 1] ?? query.value;
   const topicQuery = normalizeText(lastSegment);
+  // Exceções também valem em consultas: um tema relacionado não pode sugerir
+  // uma orientação que os próprios dados excluem para o cenário perguntado.
+  if (findExpressions(topicQuery, rule.exceptions).length) {
+    return null;
+  }
   const topicExpressions = unique([
     ...(rule.topicKeywords ?? []),
     ...(rule.relatedEvidence ?? []),

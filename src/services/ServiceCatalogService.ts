@@ -64,6 +64,10 @@ export class ServiceCatalogService {
       summary: service.summary,
       insights: service.insights,
       suggestedQuestions: service.suggestedQuestions,
+      analysisStatus: service.analysisStatus,
+      parameterization: service.parameterization,
+      catalogNameStatus: service.catalogNameStatus,
+      sourceLabel: service.sourceLabel,
       businessRules: localById.get(service.id)?.businessRules ?? [],
     }));
 

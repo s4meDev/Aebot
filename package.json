@@ -1,6 +1,6 @@
 {
   "name": "field-service-assistant",
-  "version": "2.6.2",
+  "version": "2.8.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -28,6 +28,7 @@
     "extension:identity:generate": "node scripts/generate-extension-identity.mjs",
     "cloudflare:secrets:configure": "node scripts/configure-cloudflare-secrets.mjs",
     "deployment:check": "node scripts/verify-production-deployment.mjs",
+    "pilot:check": "node scripts/validate-pilot-readiness.mjs",
     "rules:audit": "node scripts/audit-rules.mjs",
     "validate": "npm test && npm run build:all && node scripts/validate-extension.mjs && node scripts/validate-server.mjs",
     "preview": "vite preview"

@@ -12,6 +12,20 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
+function productionOriginFromPermission(permission) {
+  if (typeof permission !== 'string' || !permission.endsWith('/*')) return null;
+  try {
+    const url = new URL(permission.slice(0, -2));
+    if (
+      url.protocol !== 'https:' || url.username || url.password || url.search || url.hash ||
+      (url.pathname !== '/' && url.pathname !== '')
+    ) return null;
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
 function requireFile(relativePath) {
   const filePath = path.join(distDirectory, relativePath);
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
@@ -49,15 +63,31 @@ const expectedHostPermissions = [
   'http://127.0.0.1/*',
   'http://localhost/*',
 ];
-if (
+const isDevelopmentProfile = (
   hostPermissions.length !== expectedHostPermissions.length ||
   expectedHostPermissions.some((permission) => !hostPermissions.includes(permission))
-) {
-  fail('permissão externa ausente ou mais ampla que o endpoint Gemini');
+)
+  ? false
+  : true;
+const productionOrigin = hostPermissions.length === 1
+  ? productionOriginFromPermission(hostPermissions[0])
+  : null;
+const isProductionProfile = Boolean(productionOrigin) &&
+  hostPermissions[0] !== 'https://generativelanguage.googleapis.com/*' &&
+  typeof manifest.key === 'string' &&
+  /^[A-Za-z0-9+/]+={0,2}$/.test(manifest.key);
+if (!isDevelopmentProfile && !isProductionProfile) {
+  fail('host_permissions não corresponde ao perfil local nem ao pacote empresarial');
 }
 
 const extensionPolicy = manifest.content_security_policy?.extension_pages ?? '';
-if (!extensionPolicy.includes('http://127.0.0.1:*')) fail('CSP não permite backend local');
+if (isDevelopmentProfile && !extensionPolicy.includes('http://127.0.0.1:*')) {
+  fail('CSP não permite backend local no perfil de desenvolvimento');
+}
+if (isProductionProfile) {
+  const expectedPolicy = `script-src 'self'; object-src 'self'; connect-src ${productionOrigin}`;
+  if (extensionPolicy !== expectedPolicy) fail('CSP do pacote empresarial não está restrita à API');
+}
 if (!extensionPolicy.includes("script-src 'self'")) fail('CSP não restringe scripts locais');
 if (extensionPolicy.includes('unsafe-eval')) fail('CSP contém unsafe-eval');
 

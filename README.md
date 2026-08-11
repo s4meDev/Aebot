@@ -45,7 +45,9 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - feedback persistente em Cloudflare D1;
 - painel administrativo protegido por credencial separada;
 - Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
-- serviço **Reparo de Cavalete** cadastrado na base atual.
+- 28 serviços cadastrados no catálogo, incluindo Substituição de HD com e sem custo;
+- regras e orientações ativas para **Reparo de Cavalete**, cinco variações de **Reparo de Ramal**, três variações de **Reaterro de Valas**, **Substituição de Registro** e **Substituição de HD com/sem custo**;
+- critérios de desdobro para ramal, reaterro e repavimentação cadastrados; falhas sem conclusão oficial definida continuam sem decisão automática.
 
 ## Carregar a extensão no Chrome
 
@@ -72,6 +74,7 @@ O pacote oficial para os analistas deve ser criado com `npm run build:production
 - Painel de feedback: [aebot-api.pedrolucasbotelho.workers.dev/admin](https://aebot-api.pedrolucasbotelho.workers.dev/admin)
 
 O procedimento completo de publicação, geração de credenciais e instalação está em [Implantação para 40 analistas](docs/DEPLOYMENT-40-USERS.md).
+O material simplificado que deve acompanhar o piloto está em [Guia rápido para teste dos analistas](docs/GUIA-TESTE-ANALISTAS.md).
 
 ## Desenvolvimento local
 
@@ -141,7 +144,8 @@ Nunca adicione chaves em variáveis `VITE_*`, pois elas seriam incorporadas ao p
 
 ## Limitações conhecidas
 
-- a base atual contém apenas o serviço Reparo de Cavalete;
+- somente o Reparo de Cavalete de Água possui regras de decisão nesta etapa;
+- seis nomes reconstruídos de rótulos cortados aguardam confirmação em uma captura completa;
 - os acessos técnicos ainda precisam ser associados aos analistas reais durante o piloto;
 - serviços e regras novas precisam ser cadastrados e protegidos por testes de regressão;
 - cotas gratuitas de provedores de IA não são consideradas ilimitadas.

@@ -27,8 +27,11 @@ describe('ServiceCatalogService', () => {
     expect(result).toMatchObject({
       type: 'success',
       source: 'local',
-      services: [expect.objectContaining({ id: 'reparo-cavalete' })],
     });
+    expect(result.services).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'reparo-cavalete', analysisStatus: 'active' }),
+      expect.objectContaining({ id: 'repavimentacao-calcada', analysisStatus: 'rules_pending' }),
+    ]));
   });
 
   it('prefere o catálogo autenticado e registra a versão central', async () => {

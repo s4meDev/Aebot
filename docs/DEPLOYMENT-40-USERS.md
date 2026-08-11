@@ -111,6 +111,12 @@ npm run worker:deploy
 npm run deployment:check -- https://aebot-api.pedrolucasbotelho.workers.dev
 ```
 
+Com o pacote empresarial já gerado, confira também arquivos, 40 credenciais e identidade sem exibir valores privados:
+
+```powershell
+npm run pilot:check -- https://aebot-api.pedrolucasbotelho.workers.dev
+```
+
 O `wrangler.jsonc` já configura Workers AI, limite de 240 requisições por minuto por analista, limite menor para acessos não autenticados e corpo máximo de 32 KiB.
 
 Gemini é opcional. Se a política de dados permitir e for necessário como contingência:

@@ -285,6 +285,55 @@ button, input, textarea, select {
   flex: 1;
 }
 
+.service-pending-notice,
+.service-name-notice {
+  padding: 7px 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.service-name-notice {
+  color: var(--badge-nc-text);
+}
+
+.parameterization-container {
+  max-height: 230px;
+  overflow-y: auto;
+}
+
+.parameterization-groups {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.parameterization-group h3 {
+  margin-bottom: 4px;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+}
+
+.parameterization-group ul {
+  display: grid;
+  gap: 3px;
+  padding-left: 16px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.parameterization-help {
+  color: var(--text-muted);
+  font-size: 0.67rem;
+  line-height: 1.35;
+}
+
 /* AI Chat Shell */
 .chat-shell {
   display: flex;

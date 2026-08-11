@@ -58,6 +58,12 @@ O Cloudflare Worker é o destino principal do MVP online. O backend Node permane
 
 A IA interpreta linguagem livre e humaniza; nunca escolhe ou altera a conclusão determinística.
 
+Cada serviço possui parametrização própria e pode aparecer como serviço original de uma OS. As relações de Troca de Serviço, Adicional Executado e Adicional Posterior (também chamado de desdobro) apontam para os mesmos serviços do catálogo, sem criar cópias. Um serviço cadastrado sem regras permanece com `decision: null` até que suas regras próprias sejam fornecidas.
+
+Reparo de Ramal e Reaterro de Valas possuem diretrizes fotográficas compartilhadas entre suas variações de revestimento. Essas diretrizes verificam local, antes, execução, metragem e finalização conforme o serviço, mas só geram uma das três conclusões oficiais quando existir regra classificatória explícita para o fato observado.
+
+No enquadramento da execução: troca exclusiva do registro usa Substituição de Registro; registro acompanhado de intervenção em outra peça permanece Reparo de Cavalete; intervenção no cavalete e no ramal mantém Reparo de Cavalete com Reparo de Ramal no executado; intervenção somente no ramal usa Reparo de Ramal. Substituição de HD é com custo apenas quando a avaria é atribuída ao cliente e sem custo para os demais motivos, inclusive erro, quebra e furto.
+
 ---
 
 # Prioridades

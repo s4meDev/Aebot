@@ -118,6 +118,52 @@ describe('BackendClient', () => {
       .toMatchObject({ state: 'offline', statusCode: 401, message: expect.stringContaining('token') });
   });
 
+  it('preserva status e relações da parametrização recebida do backend', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({
+      ruleStoreVersion: '2.6.0',
+      services: [
+        {
+          id: 'servico-a',
+          name: 'Serviço A',
+          category: 'Campo',
+          summary: 'Resumo',
+          insights: [],
+          analysisStatus: 'rules_pending',
+          catalogNameStatus: 'needs_confirmation',
+          sourceLabel: 'SERVIÇO A...',
+          parameterization: {
+            subsequentAdditional: ['servico-b'],
+          },
+          ruleCount: 0,
+        },
+        {
+          id: 'servico-b',
+          name: 'Serviço B',
+          category: 'Campo',
+          summary: 'Resumo',
+          insights: [],
+          analysisStatus: 'rules_pending',
+          ruleCount: 0,
+        },
+      ],
+    }), { status: 200 })));
+
+    await expect(fetchBackendCatalog('https://aebot.example', 'token')).resolves.toMatchObject({
+      state: 'online',
+      catalog: {
+        services: [
+          expect.objectContaining({
+            analysisStatus: 'rules_pending',
+            catalogNameStatus: 'needs_confirmation',
+            sourceLabel: 'SERVIÇO A...',
+            parameterization: { subsequentAdditional: ['servico-b'] },
+          }),
+          expect.objectContaining({ id: 'servico-b' }),
+        ],
+      },
+    });
+  });
+
   it('recusa acesso operacional quando saúde e catálogo divergem', async () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({

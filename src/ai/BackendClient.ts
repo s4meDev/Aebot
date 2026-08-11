@@ -1,4 +1,4 @@
-import type { DataService } from '../types';
+import type { DataService, ServiceParameterization } from '../types';
 
 const HEALTH_TIMEOUT_MS = 3_000;
 const CATALOG_TIMEOUT_MS = 5_000;
@@ -112,6 +112,31 @@ function isStringList(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
+function parseParameterization(value: unknown): ServiceParameterization | null | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const source = value as Record<string, unknown>;
+  const supportedKeys = [
+    'serviceExchange',
+    'executedAdditional',
+    'subsequentAdditional',
+  ] as const;
+  if (Object.keys(source).some((key) => !supportedKeys.includes(
+    key as typeof supportedKeys[number]
+  ))) return null;
+  const result: ServiceParameterization = {};
+  for (const key of supportedKeys) {
+    if (source[key] === undefined) continue;
+    if (
+      !isStringList(source[key]) ||
+      source[key].some((item) => !item.trim()) ||
+      new Set(source[key]).size !== source[key].length
+    ) return null;
+    result[key] = source[key];
+  }
+  return result;
+}
+
 function parseCatalog(value: unknown): BackendCatalog | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const source = value as Record<string, unknown>;
@@ -120,6 +145,7 @@ function parseCatalog(value: unknown): BackendCatalog | null {
   const services = source.services.flatMap((value): BackendCatalog['services'] => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
     const service = value as Record<string, unknown>;
+    const parameterization = parseParameterization(service.parameterization);
     if (
       typeof service.id !== 'string' || !service.id ||
       typeof service.name !== 'string' || !service.name ||
@@ -127,6 +153,10 @@ function parseCatalog(value: unknown): BackendCatalog | null {
       typeof service.summary !== 'string' || !service.summary ||
       !isStringList(service.insights) ||
       (service.suggestedQuestions !== undefined && !isStringList(service.suggestedQuestions)) ||
+      (service.analysisStatus !== undefined && !['active', 'rules_pending'].includes(String(service.analysisStatus))) ||
+      (service.catalogNameStatus !== undefined && !['confirmed', 'needs_confirmation'].includes(String(service.catalogNameStatus))) ||
+      (service.sourceLabel !== undefined && typeof service.sourceLabel !== 'string') ||
+      parameterization === null ||
       !Number.isInteger(service.ruleCount) || (service.ruleCount as number) < 0
     ) {
       return [];
@@ -138,10 +168,21 @@ function parseCatalog(value: unknown): BackendCatalog | null {
       summary: service.summary,
       insights: service.insights,
       suggestedQuestions: service.suggestedQuestions as string[] | undefined,
+      analysisStatus: service.analysisStatus as DataService['analysisStatus'],
+      parameterization,
+      catalogNameStatus: service.catalogNameStatus as DataService['catalogNameStatus'],
+      sourceLabel: service.sourceLabel as string | undefined,
       ruleCount: service.ruleCount as number,
     }];
   });
   if (!services.length || services.length !== source.services.length) return null;
+  const serviceIds = new Set(services.map((service) => service.id));
+  const hasBrokenRelation = services.some((service) => (
+    Object.values(service.parameterization ?? {}) as Array<string[] | undefined>
+  ).some((targetIds) => targetIds?.some((targetId: string) => (
+    targetId === service.id || !serviceIds.has(targetId)
+  ))));
+  if (hasBrokenRelation) return null;
   return { ruleStoreVersion: source.ruleStoreVersion, services };
 }
 

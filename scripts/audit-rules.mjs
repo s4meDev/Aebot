@@ -21,11 +21,38 @@ const structuralErrors = [];
 const warnings = [];
 const expressionOwners = new Map();
 
+for (const service of store.services) {
+  for (const [relation, targetIds] of Object.entries(service.parameterization ?? {})) {
+    if (new Set(targetIds).size !== targetIds.length) {
+      structuralErrors.push(`${service.id}.${relation}: serviço duplicado`);
+    }
+    for (const targetId of targetIds) {
+      if (!serviceIds.has(targetId)) {
+        structuralErrors.push(`${service.id}.${relation}: serviço inexistente ${targetId}`);
+      }
+      if (targetId === service.id) {
+        structuralErrors.push(`${service.id}.${relation}: autorreferência não permitida`);
+      }
+    }
+  }
+}
+
 for (const rule of store.rules) {
   if (ids.has(rule.id)) structuralErrors.push(`ID duplicado: ${rule.id}`);
   ids.add(rule.id);
   if (!serviceIds.has(rule.serviceId)) {
     structuralErrors.push(`${rule.id}: serviço inexistente ${rule.serviceId}`);
+  }
+  for (const applicableServiceId of rule.applicableServiceIds ?? []) {
+    if (!serviceIds.has(applicableServiceId)) {
+      structuralErrors.push(`${rule.id}: serviço aplicável inexistente ${applicableServiceId}`);
+    }
+    if (applicableServiceId === rule.serviceId) {
+      structuralErrors.push(`${rule.id}: serviço principal repetido em applicableServiceIds`);
+    }
+  }
+  if (new Set(rule.applicableServiceIds ?? []).size !== (rule.applicableServiceIds ?? []).length) {
+    structuralErrors.push(`${rule.id}: serviço aplicável duplicado`);
   }
   if (rule.severity !== undefined && !officialDecisions.has(rule.severity)) {
     structuralErrors.push(`${rule.id}: conclusão não oficial ${rule.severity}`);
@@ -41,10 +68,12 @@ for (const rule of store.rules) {
   for (const expression of expressions) {
     const normalized = normalize(expression);
     if (!normalized) continue;
-    const key = `${rule.serviceId}:${normalized}`;
-    const owners = expressionOwners.get(key) ?? [];
-    owners.push({ id: rule.id, severity: rule.severity ?? null });
-    expressionOwners.set(key, owners);
+    for (const serviceId of [rule.serviceId, ...(rule.applicableServiceIds ?? [])]) {
+      const key = `${serviceId}:${normalized}`;
+      const owners = expressionOwners.get(key) ?? [];
+      owners.push({ id: rule.id, severity: rule.severity ?? null });
+      expressionOwners.set(key, owners);
+    }
   }
 }
 
@@ -59,8 +88,13 @@ for (const [key, owners] of expressionOwners) {
 
 const decisionRules = store.rules.filter((rule) => rule.severity);
 const guidanceRules = store.rules.filter((rule) => !rule.severity);
+const pendingServices = store.services.filter((service) => service.analysisStatus === 'rules_pending');
+const namesToConfirm = store.services.filter(
+  (service) => service.catalogNameStatus === 'needs_confirmation'
+);
 console.log(`Base ${store.version}: ${store.services.length} serviço(s), ${store.rules.length} regra(s).`);
 console.log(`Classificatórias: ${decisionRules.length}; orientativas: ${guidanceRules.length}.`);
+console.log(`Serviços com regras pendentes: ${pendingServices.length}; nomes a confirmar: ${namesToConfirm.length}.`);
 if (warnings.length) {
   console.log(`Avisos de governança (${warnings.length}):`);
   for (const warning of warnings) console.log(`- ${warning}`);

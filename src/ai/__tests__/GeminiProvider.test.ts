@@ -406,6 +406,24 @@ describe('GeminiProvider', () => {
     expect(response.decision).toBe('Reprovado');
   });
 
+  it('não chama IA quando o serviço ainda não possui regras próprias', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new GeminiProvider(ruleEngine, {
+      getApiKey: () => 'test-key',
+    });
+
+    const response = await provider.generateResponse(
+      '',
+      'O acabamento ficou correto.',
+      { id: 'repavimentacao-calcada', name: 'Repavimentação - Calçada' }
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.insufficiencyReason).toBe('service_rules_pending');
+  });
+
   it('mantém a decisão determinística quando o modelo tenta alterá-la', async () => {
     storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({

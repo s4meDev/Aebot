@@ -11,6 +11,7 @@ import { classifyQueryIntent, isServiceOverviewQuestion } from './QueryIntentCla
 import { resolveConflicts } from './ConflictResolver';
 import { retrieveInformationalRules, retrieveRules } from './RuleRetriever';
 import { normalizeText } from './TextNormalizer';
+import { describeServiceParameterization } from './ServiceParameterization';
 import { parseRuleStore } from './RuleStoreValidator';
 
 function confidenceFromScore(score: number | undefined): ConfidenceLevel {
@@ -32,7 +33,9 @@ export class RuleEngine {
   }
 
   getRulesForService(serviceId: string): DataRule[] {
-    return this.store.rules.filter((rule) => rule.serviceId === serviceId);
+    return this.store.rules.filter((rule) => (
+      rule.serviceId === serviceId || rule.applicableServiceIds?.includes(serviceId)
+    ));
   }
 
   getConclusions(): RuleConclusionMeta[] {
@@ -67,6 +70,32 @@ export class RuleEngine {
         requiresHumanValidation: true,
         insufficiencyReason: 'service_not_found',
         errorCode: 'SERVICE_NOT_FOUND',
+      };
+    }
+
+    if (service.analysisStatus === 'rules_pending') {
+      return {
+        serviceId,
+        ruleStoreVersion: this.store.version,
+        normalizedQuery: normalized.value,
+        contextApplied: false,
+        intent,
+        outcome: 'insufficient',
+        decision: null,
+        hasSufficientEvidence: false,
+        matchedRules: [],
+        primaryRule: null,
+        conflicts: [],
+        confidence: 'insuficiente',
+        reasoningSummary: `O serviço ${service.name} já está cadastrado, mas suas regras de análise ainda não foram fornecidas.`,
+        requiresHumanValidation: true,
+        insufficiencyReason: 'service_rules_pending',
+        serviceContext: {
+          name: service.name,
+          summary: service.summary,
+          insights: service.insights,
+        },
+        errorCode: 'SERVICE_RULES_PENDING',
       };
     }
 
@@ -115,6 +144,31 @@ export class RuleEngine {
           reasoningSummary: primaryRule.severity
             ? `A regra ${primaryRule.id} — ${primaryRule.title} prevê ${primaryRule.severity} quando o cenário nela descrito for confirmado.${additionalRules}`
             : `${primaryRule.message}${additionalRules}`,
+          requiresHumanValidation: false,
+          serviceContext,
+        };
+      }
+
+      const parameterizationSummary = describeServiceParameterization(
+        normalized,
+        service,
+        this.store.services
+      );
+      if (parameterizationSummary) {
+        return {
+          serviceId,
+          ruleStoreVersion: this.store.version,
+          normalizedQuery: normalized.value,
+          contextApplied: false,
+          intent,
+          outcome: 'informational',
+          decision: null,
+          hasSufficientEvidence: false,
+          matchedRules: [],
+          primaryRule: null,
+          conflicts: [],
+          confidence: 'alta',
+          reasoningSummary: parameterizationSummary,
           requiresHumanValidation: false,
           serviceContext,
         };

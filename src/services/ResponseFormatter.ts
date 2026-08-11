@@ -54,6 +54,8 @@ export function formatEvaluationResponse(
         ? 'Tente novamente. Se o problema persistir, valide o caso com o responsável; não altere a base somente por esta falha técnica.'
       : evaluation.insufficiencyReason === 'service_not_found'
         ? 'Selecione um serviço válido antes de realizar a análise.'
+      : evaluation.insufficiencyReason === 'service_rules_pending'
+        ? 'Valide este caso com o responsável até que as regras próprias desse serviço sejam cadastradas.'
       : evaluation.insufficiencyReason === 'backend_unavailable'
         ? 'Restabeleça o backend central ou peça suporte. Esta análise não usará uma base local possivelmente desatualizada.'
         : 'Valide com o responsável e cadastre ou atualize a regra necessária na base.';

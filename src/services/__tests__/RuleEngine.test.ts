@@ -330,6 +330,188 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(result.requiresHumanValidation).toBe(true);
   });
 
+  it('não decide serviço cuja parametrização existe mas as regras ainda estão pendentes', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'O serviço foi executado corretamente.',
+      'repavimentacao-calcada'
+    );
+    expect(result.decision).toBeNull();
+    expect(result.errorCode).toBe('SERVICE_RULES_PENDING');
+    expect(result.insufficiencyReason).toBe('service_rules_pending');
+    expect(result.requiresHumanValidation).toBe(true);
+  });
+
+  it('responde informativamente com a parametrização cadastrada', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Quais serviços estão disponíveis na parametrização?',
+      selectedServiceId
+    );
+    expect(result.outcome).toBe('informational');
+    expect(result.decision).toBeNull();
+    expect(result.requiresHumanValidation).toBe(false);
+    expect(result.reasoningSummary).toContain('Troca de Serviço:');
+    expect(result.reasoningSummary).toContain('Adicional Executado:');
+    expect(result.reasoningSummary).toContain('Adicional Posterior:');
+  });
+
+  it('explica quando aceitar reparo de ramal como adicional executado', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Quando posso lançar reparo de ramal no adicional executado?',
+      selectedServiceId
+    );
+
+    expect(result.outcome).toBe('informational');
+    expect(result.decision).toBeNull();
+    expect(result.reasoningSummary).toContain('Adicional Executado');
+    expect(result.reasoningSummary).toContain('intervenção no ramal');
+  });
+
+  it('explica a variação do ramal para bloco e revestimentos equivalentes', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Qual ramal usar se o piso é pedra portuguesa?',
+      selectedServiceId
+    );
+
+    expect(result.outcome).toBe('informational');
+    expect(result.decision).toBeNull();
+    expect(result.reasoningSummary).toContain('Bloco/Paralelo');
+  });
+
+  it('não recomenda Furto/Vandalismo como executado', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Posso colocar furto e vandalismo no executado?',
+      selectedServiceId
+    );
+
+    expect(result.outcome).toBe('informational');
+    expect(result.decision).toBeNull();
+    expect(result.reasoningSummary).toContain('Não lance Furto/Vandalismo');
+  });
+
+  it('compartilha o padrão de fotos entre as variações de reparo de ramal', () => {
+    const serviceIds = [
+      'reparo-ramal-agua-asfalto',
+      'reparo-ramal-agua-bloco-paralelo',
+      'reparo-ramal-agua-calcada',
+      'reparo-ramal-agua-terra',
+      'reparo-ramal-agua-causado-por-terceiros',
+    ];
+
+    for (const serviceId of serviceIds) {
+      const result = ruleEngine.evaluatePrompt(
+        'Quais fotos comprovam o reparo de ramal?',
+        serviceId
+      );
+      expect(result.outcome).toBe('informational');
+      expect(result.decision).toBeNull();
+      expect(result.reasoningSummary).toContain('fachada/local');
+      expect(result.requiresHumanValidation).toBe(false);
+    }
+  });
+
+  it('orienta falta de evidência no ramal sem inventar conclusão oficial', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Só mostrou o cavalete e não provou o conserto do ramal.',
+      'reparo-ramal-agua-calcada'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.outcome).toBe('insufficient');
+    expect(result.matchedRules.some((rule) => rule.id === 'RULE-RR-INFO-02')).toBe(true);
+  });
+
+  it('compartilha o padrão fotográfico entre os tipos de reaterro', () => {
+    for (const serviceId of ['reaterro-valas-asfalto', 'reaterro-valas-calcada', 'reaterro-valas-terra']) {
+      const result = ruleEngine.evaluatePrompt('Quais fotos comprovam o reaterro?', serviceId);
+      expect(result.outcome).toBe('informational');
+      expect(result.decision).toBeNull();
+      expect(result.reasoningSummary).toContain('execução por camadas');
+    }
+  });
+
+  it('explica compactação informal sem transformar procedimento em decisão', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Não mostrou compactando a vala camada por camada.',
+      'reaterro-valas-terra'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.matchedRules.some((rule) => rule.id === 'RULE-RV-INFO-02')).toBe(true);
+    expect(result.requiresHumanValidation).toBe(true);
+  });
+
+  it('diferencia troca exclusiva do registro de reparo do cavalete', () => {
+    const onlyRegister = ruleEngine.evaluatePrompt(
+      'Qual serviço usar quando foi trocado apenas o registro?',
+      selectedServiceId
+    );
+    const otherParts = ruleEngine.evaluatePrompt(
+      'Qual serviço usar quando trocaram o registro e o tubete?',
+      selectedServiceId
+    );
+
+    expect(onlyRegister.outcome).toBe('informational');
+    expect(onlyRegister.reasoningSummary).toContain('Substituição de Registro de Cavalete');
+    expect(otherParts.outcome).toBe('informational');
+    expect(otherParts.reasoningSummary).toContain('Mantenha Reparo de Cavalete');
+  });
+
+  it('orienta cavalete mais ramal como reparo de ramal executado', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Qual serviço usar se substituiu o registro e mexeu no cavalete e no ramal?',
+      selectedServiceId
+    );
+
+    expect(result.outcome).toBe('informational');
+    expect(result.decision).toBeNull();
+    expect(result.reasoningSummary).toContain('Adicional Executado');
+  });
+
+  it('orienta intervenção exclusiva no ramal como Reparo de Ramal', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Qual serviço usar se mexeu somente no ramal?',
+      selectedServiceId
+    );
+
+    expect(result.outcome).toBe('informational');
+    expect(result.decision).toBeNull();
+    expect(result.reasoningSummary).toContain('Use Reparo de Ramal');
+  });
+
+  it('separa Substituição de HD com e sem custo pela responsabilidade', () => {
+    const withCost = ruleEngine.evaluatePrompt(
+      'Qual serviço usar? O cliente quebrou o hidrômetro.',
+      selectedServiceId
+    );
+    const withoutCost = ruleEngine.evaluatePrompt(
+      'Qual serviço usar quando o hidrômetro foi furtado?',
+      selectedServiceId
+    );
+
+    expect(withCost.outcome).toBe('informational');
+    expect(withCost.reasoningSummary).toContain('HD com Custo');
+    expect(withCost.matchedRules.some((rule) => rule.id === 'RULE-HD-SEM-CUSTO-INFO-01'))
+      .toBe(false);
+    expect(withoutCost.outcome).toBe('informational');
+    expect(withoutCost.reasoningSummary).toContain('HD sem Custo');
+  });
+
+  it('permite consultar as novas Substituições de HD como serviços originais', () => {
+    const withCost = ruleEngine.evaluatePrompt(
+      'Quando a substituição do hidrômetro é com custo?',
+      'substituicao-hd-com-custo'
+    );
+    const withoutCost = ruleEngine.evaluatePrompt(
+      'Hidrômetro furtado é sem custo?',
+      'substituicao-hd-sem-custo'
+    );
+
+    expect(withCost.errorCode).toBeUndefined();
+    expect(withCost.reasoningSummary).toContain('atribuída ao cliente');
+    expect(withoutCost.errorCode).toBeUndefined();
+    expect(withoutCost.reasoningSummary).toContain('sem Custo');
+  });
+
   it('normaliza texto com e sem acentos', () => {
     const withAccent = ruleEngine.evaluatePrompt('Sem hidrômetro.', selectedServiceId);
     const withoutAccent = ruleEngine.evaluatePrompt('Sem hidrometro.', selectedServiceId);
