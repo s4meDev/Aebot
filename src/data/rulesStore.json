@@ -1,5 +1,5 @@
 {
-  "version": "2.9.0",
+  "version": "2.9.1",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -1019,6 +1019,70 @@
       "message": "Havendo escavação, avalie o Reaterro e a Repavimentação adequados ao revestimento. Use Adicional Executado para o que foi concluído na visita e Adicional Posterior para o que será feito depois.",
       "guidance": "Confirme pelas fotos se houve escavação, o revestimento do local e quais etapas foram realmente concluídas.",
       "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026","IT - Reparo de Ramal de Água.pdf, páginas 4, 6 e 8"]
+    },
+    {
+      "id": "RULE-PARAM-REPAV-01",
+      "serviceId": "reparo-cavalete",
+      "applicableServiceIds": [
+        "reparo-ramal-agua-asfalto",
+        "reparo-ramal-agua-bloco-paralelo",
+        "reparo-ramal-agua-calcada",
+        "reparo-ramal-agua-terra",
+        "reparo-ramal-agua-causado-por-terceiros",
+        "reparo-rede-agua-asfalto",
+        "reaterro-valas-asfalto",
+        "reaterro-valas-calcada",
+        "reaterro-valas-terra",
+        "corte-fornecimento-agua",
+        "religacao-fornecimento-agua",
+        "vistoria-pos-corte",
+        "implantacao-ligacao-agua",
+        "reparo-rede-esgoto",
+        "extensao-rede-agua",
+        "interligacao-rede-agua"
+      ],
+      "title": "Ausência de desdobro obrigatório de repavimentação",
+      "description": "Quando o analista afirma que faltou o desdobro necessário de repavimentação, a própria frase confirma a necessidade e a ausência do lançamento. A parametrização deve ser corrigida.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "attentionLevel": "attention",
+      "category": "Parametrização operacional",
+      "topicKeywords": ["falta de desdobro de repavimentação","repavimentação não lançada","adicional de repavimentação ausente","repavimentação calçada"],
+      "relatedEvidence": [
+        "desdobro de repavimentação",
+        "adicional de repavimentação",
+        "repavimentação de calçada",
+        "repavimentação de asfalto",
+        "repavimentação de concreto",
+        "repavimentação de bloco"
+      ],
+      "conditionKeywords": [
+        "falta de desdobro para repavimentação",
+        "faltou desdobro para repavimentação",
+        "faltou o desdobro de repavimentação",
+        "repavimentação necessária não lançada",
+        "não lançaram o desdobro de repavimentação",
+        "sem adicional de repavimentação"
+      ],
+      "equivalentExpressions": [
+        "faltou o desdobro da calçada",
+        "não colocaram repavimentação no desdobro",
+        "era para gerar repavimentação e não gerou",
+        "era para ter repavimentação da calçada e não lançaram",
+        "esqueceram de lançar a repavimentação",
+        "tinha que ter repavimentação e não lançaram",
+        "ficou sem o adicional para refazer o piso",
+        "a calçada precisava ser refeita mas esqueceram o adicional"
+      ],
+      "negativeSignals": ["desdobro lançado","repavimentação incluída","adicional cadastrado","não faltou desdobro"],
+      "examples": [
+        "Falta de desdobro para Repavimentação Calçada.",
+        "Era para ter repav da calçada e não lançaram.",
+        "A calçada precisava ser refeita, mas esqueceram o adicional."
+      ],
+      "message": "O desdobro necessário de repavimentação não foi lançado. A parametrização precisa ser corrigida e o caso deve ser registrado como Não Conforme.",
+      "guidance": "Se a recomposição foi concluída na visita, inclua a Repavimentação correspondente no Adicional Executado. Se ficou para uma execução futura, inclua no Adicional Posterior. Use as fotos para escolher o revestimento correto.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 14/08/2026"]
     },
     {
       "id": "RULE-RC-PARAM-05",

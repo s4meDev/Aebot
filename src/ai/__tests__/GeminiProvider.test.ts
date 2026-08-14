@@ -445,6 +445,21 @@ describe('GeminiProvider', () => {
     expect(response.content).not.toContain('interpretação semântica não pôde');
   });
 
+  it('devolve a ação Executado ou Posterior quando falta o desdobro de repavimentação', async () => {
+    const response = await new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    }).generateResponse(
+      '',
+      'Falta de desdobro para Repavimentação Calçada.',
+      { id: 'reparo-cavalete', name: 'Reparo de Cavalete de Água' }
+    );
+
+    expect(response.decision).toBe('Não Conforme');
+    expect(response.content).toContain('Adicional Executado');
+    expect(response.content).toContain('Adicional Posterior');
+    expect(response.content).not.toContain('interpretação semântica não pôde');
+  });
+
   it('mantém a decisão determinística quando o modelo tenta alterá-la', async () => {
     storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({

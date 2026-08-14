@@ -649,5 +649,32 @@
     "outcome": "informational",
     "decision": null,
     "minimumMatches": 1
+  },
+  {
+    "name": "falta de desdobro de repavimentação fica não conforme",
+    "serviceId": "reparo-cavalete",
+    "query": "Falta de desdobro para Repavimentação Calçada.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "repav abreviada e não lançada mantém a mesma regra",
+    "serviceId": "reparo-ramal-agua-calcada",
+    "query": "Era pra ter repav da calçada e não lançaram.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "pergunta sobre desdobro não classifica uma OS real",
+    "serviceId": "reparo-cavalete",
+    "query": "Quando devo lançar o desdobro de repavimentação da calçada?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
   }
 ]

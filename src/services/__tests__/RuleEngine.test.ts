@@ -407,6 +407,38 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(informative.outcome).toBe('informational');
   });
 
+  it('entende que afirmar falta do desdobro já confirma necessidade e ausência', () => {
+    const exact = ruleEngine.evaluatePrompt(
+      'Falta de desdobro para Repavimentação Calçada.',
+      'reparo-cavalete'
+    );
+    const informal = ruleEngine.evaluatePrompt(
+      'Era pra ter repav da calçada e não lançaram.',
+      'reparo-ramal-agua-calcada'
+    );
+
+    for (const result of [exact, informal]) {
+      expect(result.intent).toBe('relato_afirmativo');
+      expect(result.decision).toBe('Não Conforme');
+      expect(result.primaryRule?.id).toBe('RULE-PARAM-REPAV-01');
+    }
+  });
+
+  it('não transforma consulta ou negação sobre desdobro em ocorrência real', () => {
+    const question = ruleEngine.evaluatePrompt(
+      'Quando devo lançar o desdobro de repavimentação da calçada?',
+      'reparo-cavalete'
+    );
+    const negated = ruleEngine.evaluatePrompt(
+      'Não faltou desdobro; a repavimentação foi incluída.',
+      'reparo-cavalete'
+    );
+
+    expect(question.outcome).toBe('informational');
+    expect(question.decision).toBeNull();
+    expect(negated.decision).toBeNull();
+  });
+
   it('consulta os novos serviços sem cair em regras pendentes', () => {
     for (const serviceId of [
       'corte-fornecimento-agua',

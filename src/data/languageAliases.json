@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "aliases": {
     "anexaram": "apresentou",
     "anexou": "apresentou",
@@ -52,6 +52,7 @@
     "previamente": "antes",
     "previo": "antes",
     "previos": "antes",
+    "repav": "repavimentacao",
     "q": "que",
     "qdo": "quando",
     "reprova": "reprovado",
