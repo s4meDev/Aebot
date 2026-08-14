@@ -722,5 +722,25 @@
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
+  },
+  {
+    "name": "pergunta sobre caso real manda retirar repavimentação sem vala",
+    "serviceId": "reparo-cavalete",
+    "query": "Sem foto da vala feita na OS, então tiro o desdobro de repavimentação?",
+    "intent": "relato_afirmativo",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "linguagem informal manda retirar reaterro sem escavação",
+    "serviceId": "implantacao-ligacao-agua",
+    "query": "Não aparece a vala, então retiro o adicional de reaterro?",
+    "intent": "relato_afirmativo",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
   }
 ]

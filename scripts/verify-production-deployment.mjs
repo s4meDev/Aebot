@@ -106,6 +106,23 @@ assert(
   'Orientação fundamentada foi promovida indevidamente a decisão.'
 );
 
+const unsupportedPavingBranch = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId,
+    prompt: 'Sem foto da vala feita na OS, então tiro o desdobro de repavimentação?',
+    history: [],
+  }),
+})).json();
+assert(
+  unsupportedPavingBranch.result?.decision === null &&
+    unsupportedPavingBranch.result?.evaluation?.outcome === 'advisory' &&
+    unsupportedPavingBranch.result?.evaluation?.primaryRule?.id === 'RULE-PARAM-ESCAVACAO-01' &&
+    unsupportedPavingBranch.result?.content?.includes('retire o desdobro'),
+  'Orientação para retirar desdobro sem evidência de vala divergiu.'
+);
+
 const contextualAnalysis = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },

@@ -47,7 +47,7 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - painel administrativo protegido por credencial separada;
 - Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
-- 56 regras e orientações baseadas nas diretrizes do produto e nas ITs recebidas;
+- 57 regras e orientações baseadas nas diretrizes do produto e nas ITs recebidas;
 - cadeia de evidências do original, do adicional executado e do adicional posterior tratada de forma explícita;
 - ausência de Troca, Adicional Executado ou Adicional Posterior necessário resulta em Não Conforme; impossibilidade de trocar para o serviço correto resulta em Reprovado;
 - critérios de desdobro para ramal, reaterro e repavimentação cadastrados; falhas sem conclusão oficial definida recebem orientação prática sem decisão automática.

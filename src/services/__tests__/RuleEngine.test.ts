@@ -425,6 +425,48 @@ describe('RuleEngine — ranking e serviço', () => {
     }
   });
 
+  it('manda retirar repavimentação ou reaterro quando a OS não evidencia a vala', () => {
+    const cases = [
+      [
+        'reparo-cavalete',
+        'Sem foto da vala feita na OS, então tiro o desdobro de repavimentação?',
+      ],
+      [
+        'reparo-rede-agua-asfalto',
+        'Não mostrou que cavou; posso remover a repav?',
+      ],
+      [
+        'implantacao-ligacao-agua',
+        'Não aparece a vala, então retiro o adicional de reaterro?',
+      ],
+    ] as const;
+
+    for (const [serviceId, query] of cases) {
+      const result = ruleEngine.evaluatePrompt(query, serviceId);
+      expect(result.intent).toBe('relato_afirmativo');
+      expect(result.outcome).toBe('advisory');
+      expect(result.decision).toBeNull();
+      expect(result.primaryRule?.id).toBe('RULE-PARAM-ESCAVACAO-01');
+      expect(result.reasoningSummary).toMatch(/^Sim\./);
+      expect(result.matchedRules.map((rule) => rule.id)).toContain(
+        'RULE-PARAM-ESCAVACAO-01'
+      );
+      expect(result.matchedRules.map((rule) => rule.id)).not.toContain(
+        'RULE-PARAM-REPAV-01'
+      );
+    }
+  });
+
+  it('não manda retirar o desdobro quando a vala está evidenciada', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'A foto da vala foi apresentada; mantenho o desdobro de repavimentação?',
+      'reparo-cavalete'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.matchedRules.some((rule) => rule.id === 'RULE-PARAM-ESCAVACAO-01')).toBe(false);
+  });
+
   it('aplica a regra geral à troca, ao executado e ao posterior em serviços ativos', () => {
     const cases = [
       ['reparo-cavalete', 'Faltou trocar para o serviço que foi realmente executado.'],

@@ -213,7 +213,7 @@ function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedR
   const topicQuery = normalizeText(lastSegment);
   // Exceções também valem em consultas: um tema relacionado não pode sugerir
   // uma orientação que os próprios dados excluem para o cenário perguntado.
-  if (findExpressions(topicQuery, rule.exceptions).length) {
+  if (findExpressions(query, rule.exceptions).length) {
     return null;
   }
   const topicExpressions = unique([
@@ -321,6 +321,9 @@ export function retrieveRelatedRules(
   if (!queryTokens.length) return [];
 
   return rules.flatMap((rule) => {
+    if (findExpressions(query, rule.exceptions).length) {
+      return [];
+    }
     const { strongTokens, contextualTokens } = getRuleConcepts(rule);
     const matchedStrong = queryTokens.filter((token) => strongTokens.has(token));
     const matchedContextual = queryTokens.filter(

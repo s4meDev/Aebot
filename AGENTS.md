@@ -42,4 +42,5 @@
 - IT de execução de campo entra como orientação sem `severity` quando não definir uma conclusão oficial. `attentionLevel` pode destacar risco crítico, mas nunca cria nem altera `decision`.
 - Correspondência parcial fundamentada produz `outcome: advisory`, sempre com `decision: null`, base consultada, orientação prática e informações faltantes. Apenas regra classificatória realmente aplicável produz conclusão oficial.
 - A ausência declarada de Troca de Serviço, Adicional Executado ou Adicional Posterior necessário é `Não Conforme` em qualquer serviço ativo. Se a troca necessária não oferece o serviço correto, prevalece `Reprovado` por impossibilidade de troca.
+- Reaterro e repavimentação dependem de evidência de vala/escavação. Se a OS não comprovar a vala, oriente retirar o desdobro correspondente; essa correção de parametrização não cria sozinha uma conclusão oficial.
 - A manutenção da base deve continuar acessível por `rulesStore.json`, schema do VS Code, guia prático e corpus de regressão; campos desconhecidos devem falhar na validação em vez de serem ignorados.

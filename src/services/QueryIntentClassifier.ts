@@ -83,6 +83,41 @@ const FACT_MARKERS = [
   'formato inválido',
 ];
 
+const CASE_ACTION_MARKERS = [
+  'entao tiro',
+  'entao retiro',
+  'entao removo',
+  'tiro',
+  'retiro',
+  'removo',
+  'devo tirar',
+  'devo retirar',
+  'devo remover',
+  'posso tirar',
+  'posso retirar',
+  'posso remover',
+  'o que faco',
+  'como corrijo',
+];
+
+function hasFactBeforeActionQuestion(query: NormalizedText): boolean {
+  return CASE_ACTION_MARKERS.some((marker) => {
+    const markerTokens = normalizeMarker(marker).split(' ');
+    const markerIndex = query.tokens.findIndex((_, start) =>
+      markerTokens.every((token, offset) => query.tokens[start + offset] === token)
+    );
+    if (markerIndex <= 0) return false;
+    const prefixTokens = query.tokens.slice(0, markerIndex);
+    const prefix = prefixTokens.join(' ');
+    return findExpressions({
+      original: prefix,
+      value: prefix,
+      tokens: prefixTokens,
+      segments: [prefix],
+    }, FACT_MARKERS).length > 0;
+  });
+}
+
 export function classifyQueryIntent(query: NormalizedText): QueryIntent {
   if (!query.value) return 'indefinida';
   const hasConditionalFact =
@@ -99,6 +134,9 @@ export function classifyQueryIntent(query: NormalizedText): QueryIntent {
   // o enquadramento. Em contexto acumulado, porém, um fato afirmado numa
   // frase anterior continua sendo fato mesmo quando a continuação é curta.
   if (query.original.includes('?')) {
+    // "Sem foto da vala na OS, então tiro o desdobro?" contém uma dúvida,
+    // mas começa relatando um fato real. A ação perguntada não apaga esse fato.
+    if (hasFactBeforeActionQuestion(query)) return 'relato_afirmativo';
     const earlierSegments = query.segments.slice(0, -1);
     const hasEarlierFact = earlierSegments.some(
       (segment) => findExpressions({

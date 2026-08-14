@@ -460,6 +460,24 @@ describe('GeminiProvider', () => {
     expect(response.content).not.toContain('interpretação semântica não pôde');
   });
 
+  it('responde diretamente para retirar repavimentação sem evidência de vala', async () => {
+    const response = await new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    }).generateResponse(
+      '',
+      'Sem foto da vala feita na OS, então tiro o desdobro de repavimentação?',
+      { id: 'reparo-cavalete', name: 'Reparo de Cavalete de Água' }
+    );
+
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.outcome).toBe('advisory');
+    expect(response.evaluation.primaryRule?.id).toBe('RULE-PARAM-ESCAVACAO-01');
+    expect(response.content).toContain('Sim.');
+    expect(response.content).toContain('retire o desdobro');
+    expect(response.content).toContain('Sem foto ou outra evidência de vala');
+    expect(response.content).not.toContain('Ausência de desdobro obrigatório');
+  });
+
   it('aplica a falta geral de parametrização sem depender de um serviço específico', async () => {
     const response = await new GeminiProvider(ruleEngine, {
       humanizeDeterministicResponses: false,

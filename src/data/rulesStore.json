@@ -1,5 +1,5 @@
 {
-  "version": "2.10.0",
+  "version": "2.10.1",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -1019,6 +1019,69 @@
       "message": "Havendo escavação, avalie o Reaterro e a Repavimentação adequados ao revestimento. Use Adicional Executado para o que foi concluído na visita e Adicional Posterior para o que será feito depois.",
       "guidance": "Confirme pelas fotos se houve escavação, o revestimento do local e quais etapas foram realmente concluídas.",
       "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026","IT - Reparo de Ramal de Água.pdf, páginas 4, 6 e 8"]
+    },
+    {
+      "id": "RULE-PARAM-ESCAVACAO-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Retirada de desdobro sem evidência de vala",
+      "description": "Reaterro e repavimentação dependem de uma intervenção com escavação. Quando a OS não possui foto ou outra evidência da vala, esses desdobros não estão sustentados e devem ser retirados.",
+      "priority": 1,
+      "attentionLevel": "attention",
+      "category": "Parametrização operacional",
+      "topicKeywords": [
+        "desdobro sem evidência de vala",
+        "repavimentação sem escavação",
+        "reaterro sem escavação",
+        "retirar desdobro de repavimentação",
+        "retirar desdobro de reaterro"
+      ],
+      "relatedEvidence": [
+        "foto da vala",
+        "evidência da vala",
+        "evidência de escavação",
+        "desdobro de repavimentação",
+        "desdobro de reaterro"
+      ],
+      "negativeSignals": [
+        "vala evidenciada",
+        "escavação evidenciada",
+        "foto da vala apresentada",
+        "foto da vala foi apresentada",
+        "mostrou a vala",
+        "houve escavação comprovada"
+      ],
+      "exceptions": [
+        "vala evidenciada",
+        "escavação evidenciada",
+        "foto da vala apresentada",
+        "foto da vala foi apresentada",
+        "mostrou a vala",
+        "houve escavação comprovada"
+      ],
+      "conditionKeywords": [
+        "desdobro de repavimentação sem evidência de vala",
+        "desdobro de reaterro sem evidência de vala",
+        "sem foto da vala retirar o desdobro de repavimentação",
+        "sem foto da vala retirar o desdobro de reaterro",
+        "não há evidência de escavação para repavimentação",
+        "não há evidência de escavação para reaterro",
+        "retirar o desdobro porque não mostrou a vala"
+      ],
+      "equivalentExpressions": [
+        "sem foto da vala feita na os então tiro o desdobro de repavimentação",
+        "não mostrou que cavou posso remover a repavimentação",
+        "não aparece a vala então retiro o adicional de reaterro",
+        "tem repavimentação lançada mas não há prova de que abriram o piso",
+        "lançaram reaterro sem mostrar nenhuma escavação"
+      ],
+      "examples": [
+        "Sem foto da vala feita na OS, então tiro o desdobro de repavimentação?",
+        "Não mostrou que cavou; retiro o adicional de reaterro?"
+      ],
+      "message": "Sim. Sem foto ou outra evidência de vala na OS, retire o desdobro de reaterro ou repavimentação que dependeria dessa escavação.",
+      "guidance": "Mantenha o desdobro somente quando as evidências mostrarem a intervenção que o tornou necessária. Se a vala estiver comprovada, avalie separadamente o que foi executado e o que ficou para posterior.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 14/08/2026"]
     },
     {
       "id": "RULE-PARAM-GERAL-01",

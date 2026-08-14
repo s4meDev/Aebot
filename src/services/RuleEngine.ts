@@ -217,9 +217,16 @@ export class RuleEngine {
       // classificatória já resolveu o caso.
       const relatedConceptCandidates = retrieveRelatedRules(normalized, serviceRules);
       const relatedById = new Map<string, (typeof candidates)[number]>();
-      const groundedCandidates = guidanceCandidates.length || topicalCandidates.length
-        ? [...guidanceCandidates, ...topicalCandidates]
-        : relatedConceptCandidates;
+      // Uma orientação que casou com o cenário é mais confiável do que regras
+      // classificatórias que apenas compartilham o assunto da pergunta.
+      const topicalGuidanceCandidates = topicalCandidates.filter(
+        (rule) => rule.severity === null
+      );
+      const groundedCandidates = guidanceCandidates.length
+        ? [...guidanceCandidates, ...topicalGuidanceCandidates]
+        : topicalCandidates.length
+          ? topicalCandidates
+          : relatedConceptCandidates;
       for (const rule of groundedCandidates) {
         const current = relatedById.get(rule.id);
         if (!current || rule.score > current.score) relatedById.set(rule.id, rule);
