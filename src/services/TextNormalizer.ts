@@ -9,6 +9,8 @@ export interface NormalizedText {
 }
 
 const TYPO_DISTANCE_MIN_LENGTH = 6;
+const EXPRESSION_CACHE_LIMIT = 4_096;
+const EXPRESSION_TOKEN_CACHE = new Map<string, string[]>();
 const PROTECTED_TOKENS = new Set(['nao', 'sem', 'com', 'antes', 'durante', 'depois']);
 const FILLER_TOKENS = new Set([
   'a', 'o', 'as', 'os', 'de', 'da', 'do', 'das', 'dos', 'um', 'uma',
@@ -140,10 +142,24 @@ interface ExpressionRange {
   end: number;
 }
 
-function findExpressionRanges(text: NormalizedText, expression: string): ExpressionRange[] {
-  const expressionTokens = normalizeText(expression).tokens.filter(
+function normalizedExpressionTokens(expression: string): string[] {
+  const cached = EXPRESSION_TOKEN_CACHE.get(expression);
+  if (cached) return cached;
+  const tokens = normalizeText(expression).tokens.filter(
     (token) => !FILLER_TOKENS.has(token)
   );
+  EXPRESSION_TOKEN_CACHE.set(expression, tokens);
+  if (EXPRESSION_TOKEN_CACHE.size > EXPRESSION_CACHE_LIMIT) {
+    const oldest = EXPRESSION_TOKEN_CACHE.keys().next().value;
+    if (typeof oldest === 'string') EXPRESSION_TOKEN_CACHE.delete(oldest);
+  }
+  return tokens;
+}
+
+function findExpressionRanges(text: NormalizedText, expression: string): ExpressionRange[] {
+  // As expressões vêm da base e se repetem entre avaliações. O cache evita
+  // renormalizar a mesma regra sem guardar o texto das perguntas.
+  const expressionTokens = normalizedExpressionTokens(expression);
   const searchableTokens = text.tokens
     .map((token, index) => ({ token, index }))
     .filter(({ token }) => !FILLER_TOKENS.has(token));

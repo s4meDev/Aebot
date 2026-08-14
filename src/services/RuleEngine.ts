@@ -9,10 +9,15 @@ import type {
 } from '../types';
 import { classifyQueryIntent, isServiceOverviewQuestion } from './QueryIntentClassifier';
 import { resolveConflicts } from './ConflictResolver';
-import { retrieveInformationalRules, retrieveRules } from './RuleRetriever';
+import {
+  retrieveInformationalRules,
+  retrieveRelatedRules,
+  retrieveRules,
+} from './RuleRetriever';
 import { normalizeText } from './TextNormalizer';
 import { describeServiceParameterization } from './ServiceParameterization';
 import { parseRuleStore } from './RuleStoreValidator';
+import { buildGroundedAdvisory } from './GroundedAdvisory';
 
 function confidenceFromScore(score: number | undefined): ConfidenceLevel {
   if (score === undefined) return 'insuficiente';
@@ -208,8 +213,14 @@ export class RuleEngine {
     );
 
     if (!primaryRule || !primaryRule.severity) {
+      // A busca conceitual é o segundo nível: só roda quando nenhuma regra
+      // classificatória já resolveu o caso.
+      const relatedConceptCandidates = retrieveRelatedRules(normalized, serviceRules);
       const relatedById = new Map<string, (typeof candidates)[number]>();
-      for (const rule of [...guidanceCandidates, ...topicalCandidates]) {
+      const groundedCandidates = guidanceCandidates.length || topicalCandidates.length
+        ? [...guidanceCandidates, ...topicalCandidates]
+        : relatedConceptCandidates;
+      for (const rule of groundedCandidates) {
         const current = relatedById.get(rule.id);
         if (!current || rule.score > current.score) relatedById.set(rule.id, rule);
       }
@@ -218,6 +229,14 @@ export class RuleEngine {
         this.getConclusions()
       );
       const hasRelatedRules = relatedRules.length > 0;
+      const advisoryPrimaryRule = relatedRules.find((rule) => rule.severity === null)
+        ?? relatedRules[0];
+      const advisoryRules = advisoryPrimaryRule
+        ? [advisoryPrimaryRule, ...relatedRules.filter((rule) => rule.id !== advisoryPrimaryRule.id)]
+        : [];
+      const advisory = hasRelatedRules
+        ? buildGroundedAdvisory(service, advisoryRules)
+        : undefined;
       const reasoningSummary =
         guidanceCandidates.length > 0
           ? `A base descreve a orientação aplicável (${guidanceCandidates.map((rule) => rule.id).join(', ')}), mas os documentos não definem uma conclusão oficial para esse fato.`
@@ -232,15 +251,18 @@ export class RuleEngine {
         normalizedQuery: normalized.value,
         contextApplied: false,
         intent,
-        outcome: 'insufficient',
+        outcome: advisory ? 'advisory' : 'insufficient',
         decision: null,
         hasSufficientEvidence: false,
-        matchedRules: relatedRules,
-        primaryRule: null,
+        matchedRules: advisory ? advisoryRules : relatedRules,
+        primaryRule: advisory ? advisoryPrimaryRule ?? null : null,
         conflicts: [],
-        confidence: 'insuficiente',
-        reasoningSummary,
+        confidence: advisory
+          ? confidenceFromScore(advisoryPrimaryRule?.score)
+          : 'insuficiente',
+        reasoningSummary: advisory?.summary ?? reasoningSummary,
         requiresHumanValidation: true,
+        advisory,
         insufficiencyReason: hasRelatedRules ? 'missing_information' : 'no_matching_rule',
         serviceContext,
       };

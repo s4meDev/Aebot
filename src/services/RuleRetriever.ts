@@ -260,3 +260,95 @@ export function retrieveInformationalRules(
     return match ? [match] : [];
   });
 }
+
+const RELATED_STOP_WORDS = new Set([
+  'a', 'o', 'as', 'os', 'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'na', 'no',
+  'nas', 'nos', 'um', 'uma', 'para', 'pra', 'por', 'que', 'qual', 'como', 'foi',
+  'esta', 'esse', 'essa', 'isso', 'servico', 'regra', 'foto', 'fotos',
+  'ficou', 'ficar', 'feito', 'fazer', 'fez', 'tem', 'tinha', 'deve', 'precisa',
+  'necessario', 'necessaria', 'correto', 'correta', 'outro', 'outra',
+]);
+
+function conceptTokens(values: string[] | undefined): Set<string> {
+  return new Set(
+    normalizeText(values?.join(' ') ?? '').tokens.filter(
+      (token) => token.length > 2 && !RELATED_STOP_WORDS.has(token)
+    )
+  );
+}
+
+interface CachedRuleConcepts {
+  strongTokens: Set<string>;
+  contextualTokens: Set<string>;
+}
+
+const RULE_CONCEPT_CACHE = new WeakMap<DataRule, CachedRuleConcepts>();
+
+function getRuleConcepts(rule: DataRule): CachedRuleConcepts {
+  const cached = RULE_CONCEPT_CACHE.get(rule);
+  if (cached) return cached;
+  const concepts = {
+    strongTokens: conceptTokens([
+      ...(rule.topicKeywords ?? []),
+      ...(rule.relatedEvidence ?? []),
+      ...(rule.conditionKeywords ?? []),
+      ...(rule.equivalentExpressions ?? []),
+    ]),
+    contextualTokens: conceptTokens([
+      rule.title,
+      rule.description,
+      rule.category ?? '',
+      ...(rule.examples ?? []),
+    ]),
+  };
+  RULE_CONCEPT_CACHE.set(rule, concepts);
+  return concepts;
+}
+
+/**
+ * Localiza regras conceitualmente próximas sem torná-las aplicáveis à decisão.
+ * Esse segundo nível serve apenas para orientar o analista quando a frase não
+ * comprovou todas as condições de uma regra.
+ */
+export function retrieveRelatedRules(
+  query: NormalizedText,
+  rules: DataRule[],
+  limit = 5
+): MatchedRule[] {
+  const queryTokens = unique(
+    query.tokens.filter((token) => token.length > 2 && !RELATED_STOP_WORDS.has(token))
+  );
+  if (!queryTokens.length) return [];
+
+  return rules.flatMap((rule) => {
+    const { strongTokens, contextualTokens } = getRuleConcepts(rule);
+    const matchedStrong = queryTokens.filter((token) => strongTokens.has(token));
+    const matchedContextual = queryTokens.filter(
+      (token) => !strongTokens.has(token) && contextualTokens.has(token)
+    );
+    const weightedMatch = matchedStrong.length * 3 + matchedContextual.length;
+    if (matchedStrong.length < 2 || weightedMatch < 6) return [];
+
+    const matchedTerms = unique([...matchedStrong, ...matchedContextual]);
+    const specificity = matchedTerms.length;
+    const relevance = Math.min(0.68, 0.3 + weightedMatch * 0.06);
+    const score = Math.round((relevance * 6 + specificity * 0.25) * 10) / 10;
+    return [{
+      id: rule.id,
+      title: rule.title,
+      severity: rule.severity ?? null,
+      priority: rule.priority,
+      score,
+      factMatchQuality: 0.25,
+      specificity,
+      relevance,
+      matchReasons: ['conceitos relacionados identificados; ocorrência ainda não confirmada'],
+      matchedTerms,
+      attentionLevel: rule.attentionLevel,
+      guidance: rule.guidance,
+      message: rule.message,
+    } satisfies MatchedRule];
+  })
+    .sort((left, right) => right.score - left.score || left.priority - right.priority)
+    .slice(0, Math.max(1, Math.floor(limit)));
+}

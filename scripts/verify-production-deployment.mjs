@@ -63,6 +63,49 @@ const analysis = await (await request('/v1/analyze', {
 })).json();
 assert(analysis.result?.decision === 'Reprovado', 'Decisão determinística de verificação divergiu.');
 
+const missingParameterization = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId,
+    prompt: 'Faltou adicional executado.',
+    history: [],
+  }),
+})).json();
+assert(
+  missingParameterization.result?.decision === 'Não Conforme',
+  'Regra geral de parametrização ausente divergiu.'
+);
+
+const impossibleExchange = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId,
+    prompt: 'Não há possibilidade de troca do serviço.',
+    history: [],
+  }),
+})).json();
+assert(
+  impossibleExchange.result?.decision === 'Reprovado',
+  'Regra de impossibilidade de troca divergiu.'
+);
+
+const groundedAdvisory = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId,
+    prompt: 'A foto foi feita na vertical.',
+    history: [],
+  }),
+})).json();
+assert(
+  groundedAdvisory.result?.decision === null &&
+    groundedAdvisory.result?.evaluation?.outcome === 'advisory',
+  'Orientação fundamentada foi promovida indevidamente a decisão.'
+);
+
 const contextualAnalysis = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },

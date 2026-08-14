@@ -8,7 +8,7 @@ export type QueryIntent =
 
 export type ConfidenceLevel = 'insuficiente' | 'baixa' | 'média' | 'alta';
 
-export type EvaluationOutcome = 'decision' | 'informational' | 'insufficient';
+export type EvaluationOutcome = 'decision' | 'informational' | 'advisory' | 'insufficient';
 
 export type InsufficiencyReason =
   | 'missing_information'
@@ -149,6 +149,17 @@ export interface EvaluationConflict {
   resolution: string;
 }
 
+/**
+ * Direcionamento fundamentado quando a base ajuda a interpretar o caso, mas
+ * ainda não sustenta uma das três conclusões oficiais.
+ */
+export interface GroundedAdvisory {
+  summary: string;
+  guidance: string;
+  basisRuleIds: string[];
+  missingInformation: string[];
+}
+
 export type SemanticMappingStance =
   | 'asserted'
   | 'hypothetical'
@@ -180,6 +191,7 @@ export interface RuleEvaluationResult {
   confidence: ConfidenceLevel;
   reasoningSummary: string;
   requiresHumanValidation: boolean;
+  advisory?: GroundedAdvisory;
   /** A linguagem livre foi aterrada em expressões cadastradas antes da avaliação. */
   semanticInterpretationApplied?: boolean;
   semanticMappings?: SemanticRuleMapping[];

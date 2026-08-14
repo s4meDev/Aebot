@@ -9,7 +9,7 @@ Abra o projeto no VS Code. O arquivo possui validação e sugestões automática
 Uma regra pode ser:
 
 - **classificatória**: possui `severity` e pode recomendar `Conforme`, `Não Conforme` ou `Reprovado`;
-- **orientativa**: não possui `severity`; explica o padrão, chama atenção para riscos e mantém `decision: null`.
+- **orientativa**: não possui `severity`; explica o padrão, chama atenção para riscos e mantém `decision: null`. Quando aplicável, aparece como `advisory`, com ação prática e fatos ainda necessários.
 
 Nunca use uma conclusão apenas porque parece lógica. Cadastre `severity` somente quando a regra de análise tiver definido o resultado oficial.
 

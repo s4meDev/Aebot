@@ -96,9 +96,9 @@ describe('GeminiProvider', () => {
     );
 
     expect(response.decision).toBeNull();
-    expect(response.evaluation.outcome).toBe('insufficient');
+    expect(response.evaluation.outcome).toBe('advisory');
     expect(response.content).toContain('horizontal');
-    expect(response.content).toContain('não há conclusão oficial');
+    expect(response.content).toContain('Para concluir a classificação');
   });
 
   it('modo simulado responde pergunta informativa sem recomendar decisão', async () => {
@@ -458,6 +458,58 @@ describe('GeminiProvider', () => {
     expect(response.content).toContain('Adicional Executado');
     expect(response.content).toContain('Adicional Posterior');
     expect(response.content).not.toContain('interpretação semântica não pôde');
+  });
+
+  it('aplica a falta geral de parametrização sem depender de um serviço específico', async () => {
+    const response = await new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    }).generateResponse(
+      '',
+      'Fez outro serviço mas não colocou no adicional executado.',
+      { id: 'implantacao-ligacao-agua', name: 'Implantação de Ligação de Água' }
+    );
+
+    expect(response.decision).toBe('Não Conforme');
+    expect(response.content).toContain('Adicional Executado');
+    expect(response.evaluation.primaryRule?.id).toBe('RULE-PARAM-GERAL-01');
+  });
+
+  it('reprova quando não existe possibilidade de troca correta', async () => {
+    const response = await new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    }).generateResponse(
+      '',
+      'O sistema não permite trocar para o serviço correto.',
+      { id: 'reparo-rede-agua-asfalto', name: 'Reparo de Rede de Água - Asfalto' }
+    );
+
+    expect(response.decision).toBe('Reprovado');
+    expect(response.content).toContain('Não há a possibilidade de troca do serviço');
+  });
+
+  it('oferece orientação fundamentada sem aceitar decisão inventada pelo modelo', async () => {
+    storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({
+          justification: 'A OS está Conforme.',
+          guidance: 'Pode aprovar.',
+        }) }] } }],
+      }),
+    }));
+
+    const response = await new GeminiProvider().generateResponse(
+      '',
+      'A foto foi feita na vertical.',
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(response.provider).toBe('simulated');
+    expect(response.fallbackReason).toBe('invalid_response');
+    expect(response.evaluation.outcome).toBe('advisory');
+    expect(response.decision).toBeNull();
+    expect(response.content).toContain('horizontal');
   });
 
   it('mantém a decisão determinística quando o modelo tenta alterá-la', async () => {

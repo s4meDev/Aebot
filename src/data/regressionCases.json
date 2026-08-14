@@ -167,7 +167,7 @@
     "serviceId": "reparo-cavalete",
     "query": "Não faltou foto depois.",
     "intent": "relato_afirmativo",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "decision": null,
     "minimumMatches": 0
   },
@@ -358,7 +358,7 @@
     "serviceId": "reparo-cavalete",
     "query": "A foto depois foi apresentada.",
     "intent": "indefinida",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -440,7 +440,7 @@
     "serviceId": "reparo-cavalete",
     "query": "A foto foi feita na vertical.",
     "intent": "indefinida",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -450,7 +450,7 @@
     "serviceId": "reparo-cavalete",
     "query": "Não preencheram o croqui de acesso à rede.",
     "intent": "indefinida",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -524,7 +524,7 @@
     "serviceId": "reparo-ramal-agua-calcada",
     "query": "Só mostrou o cavalete e não provou o conserto do ramal.",
     "intent": "indefinida",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -543,7 +543,7 @@
     "serviceId": "reaterro-valas-calcada",
     "query": "Não mostrou compactando a vala camada por camada.",
     "intent": "relato_afirmativo",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -607,7 +607,7 @@
     "serviceId": "reparo-rede-agua-asfalto",
     "query": "O desdobro executado ficou sem foto durante.",
     "intent": "relato_afirmativo",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -617,7 +617,7 @@
     "serviceId": "implantacao-ligacao-agua",
     "query": "Lançou o adicional posterior mas não mostrou a necessidade.",
     "intent": "relato_afirmativo",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -627,7 +627,7 @@
     "serviceId": "reparo-rede-agua-asfalto",
     "query": "O serviço original ficou sem foto durante.",
     "intent": "relato_afirmativo",
-    "outcome": "insufficient",
+    "outcome": "advisory",
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
@@ -674,6 +674,52 @@
     "query": "Quando devo lançar o desdobro de repavimentação da calçada?",
     "intent": "pergunta_informativa",
     "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "troca necessária ausente é não conforme em regra geral",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "Faltou trocar para o serviço que foi realmente executado.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "adicional executado necessário ausente é não conforme",
+    "serviceId": "implantacao-ligacao-agua",
+    "query": "Fez outro serviço mas não colocou no adicional executado.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "adicional posterior necessário ausente é não conforme",
+    "serviceId": "reparo-rede-esgoto",
+    "query": "O serviço ficou para depois e esqueceram o adicional posterior.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "troca correta indisponível reprova",
+    "serviceId": "reparo-cavalete",
+    "query": "Não há possibilidade de troca do serviço.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "orientação conceitual não vira decisão oficial",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "A sequência do desdobro ficou quebrada entre o começo e o resultado.",
+    "intent": "indefinida",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
   }

@@ -67,13 +67,14 @@ O fallback embarcado só pode decidir quando conhece o serviço e comprova que a
 ### 2.5 Recuperação e decisão
 
 - `src/services/RuleRetriever.ts` encontra todas as regras aplicáveis, registra os motivos do match e trata condições orientadas pelos dados.
+- `src/services/GroundedAdvisory.ts` transforma relações parciais confiáveis em orientação prática, sem criar conclusão oficial.
 - `src/services/SemanticRuleRetriever.ts` acrescenta candidatos semânticos permitidos, sem criar regra nova.
 - `src/services/ConflictResolver.ts` ordena compatibilidade, fatos, especificidade, relevância, prioridade e gravidade.
 - `src/services/RuleEngine.ts` coordena a avaliação determinística e devolve decisão, evidências, conflitos, confiança e necessidade de validação humana.
 - `src/services/ResponseFormatter.ts` gera a resposta curta de contingência.
 - `src/services/AnalysisService.ts` executa o mesmo fluxo na extensão, no servidor Node e no Worker.
 
-Se nenhuma regra realmente aplicável for encontrada, `decision` é `null`. O sistema não usa decisão padrão para aprovar.
+Se nenhuma regra classificatória realmente aplicável for encontrada, `decision` é `null`. Quando existem regras ou conceitos próximos, o resultado `advisory` informa o direcionamento, a base consultada e o que falta confirmar. Ausência real de relação continua como `insufficient`. O sistema não usa decisão padrão para aprovar.
 
 ### 2.6 Uso opcional de IA
 
@@ -169,6 +170,7 @@ Regras que evitam acoplamento:
 - `TextNormalizer.ts`: normalização e tokens inteiros.
 - `QueryIntentClassifier.ts`: intenção e força da afirmação.
 - `RuleRetriever.ts`: recuperação, score e motivos de correspondência.
+- `GroundedAdvisory.ts`: orientação segura para correspondências parciais.
 - `SemanticRuleRetriever.ts`: combinação segura de candidatos semânticos.
 - `SemanticInterpreter.ts`: valida a interpretação limitada produzida pela IA.
 - `ConflictResolver.ts`: escolhe a regra principal sem descartar as demais.

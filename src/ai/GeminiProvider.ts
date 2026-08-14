@@ -270,7 +270,7 @@ function applyConversationContext(
 
   const isCorrectionWithoutDecision =
     contextualQuery.mode === 'correction' &&
-    baseEvaluation.outcome === 'insufficient' &&
+    (baseEvaluation.outcome === 'insufficient' || baseEvaluation.outcome === 'advisory') &&
     !baseEvaluation.errorCode;
   return {
     ...baseEvaluation,
@@ -283,6 +283,7 @@ function applyConversationContext(
     requiresHumanValidation: isCorrectionWithoutDecision
       ? false
       : baseEvaluation.requiresHumanValidation,
+    advisory: isCorrectionWithoutDecision ? undefined : baseEvaluation.advisory,
     reasoningSummary: isCorrectionWithoutDecision
       ? 'A correção mais recente foi considerada e substituiu o fato anterior relacionado. Ainda faltam informações para recomendar uma conclusão oficial.'
       : contextualQuery.mode === 'correction'
@@ -311,7 +312,10 @@ function applySemanticMetadata(
 
 function hasGroundedRuleMatch(evaluation: RuleEvaluationResult): boolean {
   return evaluation.matchedRules.some((rule) =>
-    rule.matchReasons.some((reason) => reason !== 'tema da regra identificado')
+    rule.matchReasons.some((reason) =>
+      reason !== 'tema da regra identificado' &&
+      !reason.startsWith('conceitos relacionados identificados')
+    )
   );
 }
 
@@ -442,7 +446,8 @@ export class GeminiProvider implements AiProvider {
     // ou para deixar a explicação mais natural. Ela nunca troca a decisão.
     if (modelClient) {
       if (
-        rawBaseEvaluation.outcome === 'insufficient' &&
+        (rawBaseEvaluation.outcome === 'insufficient' ||
+          rawBaseEvaluation.outcome === 'advisory') &&
         !rawBaseEvaluation.errorCode &&
         !hasGroundedRuleMatch(rawBaseEvaluation)
       ) {

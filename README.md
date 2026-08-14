@@ -11,7 +11,8 @@ O AEBOT é uma extensão Chrome Manifest V3 exibida no painel lateral do navegad
 - localiza todas as regras realmente relacionadas ao caso;
 - resolve conflitos de forma determinística;
 - explica a decisão e informa as regras utilizadas;
-- reconhece quando faltam regras ou informações;
+- oferece orientação fundamentada quando há relação útil, mas ainda faltam fatos para uma conclusão oficial;
+- reconhece quando realmente faltam regras ou informações;
 - recebe feedback dos analistas sem copiar automaticamente o chat.
 
 As únicas conclusões oficiais são:
@@ -20,7 +21,7 @@ As únicas conclusões oficiais são:
 - **Não Conforme**: serviço aprovado, mas com correção ou problema que deve ser pontuado;
 - **Reprovado**: serviço sem execução válida, no local incorreto, sem evidência suficiente ou com falha grave.
 
-Quando a base não sustenta uma conclusão, o sistema retorna **sem decisão** e recomenda validação humana. Ele nunca usa uma decisão padrão para aprovar.
+Quando a base ajuda, mas ainda não sustenta uma conclusão, o sistema retorna uma **orientação fundamentada** com `decision: null`, próximos passos, regras relacionadas e o que falta confirmar. Ausência real de base continua como **sem decisão**. O AEBOT nunca usa uma decisão padrão para aprovar.
 
 ## Como funciona
 
@@ -46,9 +47,10 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - painel administrativo protegido por credencial separada;
 - Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
-- 53 regras e orientações baseadas nas diretrizes do produto e nas ITs recebidas;
+- 56 regras e orientações baseadas nas diretrizes do produto e nas ITs recebidas;
 - cadeia de evidências do original, do adicional executado e do adicional posterior tratada de forma explícita;
-- critérios de desdobro para ramal, reaterro e repavimentação cadastrados; falhas sem conclusão oficial definida continuam sem decisão automática.
+- ausência de Troca, Adicional Executado ou Adicional Posterior necessário resulta em Não Conforme; impossibilidade de trocar para o serviço correto resulta em Reprovado;
+- critérios de desdobro para ramal, reaterro e repavimentação cadastrados; falhas sem conclusão oficial definida recebem orientação prática sem decisão automática.
 
 ## Carregar a extensão no Chrome
 

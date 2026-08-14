@@ -27,12 +27,32 @@ function isEvaluation(value: unknown, serviceId: string): value is RuleEvaluatio
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const evaluation = value as Record<string, unknown>;
   const decision = evaluation.decision;
+  const outcome = String(evaluation.outcome);
+  const advisory = evaluation.advisory;
+  const advisoryRecord = advisory && typeof advisory === 'object' && !Array.isArray(advisory)
+    ? advisory as Record<string, unknown>
+    : null;
+  const hasStringList = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.every((item) => typeof item === 'string');
+  const hasValidAdvisory = outcome === 'advisory'
+    ? advisoryRecord !== null &&
+      typeof advisoryRecord.summary === 'string' &&
+      advisoryRecord.summary.trim().length > 0 &&
+      typeof advisoryRecord.guidance === 'string' &&
+      advisoryRecord.guidance.trim().length > 0 &&
+      hasStringList(advisoryRecord.basisRuleIds) &&
+      hasStringList(advisoryRecord.missingInformation)
+    : advisory === undefined;
+  const hasValidDecision = outcome === 'decision'
+    ? OFFICIAL_DECISIONS.has(decision as DecisionType)
+    : decision === null;
   return (
     evaluation.serviceId === serviceId &&
     typeof evaluation.ruleStoreVersion === 'string' &&
     typeof evaluation.normalizedQuery === 'string' &&
-    ['decision', 'informational', 'insufficient'].includes(String(evaluation.outcome)) &&
-    (decision === null || OFFICIAL_DECISIONS.has(decision as DecisionType)) &&
+    ['decision', 'informational', 'advisory', 'insufficient'].includes(outcome) &&
+    hasValidDecision &&
+    hasValidAdvisory &&
     Array.isArray(evaluation.matchedRules) &&
     typeof evaluation.reasoningSummary === 'string'
   );
@@ -99,6 +119,7 @@ function createBackendUnavailableResponse(
     reasoningSummary:
       'O backend central está indisponível e a base embarcada não é compatível com o catálogo central selecionado.',
     requiresHumanValidation: true,
+    advisory: undefined,
     insufficiencyReason: 'backend_unavailable',
     errorCode: undefined,
   };

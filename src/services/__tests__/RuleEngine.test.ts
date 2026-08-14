@@ -76,17 +76,18 @@ describe('RuleEngine — recuperação e evidência', () => {
   it('respeita um sinal explícito que nega a ausência', () => {
     const result = ruleEngine.evaluatePrompt('Não faltou foto depois.', selectedServiceId);
     expect(result.decision).toBeNull();
-    expect(result.primaryRule).toBeNull();
+    expect(result.outcome).toBe('advisory');
+    expect(result.primaryRule).not.toBeNull();
     expect(result.matchedRules.length).toBeGreaterThan(0);
     expect(result.insufficiencyReason).toBe('missing_information');
   });
 
   it('distingue tema conhecido com poucos fatos de regra inexistente', () => {
     const result = ruleEngine.evaluatePrompt('A foto depois foi apresentada.', selectedServiceId);
-    expect(result.outcome).toBe('insufficient');
+    expect(result.outcome).toBe('advisory');
     expect(result.decision).toBeNull();
     expect(result.insufficiencyReason).toBe('missing_information');
-    expect(result.reasoningSummary).toContain('regras relacionadas');
+    expect(result.advisory?.basisRuleIds.length).toBeGreaterThan(0);
   });
 
   it('faz a informação mais recente prevalecer para a mesma evidência', () => {
@@ -217,7 +218,7 @@ describe('RuleEngine — recuperação e evidência', () => {
     );
 
     expect(result.decision).toBeNull();
-    expect(result.outcome).toBe('insufficient');
+    expect(result.outcome).toBe('advisory');
     expect(result.insufficiencyReason).toBe('missing_information');
   });
 
@@ -362,7 +363,7 @@ describe('RuleEngine — ranking e serviço', () => {
       'reparo-rede-agua-asfalto'
     );
 
-    expect(result.outcome).toBe('insufficient');
+    expect(result.outcome).toBe('advisory');
     expect(result.decision).toBeNull();
     expect(result.insufficiencyReason).toBe('missing_information');
     expect(result.matchedRules).toEqual(expect.arrayContaining([
@@ -377,7 +378,7 @@ describe('RuleEngine — ranking e serviço', () => {
     );
 
     expect(result.decision).toBeNull();
-    expect(result.outcome).toBe('insufficient');
+    expect(result.outcome).toBe('advisory');
     expect(result.matchedRules.some((item) => item.id === 'RULE-GERAL-EVID-03')).toBe(true);
   });
 
@@ -422,6 +423,80 @@ describe('RuleEngine — ranking e serviço', () => {
       expect(result.decision).toBe('Não Conforme');
       expect(result.primaryRule?.id).toBe('RULE-PARAM-REPAV-01');
     }
+  });
+
+  it('aplica a regra geral à troca, ao executado e ao posterior em serviços ativos', () => {
+    const cases = [
+      ['reparo-cavalete', 'Faltou trocar para o serviço que foi realmente executado.'],
+      ['reparo-rede-agua-asfalto', 'Fez outro serviço mas não colocou no adicional executado.'],
+      ['implantacao-ligacao-agua', 'O serviço ficou para depois e esqueceram o adicional posterior.'],
+    ] as const;
+
+    for (const [serviceId, query] of cases) {
+      const result = ruleEngine.evaluatePrompt(query, serviceId);
+      expect(result.decision).toBe('Não Conforme');
+      expect(result.matchedRules.some((rule) => rule.id === 'RULE-PARAM-GERAL-01')).toBe(true);
+    }
+  });
+
+  it('reprova quando a troca necessária não oferece o serviço correto', () => {
+    const exact = ruleEngine.evaluatePrompt(
+      'Não há possibilidade de troca do serviço.',
+      'reparo-cavalete'
+    );
+    const informal = ruleEngine.evaluatePrompt(
+      'Precisava trocar mas o serviço certo não aparece.',
+      'reparo-rede-agua-asfalto'
+    );
+
+    for (const result of [exact, informal]) {
+      expect(result.decision).toBe('Reprovado');
+      expect(result.primaryRule?.id).toBe('RULE-PARAM-TROCA-IMPOSSIVEL-01');
+    }
+  });
+
+  it('faz a impossibilidade de troca vencer a falta genérica de parametrização', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Faltou a troca porque o sistema não permite trocar para o serviço correto.',
+      'reparo-cavalete'
+    );
+
+    expect(result.decision).toBe('Reprovado');
+    expect(result.primaryRule?.id).toBe('RULE-PARAM-TROCA-IMPOSSIVEL-01');
+    expect(result.matchedRules.some((rule) => rule.id === 'RULE-PARAM-GERAL-01')).toBe(true);
+  });
+
+  it('explica a troca impossível como hipótese sem fingir ocorrência real', () => {
+    expect(findExpression(
+      normalizeText('Se não conseguir trocar para o serviço correto, o que faço?'),
+      'não conseguir trocar para o serviço correto'
+    )).not.toBeNull();
+    const hypothetical = ruleEngine.evaluatePrompt(
+      'Se não conseguir trocar para o serviço correto, o que faço?',
+      'reparo-cavalete'
+    );
+    const informational = ruleEngine.evaluatePrompt(
+      'Qual é a regra quando não há possibilidade de troca do serviço?',
+      'reparo-cavalete'
+    );
+
+    expect(hypothetical.intent).toBe('hipotese');
+    expect(hypothetical.decision).toBe('Reprovado');
+    expect(informational.outcome).toBe('informational');
+    expect(informational.decision).toBeNull();
+  });
+
+  it('retorna orientação fundamentada sem promover regra próxima a decisão oficial', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'A sequência do desdobro ficou quebrada entre o começo e o resultado.',
+      'reparo-cavalete'
+    );
+
+    expect(result.outcome).toBe('advisory');
+    expect(result.decision).toBeNull();
+    expect(result.advisory?.basisRuleIds).toContain('RULE-GERAL-EVID-01');
+    expect(result.advisory?.basisRuleIds).not.toContain('RULE-PARAM-GERAL-01');
+    expect(result.requiresHumanValidation).toBe(true);
   });
 
   it('não transforma consulta ou negação sobre desdobro em ocorrência real', () => {
@@ -531,7 +606,7 @@ describe('RuleEngine — ranking e serviço', () => {
     );
 
     expect(result.decision).toBeNull();
-    expect(result.outcome).toBe('insufficient');
+    expect(result.outcome).toBe('advisory');
     expect(result.matchedRules.some((rule) => rule.id === 'RULE-RR-INFO-02')).toBe(true);
   });
 

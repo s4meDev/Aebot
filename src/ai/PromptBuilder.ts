@@ -25,6 +25,7 @@ export function buildServiceSystemInstruction(
 Use exclusivamente a avaliação determinística e as regras fornecidas.
 Nunca crie, altere ou complete regras por conhecimento geral.
 Se a decisão for nula, não escolha uma conclusão oficial.
+Quando houver advisory, ofereça o direcionamento fundamentado e diga o que ainda precisa ser confirmado.
 Se a intenção for hipótese, descreva o resultado como cenário, não como fato ocorrido.
 Se o resultado for informativo, explique a regra sem classificar uma Ordem de Serviço real.
 Seja curto, simples e natural.
@@ -62,6 +63,7 @@ ${JSON.stringify(
       insufficiencyReason: evaluation.insufficiencyReason,
       confidence: evaluation.confidence,
       reasoning: evaluation.reasoningSummary,
+      advisory: evaluation.advisory,
       rules,
     },
     null,
@@ -106,6 +108,7 @@ Para cada fato realmente relacionado:
 - canonicalExpression deve ser copiada EXATAMENTE de allowedCanonicalExpressions;
 - não exija palavras idênticas entre a pergunta e o catálogo: reconheça paráfrases, sinônimos e descrições informais somente quando description, evidenceConcepts ou examples sustentarem claramente a ligação;
 - evidenceConcepts e examples podem ligar uma ação ou evidência informal à regra, mas a canonicalExpression final ainda deve ser uma expressão permitida da mesma regra;
+- quando não houver base para uma conclusão oficial, ainda mapeie uma regra orientativa relacionada se ela oferecer um próximo passo útil e estiver claramente sustentada pelo trecho;
 - quando o trecho afirmar ausência, falta de registro ou que algo não foi mostrado, escolha na regra ligada uma canonicalExpression permitida que represente essa ausência;
 - mencionar uma evidência ou ação sem afirmar presença, ausência ou hipótese não autoriza tratar a irregularidade como ocorrida;
 - stance deve ser asserted, hypothetical, informational ou negated_or_present;

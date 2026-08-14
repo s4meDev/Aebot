@@ -36,7 +36,9 @@ describe('corpus de regressão do motor', () => {
       expect(result.matchedRules.length).toBeLessThanOrEqual(testCase.maximumMatches);
     }
     expect(result.hasSufficientEvidence).toBe(testCase.decision !== null);
-    expect(result.requiresHumanValidation).toBe(testCase.outcome === 'insufficient');
+    expect(result.requiresHumanValidation).toBe(
+      testCase.outcome === 'insufficient' || testCase.outcome === 'advisory'
+    );
     expect(result.ruleStoreVersion).toMatch(/^2\./);
 
     if (result.outcome === 'insufficient') {
@@ -44,6 +46,11 @@ describe('corpus de regressão do motor', () => {
       expect(result.confidence).toBe('insuficiente');
     } else if (result.outcome === 'decision') {
       expect(result.primaryRule).toBe(result.matchedRules[0]);
+      expect(result.confidence).not.toBe('insuficiente');
+    } else if (result.outcome === 'advisory') {
+      expect(result.primaryRule).toBe(result.matchedRules[0]);
+      expect(result.advisory).toBeDefined();
+      expect(result.decision).toBeNull();
       expect(result.confidence).not.toBe('insuficiente');
     } else {
       expect(result.decision).toBeNull();

@@ -11,7 +11,7 @@ import type {
   ServiceParameterization,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.9.1';
+export const CURRENT_RULE_STORE_VERSION = '2.10.0';
 const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
 const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];
 const RULE_ATTENTION_LEVELS: RuleAttentionLevel[] = ['normal', 'attention', 'critical'];

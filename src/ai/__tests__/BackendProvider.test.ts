@@ -61,6 +61,47 @@ describe('BackendProvider', () => {
     expect(JSON.parse(String(init.body)).history).toHaveLength(1);
   });
 
+  it('aceita orientação fundamentada do backend sem convertê-la em decisão', async () => {
+    storageAdapter.set(STORAGE_KEYS.BACKEND_URL, 'http://127.0.0.1:8787');
+    const response = localResponse('A foto foi feita na vertical.');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      result: { ...response, provider: 'simulated' },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+
+    const result = await new BackendProvider(fallback()).generateResponse(
+      '',
+      'A foto foi feita na vertical.',
+      { id: 'reparo-cavalete', name: 'Reparo de Cavalete' }
+    );
+
+    expect(result.provider).toBe('backend');
+    expect(result.evaluation.outcome).toBe('advisory');
+    expect(result.evaluation.advisory).toBeDefined();
+    expect(result.decision).toBeNull();
+  });
+
+  it('rejeita orientação remota que tente incluir conclusão oficial', async () => {
+    storageAdapter.set(STORAGE_KEYS.BACKEND_URL, 'http://127.0.0.1:8787');
+    const response = localResponse('A foto foi feita na vertical.');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      result: {
+        ...response,
+        decision: 'Conforme',
+        evaluation: { ...response.evaluation, decision: 'Conforme' },
+      },
+    }), { status: 200 })));
+
+    const result = await new BackendProvider(fallback()).generateResponse(
+      '',
+      'A foto foi feita na vertical.',
+      { id: 'reparo-cavalete', name: 'Reparo de Cavalete' }
+    );
+
+    expect(result.evaluation.insufficiencyReason).toBe('backend_unavailable');
+    expect(result.evaluation.advisory).toBeUndefined();
+    expect(result.decision).toBeNull();
+  });
+
   it('não decide localmente se a resposta é inválida e a versão central é desconhecida', async () => {
     storageAdapter.set(STORAGE_KEYS.BACKEND_URL, 'http://localhost:8787');
     const response = localResponse();
