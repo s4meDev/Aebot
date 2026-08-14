@@ -20,6 +20,7 @@ export type InsufficiencyReason =
 
 export type ServiceAnalysisStatus = 'active' | 'rules_pending';
 export type CatalogNameStatus = 'confirmed' | 'needs_confirmation';
+export type RuleAttentionLevel = 'normal' | 'attention' | 'critical';
 
 /** Relações permitidas no sistema. Adicional também pode ser chamado de desdobro. */
 export interface ServiceParameterization {
@@ -61,6 +62,8 @@ export interface DataRule {
   serviceId: string;
   /** Outros serviços que compartilham exatamente a mesma regra, sem duplicá-la na base. */
   applicableServiceIds?: string[];
+  /** Aplica uma orientação realmente geral a todo serviço com análise ativa. */
+  appliesToAllActiveServices?: boolean;
   title: string;
   description: string;
   /** Conclusão oficial. Ausente em orientações que não definem classificação da OS. */
@@ -86,6 +89,8 @@ export interface DataRule {
   sourceReferences?: string[];
   /** Grupo factual reutilizável por regras agregadoras do mesmo serviço. */
   factGroup?: string;
+  /** Destaca risco operacional sem criar ou alterar uma conclusão oficial. */
+  attentionLevel?: RuleAttentionLevel;
   matchPolicy?: RuleMatchPolicy;
 }
 
@@ -132,6 +137,7 @@ export interface MatchedRule {
   matchedTerms: string[];
   /** Regras-base cujos fatos distintos sustentaram uma regra agregadora. */
   supportingRuleIds?: string[];
+  attentionLevel?: RuleAttentionLevel;
   guidance?: string;
   message: string;
 }

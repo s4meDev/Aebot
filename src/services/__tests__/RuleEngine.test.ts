@@ -321,6 +321,21 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(result.matchedRules.map((item) => item.id)).toEqual(['b']);
   });
 
+  it('aplica orientação geral a novo serviço ativo sem copiar seu ID', () => {
+    const generalRule = rule({
+      id: 'general-guidance',
+      severity: undefined,
+      appliesToAllActiveServices: true,
+      conditionKeywords: ['evidência geral ausente'],
+      attentionLevel: 'critical',
+    });
+    const engine = new RuleEngine(store([generalRule], ['service-a', 'service-new']));
+
+    const result = engine.evaluatePrompt('Evidência geral ausente.', 'service-new');
+    expect(result.decision).toBeNull();
+    expect(result.matchedRules[0]?.id).toBe('general-guidance');
+  });
+
   it('retorna erro controlado para serviceId inexistente', () => {
     const result = ruleEngine.evaluatePrompt('Sem foto depois.', 'servico-inexistente');
     expect(result.decision).toBeNull();
@@ -333,12 +348,80 @@ describe('RuleEngine — ranking e serviço', () => {
   it('não decide serviço cuja parametrização existe mas as regras ainda estão pendentes', () => {
     const result = ruleEngine.evaluatePrompt(
       'O serviço foi executado corretamente.',
-      'repavimentacao-calcada'
+      'desobstrucao-ramal-agua'
     );
     expect(result.decision).toBeNull();
     expect(result.errorCode).toBe('SERVICE_RULES_PENDING');
     expect(result.insufficiencyReason).toBe('service_rules_pending');
     expect(result.requiresHumanValidation).toBe(true);
+  });
+
+  it('trata adicional executado sem evidência própria como atenção crítica sem inventar decisão', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'O desdobro executado ficou sem foto durante.',
+      'reparo-rede-agua-asfalto'
+    );
+
+    expect(result.outcome).toBe('insufficient');
+    expect(result.decision).toBeNull();
+    expect(result.insufficiencyReason).toBe('missing_information');
+    expect(result.matchedRules).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'RULE-GERAL-EVID-02', attentionLevel: 'critical' }),
+    ]));
+  });
+
+  it('exige motivo do adicional posterior sem fingir que o serviço futuro foi executado', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Lançou o adicional posterior mas não mostrou a necessidade.',
+      'implantacao-ligacao-agua'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.outcome).toBe('insufficient');
+    expect(result.matchedRules.some((item) => item.id === 'RULE-GERAL-EVID-03')).toBe(true);
+  });
+
+  it('não herda a severidade do cavalete para falta de etapa em outro serviço', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'O serviço original ficou sem foto durante.',
+      'reparo-rede-agua-asfalto'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.matchedRules.every((item) => item.severity === null)).toBe(true);
+  });
+
+  it('aplica Não Conforme somente à medição de repavimentação explicitamente fora do padrão', () => {
+    const invalid = ruleEngine.evaluatePrompt(
+      'A medição foi apresentada em formato não aceito.',
+      'repavimentacao-calcada'
+    );
+    const informative = ruleEngine.evaluatePrompt(
+      'Como deve ser a medição da repavimentação?',
+      'repavimentacao-calcada'
+    );
+
+    expect(invalid.decision).toBe('Não Conforme');
+    expect(invalid.primaryRule?.id).toBe('RULE-PAV-01');
+    expect(informative.decision).toBeNull();
+    expect(informative.outcome).toBe('informational');
+  });
+
+  it('consulta os novos serviços sem cair em regras pendentes', () => {
+    for (const serviceId of [
+      'corte-fornecimento-agua',
+      'religacao-fornecimento-agua',
+      'implantacao-ligacao-agua',
+      'reparo-rede-esgoto',
+      'extensao-rede-agua',
+      'interligacao-rede-agua',
+      'verificacao-falta-agua',
+    ]) {
+      const result = ruleEngine.evaluatePrompt('Como funciona esse serviço?', serviceId);
+      expect(result.errorCode).toBeUndefined();
+      expect(result.outcome).toBe('informational');
+      expect(result.decision).toBeNull();
+    }
   });
 
   it('responde informativamente com a parametrização cadastrada', () => {

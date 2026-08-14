@@ -43,9 +43,14 @@ export function formatEvaluationResponse(
   if (!evaluation.decision || !evaluation.hasSufficientEvidence) {
     const guidanceOnly = evaluation.matchedRules.length > 0 &&
       evaluation.matchedRules.every((rule) => rule.severity === null);
+    const hasCriticalGuidance = evaluation.matchedRules.some(
+      (rule) => rule.attentionLevel === 'critical'
+    );
     const reason = evaluation.errorCode === 'SERVICE_NOT_FOUND'
       ? 'O serviço selecionado não existe na base de regras.'
-      : evaluation.reasoningSummary;
+      : hasCriticalGuidance
+        ? `Atenção crítica: ${evaluation.reasoningSummary}`
+        : evaluation.reasoningSummary;
     const guidance = guidanceOnly
       ? `${evaluation.matchedRules[0].guidance ?? evaluation.matchedRules[0].message} Como não há conclusão oficial cadastrada para esse fato, valide a classificação com o responsável.`
       : evaluation.insufficiencyReason === 'missing_information'

@@ -45,8 +45,9 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - feedback persistente em Cloudflare D1;
 - painel administrativo protegido por credencial separada;
 - Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
-- 28 serviços cadastrados no catálogo, incluindo Substituição de HD com e sem custo;
-- regras e orientações ativas para **Reparo de Cavalete**, cinco variações de **Reparo de Ramal**, três variações de **Reaterro de Valas**, **Substituição de Registro** e **Substituição de HD com/sem custo**;
+- 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
+- 53 regras e orientações baseadas nas diretrizes do produto e nas ITs recebidas;
+- cadeia de evidências do original, do adicional executado e do adicional posterior tratada de forma explícita;
 - critérios de desdobro para ramal, reaterro e repavimentação cadastrados; falhas sem conclusão oficial definida continuam sem decisão automática.
 
 ## Carregar a extensão no Chrome
@@ -101,6 +102,8 @@ Em outro terminal, execute `npm run server:check`. As configurações privadas f
 | `npm run test:capacity` | Executa isoladamente o teste de 3.000 avaliações |
 | `npm run typecheck` | Verifica o TypeScript da extensão, Node e Worker |
 | `npm run rules:audit` | Audita estrutura, lacunas e conflitos da base |
+| `npm run rules:format` | Padroniza a formatação do JSON sem alterar as regras |
+| `npm run rules:check` | Audita regras, TypeScript e testes em uma única execução |
 | `npm run build` | Gera a extensão local em `dist` |
 | `npm run build:production` | Gera e valida o pacote oficial da extensão |
 | `npm run build:server` | Gera a API Node em `server-dist` |
@@ -130,6 +133,8 @@ O fluxo completo do código e a finalidade de cada arquivo estão documentados e
 - [Implantação para 40 analistas](docs/DEPLOYMENT-40-USERS.md): publicação, credenciais e instalação.
 - [Capacidade para 3.000 OS por dia](docs/CAPACITY-3000-OS.md): volume, limites e critérios de validação.
 - [Entrada de regras](docs/RULE-INTAKE.md): processo para cadastrar e revisar conhecimento.
+- [Como editar as regras](docs/COMO-EDITAR-REGRAS.md): guia prático com exemplos para manutenção.
+- [Base de conhecimento das ITs](docs/BASE-DE-CONHECIMENTO-ITS.md): critérios incorporados e limites de decisão.
 
 ## Segurança e privacidade
 
@@ -144,7 +149,7 @@ Nunca adicione chaves em variáveis `VITE_*`, pois elas seriam incorporadas ao p
 
 ## Limitações conhecidas
 
-- somente o Reparo de Cavalete de Água possui regras de decisão nesta etapa;
+- a maior parte das novas ITs define padrão de execução, não a conclusão oficial; nesses casos o AEBOT orienta e solicita validação sem inventar decisão;
 - seis nomes reconstruídos de rótulos cortados aguardam confirmação em uma captura completa;
 - os acessos técnicos ainda precisam ser associados aos analistas reais durante o piloto;
 - serviços e regras novas precisam ser cadastrados e protegidos por testes de regressão;

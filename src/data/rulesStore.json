@@ -1,5 +1,5 @@
 {
-  "version": "2.8.0",
+  "version": "2.9.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -108,7 +108,7 @@
         "A intervenção no ramal precisa estar visível; mencionar somente o cavalete não comprova o reparo do ramal.",
         "O documento técnico descreve as evidências obrigatórias, mas não define sozinho a conclusão oficial para cada ausência."
       ],
-      "suggestedQuestions": ["Quais fotos comprovam o reparo do ramal?", "O que deve aparecer na foto da finalização?"],
+      "suggestedQuestions": ["Quais fotos comprovam o reparo do ramal?","O que deve aparecer na foto da finalização?"],
       "analysisStatus": "active"
     },
     {
@@ -167,9 +167,12 @@
       "id": "reparo-rede-agua-asfalto",
       "name": "Reparo de Rede de Água - Asfalto",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou troca de serviço.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Reparo de rede de água em área com pavimento asfáltico.",
+      "insights": [
+        "As fotos devem identificar local, defeito, método executado, medições e finalização.",
+        "Intervenções com seis metros ou mais exigem conferência do enquadramento como substituição de rede."
+      ],
+      "analysisStatus": "active"
     },
     {
       "id": "reparo-furto-vandalismo",
@@ -196,7 +199,7 @@
         "Use este serviço quando somente o registro do cavalete foi trocado.",
         "Se outras peças do cavalete também receberam intervenção, o enquadramento permanece como Reparo de Cavalete."
       ],
-      "suggestedQuestions": ["Quando usar Substituição de Registro?", "Trocaram registro e tubete; qual serviço usar?"],
+      "suggestedQuestions": ["Quando usar Substituição de Registro?","Trocaram registro e tubete; qual serviço usar?"],
       "analysisStatus": "active"
     },
     {
@@ -209,7 +212,7 @@
         "Use a opção com custo somente quando a avaria for atribuída ao cliente.",
         "A regra também se aplica quando um hidrômetro ausente precisa ser instalado, desde que exista responsabilidade do cliente."
       ],
-      "suggestedQuestions": ["Quando a troca do HD é com custo?", "A avaria foi causada pelo cliente; qual serviço usar?"],
+      "suggestedQuestions": ["Quando a troca do HD é com custo?","A avaria foi causada pelo cliente; qual serviço usar?"],
       "analysisStatus": "active"
     },
     {
@@ -222,7 +225,7 @@
         "Use a opção sem custo para erro, equipamento quebrado, furto ou qualquer motivo não atribuído ao cliente.",
         "O serviço cobre tanto a reposição de hidrômetro ausente quanto a troca do equipamento existente."
       ],
-      "suggestedQuestions": ["Quando a troca do HD é sem custo?", "Hidrômetro furtado entra com ou sem custo?"],
+      "suggestedQuestions": ["Quando a troca do HD é sem custo?","Hidrômetro furtado entra com ou sem custo?"],
       "analysisStatus": "active"
     },
     {
@@ -251,7 +254,7 @@
         "O recorte regular e a aferição da vala devem ser evidenciados quando a equipe também executa o reaterro final em via pública.",
         "O complemento do nome no catálogo ainda precisa ser confirmado."
       ],
-      "suggestedQuestions": ["Quais fotos são obrigatórias no reaterro?", "O que deve aparecer durante a compactação?"],
+      "suggestedQuestions": ["Quais fotos são obrigatórias no reaterro?","O que deve aparecer durante a compactação?"],
       "analysisStatus": "active",
       "catalogNameStatus": "needs_confirmation",
       "sourceLabel": "REATTERRO DE VALAS - ASFALTO (MANUTE..."
@@ -288,17 +291,17 @@
       "id": "repavimentacao-asfalto-acima-1m2",
       "name": "Repavimentação - Asfalto Acima de 1m²",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou adicional posterior.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Recomposição de pavimento asfáltico em área superior a 1 m².",
+      "insights": ["A análise deve conferir necessidade, base, emulsão, massa, espessura, compactação, medição e finalização."],
+      "analysisStatus": "active"
     },
     {
       "id": "repavimentacao-asfalto-ate-1m2",
       "name": "Repavimentação - Asfalto Até 1m²",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou adicional/desdobro.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Recomposição de pavimento asfáltico em área de até 1 m².",
+      "insights": ["A análise deve conferir necessidade, base, emulsão, massa, espessura, compactação, medição e finalização."],
+      "analysisStatus": "active"
     },
     {
       "id": "repavimentacao-bloco-paralelo",
@@ -312,9 +315,9 @@
       "id": "repavimentacao-calcada",
       "name": "Repavimentação - Calçada",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou adicional/desdobro.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Recomposição do passeio ou calçada após intervenção.",
+      "insights": ["As fotos devem mostrar necessidade, preparo, execução, medidas e acabamento final compatível."],
+      "analysisStatus": "active"
     },
     {
       "id": "repavimentacao-ceramica",
@@ -328,9 +331,9 @@
       "id": "repavimentacao-concreto",
       "name": "Repavimentação - Concreto",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou adicional/desdobro.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Recomposição de pavimento de concreto após intervenção.",
+      "insights": ["As fotos devem mostrar necessidade, preparo, execução, medidas e acabamento final compatível."],
+      "analysisStatus": "active"
     },
     {
       "id": "repavimentacao-muro-alvenaria",
@@ -365,6 +368,97 @@
       "analysisStatus": "rules_pending",
       "catalogNameStatus": "needs_confirmation",
       "sourceLabel": "VISTORIA DE IRREGULARIDADE - FURTO DE..."
+    },
+    {
+      "id": "corte-fornecimento-agua",
+      "name": "Corte de Fornecimento de Água",
+      "category": "Comercial",
+      "summary": "Análise das evidências do corte conforme o método executado em campo.",
+      "insights": [
+        "A sequência deve identificar imóvel, hidrômetro, método de corte, execução e finalização.",
+        "O método executado define quais elementos físicos precisam aparecer.",
+        "Indícios de corte fictício exigem atenção crítica, mas a conclusão oficial depende de regra classificatória explícita."
+      ],
+      "suggestedQuestions": ["Quais fotos comprovam o corte?","O que indica um possível corte fictício?"],
+      "analysisStatus": "active"
+    },
+    {
+      "id": "religacao-fornecimento-agua",
+      "name": "Religação de Fornecimento de Água",
+      "category": "Comercial",
+      "summary": "Análise da recomposição do abastecimento conforme o método de corte encontrado.",
+      "insights": [
+        "A evidência precisa ligar o método encontrado à retirada do bloqueio e ao resultado final.",
+        "LISC e dispositivo de bloqueio não exigem desmontagem; obstrução, hóstia ou moeda exigem evidência compatível com remoção e fluxo."
+      ],
+      "suggestedQuestions": ["O que precisa aparecer na religação?","Quando precisa mostrar água correndo?"],
+      "analysisStatus": "active"
+    },
+    {
+      "id": "vistoria-pos-corte",
+      "name": "Vistoria Pós-Corte",
+      "category": "Comercial",
+      "summary": "Vistoria que confirma a situação encontrada após o corte e o encaminhamento necessário.",
+      "insights": [
+        "A vistoria deve identificar o imóvel, o hidrômetro e a situação real do fornecimento.",
+        "Quando houver novo corte ou desdobro, a necessidade e a execução correspondente precisam estar evidenciadas."
+      ],
+      "suggestedQuestions": ["O que conferir na vistoria pós-corte?"],
+      "analysisStatus": "active"
+    },
+    {
+      "id": "implantacao-ligacao-agua",
+      "name": "Implantação de Ligação de Água",
+      "category": "Manutenção",
+      "summary": "Implantação da ligação entre rede, ramal, cavalete e hidrômetro no imóvel correto.",
+      "insights": [
+        "As fotos devem ligar endereço, escavação, conexão, hidrômetro, fluxo, medições e finalização.",
+        "Desdobros de reaterro e repavimentação precisam corresponder ao revestimento e ao que ficou executado ou pendente."
+      ],
+      "suggestedQuestions": ["Quais evidências comprovam a implantação?"],
+      "analysisStatus": "active"
+    },
+    {
+      "id": "reparo-rede-esgoto",
+      "name": "Reparo de Rede de Esgoto",
+      "category": "Manutenção",
+      "summary": "Reparo de trecho danificado da rede de esgoto com evidência do defeito, execução e finalização.",
+      "insights": [
+        "A análise deve identificar o local, o defeito, o trecho reparado, as medições e o resultado final.",
+        "Intervenções extensas podem exigir troca do enquadramento conforme o procedimento cadastrado."
+      ],
+      "suggestedQuestions": ["Quais fotos comprovam o reparo de esgoto?"],
+      "analysisStatus": "active"
+    },
+    {
+      "id": "extensao-rede-agua",
+      "name": "Extensão de Rede de Água",
+      "category": "Manutenção",
+      "summary": "Execução de novo trecho de rede de água, da abertura da vala à compactação e finalização.",
+      "insights": ["Local, profundidade, assentamento, conexões, medições, reaterro e acabamento devem formar uma sequência coerente."],
+      "suggestedQuestions": ["O que precisa aparecer na extensão de rede?"],
+      "analysisStatus": "active"
+    },
+    {
+      "id": "interligacao-rede-agua",
+      "name": "Interligação de Rede de Água",
+      "category": "Manutenção",
+      "summary": "Conexão entre redes de água com evidência da abertura, interligação, testes e finalização.",
+      "insights": ["A interligação física precisa aparecer; somente perfuração ou preparação não comprova a interligação."],
+      "suggestedQuestions": ["Como comprovar a interligação de rede?"],
+      "analysisStatus": "active"
+    },
+    {
+      "id": "verificacao-falta-agua",
+      "name": "Verificação de Falta de Água",
+      "category": "Operação de Água",
+      "summary": "Verificação da falta ou baixa pressão de água no imóvel e definição do encaminhamento necessário.",
+      "insights": [
+        "Fachada, hidrômetro, leitura, teste de pressão e presença ou ausência de fluxo precisam ser reconhecíveis.",
+        "Qualquer adicional posterior deve mostrar o defeito ou condição que justifica o retorno."
+      ],
+      "suggestedQuestions": ["O que comprova a falta de água?","Como justificar um adicional posterior?"],
+      "analysisStatus": "active"
     }
   ],
   "rules": [
@@ -376,29 +470,16 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Qualidade fotográfica",
-      "topicKeywords": ["fachada", "foto da fachada", "fachada ampla", "identificação do imóvel"],
-      "relatedEvidence": ["foto da fachada", "fachada", "fachada ampla", "visão ampla do imóvel"],
-      "conditionKeywords": [
-        "sem foto da fachada",
-        "falta foto da fachada",
-        "foto da fachada ausente",
-        "sem foto ampla da fachada",
-        "fachada não aparece inteira"
-      ],
-      "equivalentExpressions": [
-        "não apresentou a fachada",
-        "foto da fachada muito fechada",
-        "não mostrou o imóvel de forma ampla"
-      ],
-      "positiveSignals": ["sem", "falta", "faltou", "ausente", "não apresentou", "não mostrou", "muito fechada"],
-      "negativeSignals": ["fachada ampla apresentada", "foto ampla da fachada presente"],
+      "topicKeywords": ["fachada","foto da fachada","fachada ampla","identificação do imóvel"],
+      "relatedEvidence": ["foto da fachada","fachada","fachada ampla","visão ampla do imóvel"],
+      "conditionKeywords": ["sem foto da fachada","falta foto da fachada","foto da fachada ausente","sem foto ampla da fachada","fachada não aparece inteira"],
+      "equivalentExpressions": ["não apresentou a fachada","foto da fachada muito fechada","não mostrou o imóvel de forma ampla"],
+      "positiveSignals": ["sem","falta","faltou","ausente","não apresentou","não mostrou","muito fechada"],
+      "negativeSignals": ["fachada ampla apresentada","foto ampla da fachada presente"],
       "examples": ["A foto da fachada ficou muito fechada e não identifica o imóvel."],
       "message": "A fachada não foi evidenciada com amplitude suficiente para identificar o local do serviço.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade da qualidade fotográfica.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slide 5",
-        "IT - Reparo de Cavalete.docx, página 5, Fachada Inicial"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 5","IT - Reparo de Cavalete.docx, página 5, Fachada Inicial"]
     },
     {
       "id": "RULE-RC-11",
@@ -408,18 +489,15 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Classificação do serviço",
-      "topicKeywords": ["troca do registro", "substituição do registro", "código 122003", "troca de serviço"],
-      "relatedEvidence": ["somente troca do registro", "registro do cavalete", "serviço 122003", "serviço 119001"],
+      "topicKeywords": ["troca do registro","substituição do registro","código 122003","troca de serviço"],
+      "relatedEvidence": ["somente troca do registro","registro do cavalete","serviço 122003","serviço 119001"],
       "conditionKeywords": [
         "troca exclusiva do registro cadastrada como reparo de cavalete",
         "trocaram somente o registro e mantiveram reparo de cavalete",
         "só trocaram o registro mas a os ficou como reparo de cavalete"
       ],
-      "equivalentExpressions": [
-        "foi feita apenas a substituição do registro no serviço 119001",
-        "troca somente do registro sem alterar para o código 122003"
-      ],
-      "negativeSignals": ["serviço alterado para 122003", "substituição de registro cadastrada corretamente"],
+      "equivalentExpressions": ["foi feita apenas a substituição do registro no serviço 119001","troca somente do registro sem alterar para o código 122003"],
+      "negativeSignals": ["serviço alterado para 122003","substituição de registro cadastrada corretamente"],
       "examples": ["Só trocaram o registro, mas a OS permaneceu como reparo de cavalete."],
       "message": "A execução corresponde à Substituição de Registro de Cavalete, mas permaneceu classificada como Reparo de Cavalete.",
       "guidance": "Altere o tipo para o código 122003 e registre a Não Conformidade da classificação do serviço.",
@@ -433,21 +511,16 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Classificação do serviço",
-      "topicKeywords": ["serviço no ramal", "serviço na rede", "troca do tipo de serviço", "FORMES"],
-      "relatedEvidence": ["ramal", "rede", "fora do cavalete", "tipo de serviço"],
-      "conditionKeywords": [
-        "serviço executado no ramal",
-        "serviço executado na rede",
-        "reparo feito no ramal",
-        "reparo feito na rede"
-      ],
+      "topicKeywords": ["serviço no ramal","serviço na rede","troca do tipo de serviço","FORMES"],
+      "relatedEvidence": ["ramal","rede","fora do cavalete","tipo de serviço"],
+      "conditionKeywords": ["serviço executado no ramal","serviço executado na rede","reparo feito no ramal","reparo feito na rede"],
       "equivalentExpressions": [
         "a intervenção foi no ramal e não no cavalete",
         "a equipe trabalhou na rede mas a os ficou como reparo de cavalete",
         "serviço foi executado no ramal",
         "serviço foi executado na rede"
       ],
-      "negativeSignals": ["serviço executado no cavalete", "tipo de serviço corrigido"],
+      "negativeSignals": ["serviço executado no cavalete","tipo de serviço corrigido"],
       "examples": ["O serviço foi executado no ramal, embora a OS esteja como reparo de cavalete."],
       "message": "A intervenção ocorreu no ramal ou na rede e exige correção do tipo de serviço.",
       "guidance": "Altere o tipo de serviço da OS e registre a Não Conformidade no FORMES.",
@@ -460,16 +533,14 @@
       "description": "Antes da análise, deve-se verificar a origem da OS matriz, confirmar se o endereço corresponde ao da OS mãe e consultar a matrícula. Em campo, a equipe valida georreferência, endereço, imóvel, ligação e cavalete correto.",
       "priority": 4,
       "category": "Validação cadastral",
-      "topicKeywords": ["os matriz", "os mãe", "origem da os", "matrícula", "georreferência"],
-      "relatedEvidence": ["origem da os matriz", "endereço da os mãe", "consulta da matrícula", "georreferência"],
-      "conditionKeywords": ["consultar a matrícula", "verificar a origem da os matriz", "confirmar o endereço da os mãe"],
-      "equivalentExpressions": ["conferir a os de origem", "validar matrícula e endereço antes da análise"],
+      "topicKeywords": ["os matriz","os mãe","origem da os","matrícula","georreferência"],
+      "relatedEvidence": ["origem da os matriz","endereço da os mãe","consulta da matrícula","georreferência"],
+      "conditionKeywords": ["consultar a matrícula","verificar a origem da os matriz","confirmar o endereço da os mãe"],
+      "equivalentExpressions": ["conferir a os de origem","validar matrícula e endereço antes da análise"],
       "message": "A análise deve conferir a OS de origem, o endereço da OS mãe e a matrícula; a execução deve ocorrer no ativo correto.",
       "guidance": "Consulte a matrícula e confronte origem, endereço e ativo antes de avaliar as evidências.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slide 3",
-        "IT - Reparo de Cavalete.docx, página 5, item 5.3.1"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 3","IT - Reparo de Cavalete.docx, página 5, item 5.3.1"],
+      "examples": ["Como confirmo a matrícula e a OS de origem?"]
     },
     {
       "id": "RULE-RC-INFO-02",
@@ -478,13 +549,14 @@
       "description": "O cavalete inclui registro de esfera ou borboleta, tubos ou canos, joelhos de 90 graus, tubetes longo e curto com virolas, porcas, vedações, adaptadores e lacre de proteção.",
       "priority": 4,
       "category": "Conhecimento técnico",
-      "topicKeywords": ["componentes do cavalete", "registro de esfera", "registro borboleta", "tubete", "virola", "porca", "vedante", "adaptador", "lacre de proteção"],
-      "relatedEvidence": ["registro de esfera", "registro borboleta", "tubos", "canos", "joelhos", "tubetes", "virolas", "porcas", "vedantes", "adaptadores", "lacre de proteção"],
-      "conditionKeywords": ["tubete liga o hidrômetro aos tubos", "registro permite interromper o fluxo", "lacre protege contra violação"],
-      "equivalentExpressions": ["quais são as peças do cavalete", "do que é formado o cavalete"],
+      "topicKeywords": ["componentes do cavalete","registro de esfera","registro borboleta","tubete","virola","porca","vedante","adaptador","lacre de proteção"],
+      "relatedEvidence": ["registro de esfera","registro borboleta","tubos","canos","joelhos","tubetes","virolas","porcas","vedantes","adaptadores","lacre de proteção"],
+      "conditionKeywords": ["tubete liga o hidrômetro aos tubos","registro permite interromper o fluxo","lacre protege contra violação"],
+      "equivalentExpressions": ["quais são as peças do cavalete","do que é formado o cavalete"],
       "message": "O cavalete é formado por registros, tubos, joelhos, tubetes e virolas, porcas e vedações, adaptadores e lacre de proteção.",
       "guidance": "Use a identificação do componente para conferir se o reparo descrito e o material informado são compatíveis.",
-      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 4"]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 4"],
+      "examples": ["Quais peças formam o cavalete?"]
     },
     {
       "id": "RULE-RC-INFO-03",
@@ -493,13 +565,14 @@
       "description": "Vazamentos nas conexões podem ser corrigidos por reaperto, reposicionamento ou substituição das vedações, com fotos antes e depois que demonstrem a eliminação do vazamento. Fissura, trinca, deformação ou ressecamento no corpo das tubulações exige substituição completa do conjunto afetado.",
       "priority": 4,
       "category": "Execução técnica",
-      "topicKeywords": ["reaperto", "reposicionamento", "troca de vedação", "reparo de conexões", "corpo do cavalete", "trinca", "fissura", "ressecamento"],
-      "relatedEvidence": ["conexões", "borrachas de vedação", "virolas", "corpo das tubulações", "substituição completa"],
-      "conditionKeywords": ["reaperto das conexões", "substituição das vedações", "substituição completa do corpo do cavalete"],
-      "equivalentExpressions": ["apertar a virola para eliminar o vazamento", "trocar o conjunto quando o tubo está trincado"],
+      "topicKeywords": ["reaperto","reposicionamento","troca de vedação","reparo de conexões","corpo do cavalete","trinca","fissura","ressecamento"],
+      "relatedEvidence": ["conexões","borrachas de vedação","virolas","corpo das tubulações","substituição completa"],
+      "conditionKeywords": ["reaperto das conexões","substituição das vedações","substituição completa do corpo do cavalete"],
+      "equivalentExpressions": ["apertar a virola para eliminar o vazamento","trocar o conjunto quando o tubo está trincado"],
       "message": "Conexões admitem reaperto ou correção das vedações; danos no corpo do cavalete exigem substituição completa do conjunto afetado.",
       "guidance": "Confira se o método executado corresponde ao componente danificado e se o resultado foi evidenciado antes e depois.",
-      "sourceReferences": ["IT - Reparo de Cavalete.docx, página 5, item 5.3.2"]
+      "sourceReferences": ["IT - Reparo de Cavalete.docx, página 5, item 5.3.2"],
+      "examples": ["Apertaram a virola para eliminar o vazamento; esse método é permitido?"]
     },
     {
       "id": "RULE-RC-INFO-04",
@@ -508,16 +581,14 @@
       "description": "O registro fotográfico deve mostrar fachada ampla, local do reparo, chassi ou número do hidrômetro e lacre inicial, ponto exato do vazamento, execução e método, novo lacre quando aplicável e cavalete finalizado, ligado e com registro aberto.",
       "priority": 4,
       "category": "Padrão de evidências",
-      "topicKeywords": ["padrão de fotos", "fotos obrigatórias", "sequência de fotos", "fachada", "local do reparo", "ponto de vazamento", "finalização"],
-      "relatedEvidence": ["fachada", "local do reparo", "chassi", "lacre inicial", "ponto do vazamento", "execução", "novo lacre", "cavalete finalizado"],
-      "conditionKeywords": ["fachada local chassi vazamento execução e finalização", "padrão fotográfico do reparo de cavalete"],
-      "equivalentExpressions": ["quais fotos precisam ser apresentadas", "qual é a sequência de evidências"],
+      "topicKeywords": ["padrão de fotos","fotos obrigatórias","sequência de fotos","fachada","local do reparo","ponto de vazamento","finalização"],
+      "relatedEvidence": ["fachada","local do reparo","chassi","lacre inicial","ponto do vazamento","execução","novo lacre","cavalete finalizado"],
+      "conditionKeywords": ["fachada local chassi vazamento execução e finalização","padrão fotográfico do reparo de cavalete"],
+      "equivalentExpressions": ["quais fotos precisam ser apresentadas","qual é a sequência de evidências"],
       "message": "O padrão exige evidências do local, identificação, defeito, execução e estado final do cavalete.",
       "guidance": "Confira cada etapa e aplique as regras de decisão específicas somente para as ausências realmente confirmadas.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slides 5, 6, 9, 10 e 12",
-        "IT - Reparo de Cavalete.docx, páginas 5 a 7"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slides 5, 6, 9, 10 e 12","IT - Reparo de Cavalete.docx, páginas 5 a 7"],
+      "examples": ["Qual é a sequência de fotos do Reparo de Cavalete?"]
     },
     {
       "id": "RULE-RC-INFO-05",
@@ -526,13 +597,14 @@
       "description": "Quando o número do hidrômetro encontrado no cavalete for diferente do número cadastrado na Ordem de Serviço, a equipe deve registrar obrigatoriamente a divergência no parecer.",
       "priority": 4,
       "category": "Rastreabilidade",
-      "topicKeywords": ["hidrômetro diferente", "hd divergente", "número diferente", "divergência no parecer"],
-      "relatedEvidence": ["número do hidrômetro", "número cadastrado", "parecer de campo", "divergência"],
-      "conditionKeywords": ["hidrômetro diferente do cadastrado", "número do hd divergente da os", "registrar divergência no parecer"],
-      "equivalentExpressions": ["o hd encontrado não é o mesmo da ordem", "chassi diferente do cadastrado"],
+      "topicKeywords": ["hidrômetro diferente","hd divergente","número diferente","divergência no parecer"],
+      "relatedEvidence": ["número do hidrômetro","número cadastrado","parecer de campo","divergência"],
+      "conditionKeywords": ["hidrômetro diferente do cadastrado","número do hd divergente da os","registrar divergência no parecer"],
+      "equivalentExpressions": ["o hd encontrado não é o mesmo da ordem","chassi diferente do cadastrado"],
       "message": "A divergência entre o hidrômetro encontrado e o cadastrado deve ser informada no parecer de campo.",
       "guidance": "Confirme os dois números e verifique se a equipe registrou a divergência no parecer.",
-      "sourceReferences": ["IT - Reparo de Cavalete.docx, página 4, item 5.2"]
+      "sourceReferences": ["IT - Reparo de Cavalete.docx, página 4, item 5.2"],
+      "examples": ["O hidrômetro encontrado é diferente do cadastro; o que registrar?"]
     },
     {
       "id": "RULE-RC-INFO-06",
@@ -541,13 +613,14 @@
       "description": "A equipe deve abrir Vistoria de Irregularidade quando identificar anomalia durante o serviço ou necessidade de trocar hidrômetro quebrado ou avariado. A troca do hidrômetro deve ser executada pelo setor Comercial.",
       "priority": 4,
       "category": "Fluxo operacional",
-      "topicKeywords": ["vistoria de irregularidade", "anomalia", "hidrômetro quebrado", "hidrômetro avariado", "troca de hd", "setor comercial"],
-      "relatedEvidence": ["anomalia", "equipamento quebrado", "equipamento avariado", "necessidade de troca do hidrômetro", "setor comercial"],
-      "conditionKeywords": ["abrir vistoria de irregularidade", "troca do hidrômetro pelo setor comercial", "hidrômetro quebrado ou avariado"],
-      "equivalentExpressions": ["quem troca o hd quebrado", "o que fazer quando o hidrômetro está avariado"],
+      "topicKeywords": ["vistoria de irregularidade","anomalia","hidrômetro quebrado","hidrômetro avariado","troca de hd","setor comercial"],
+      "relatedEvidence": ["anomalia","equipamento quebrado","equipamento avariado","necessidade de troca do hidrômetro","setor comercial"],
+      "conditionKeywords": ["abrir vistoria de irregularidade","troca do hidrômetro pelo setor comercial","hidrômetro quebrado ou avariado"],
+      "equivalentExpressions": ["quem troca o hd quebrado","o que fazer quando o hidrômetro está avariado"],
       "message": "Anomalias exigem Vistoria de Irregularidade; hidrômetro quebrado ou avariado deve ser trocado pelo setor Comercial.",
       "guidance": "Oriente a abertura da vistoria e encaminhe a troca do hidrômetro ao setor Comercial.",
-      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 13"]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 13"],
+      "examples": ["Quem deve trocar um hidrômetro avariado?"]
     },
     {
       "id": "RULE-RC-INFO-07",
@@ -556,13 +629,14 @@
       "description": "A área deve ser isolada quando necessário, a equipe deve usar os EPI e EPC aplicáveis, limpar entulho e material excedente ao final e preencher o croqui quando houver acesso direto à rede.",
       "priority": 4,
       "category": "Execução operacional",
-      "topicKeywords": ["epi", "epc", "isolamento", "cones", "fita zebrada", "limpeza", "entulho", "croqui", "acesso à rede", "ferramentas"],
-      "relatedEvidence": ["preparação do local", "isolamento", "equipamentos de proteção", "limpeza final", "croqui"],
-      "conditionKeywords": ["limpeza final do entulho", "preencher o croqui de acesso à rede", "isolar a área com cones e fita zebrada"],
-      "equivalentExpressions": ["quais epis são obrigatórios", "quando precisa preencher o croqui", "como deixar o local depois do reparo"],
+      "topicKeywords": ["epi","epc","isolamento","cones","fita zebrada","limpeza","entulho","croqui","acesso à rede","ferramentas"],
+      "relatedEvidence": ["preparação do local","isolamento","equipamentos de proteção","limpeza final","croqui"],
+      "conditionKeywords": ["limpeza final do entulho","preencher o croqui de acesso à rede","isolar a área com cones e fita zebrada"],
+      "equivalentExpressions": ["quais epis são obrigatórios","quando precisa preencher o croqui","como deixar o local depois do reparo"],
       "message": "O procedimento exige segurança operacional, limpeza final e croqui quando a equipe acessa diretamente a rede.",
       "guidance": "Verifique os registros aplicáveis ao caso; estes documentos não definem uma conclusão oficial automática para a ausência desses itens.",
-      "sourceReferences": ["IT - Reparo de Cavalete.docx, páginas 4, 5, 7 e 8"]
+      "sourceReferences": ["IT - Reparo de Cavalete.docx, páginas 4, 5, 7 e 8"],
+      "examples": ["Como o local deve ser entregue depois do reparo?"]
     },
     {
       "id": "RULE-RC-INFO-08",
@@ -571,13 +645,14 @@
       "description": "Sempre que for possível, as fotos do serviço devem ser registradas na horizontal para melhorar o enquadramento e a leitura das evidências.",
       "priority": 4,
       "category": "Qualidade fotográfica",
-      "topicKeywords": ["foto horizontal", "fotos na horizontal", "orientação da foto", "enquadramento"],
-      "relatedEvidence": ["registro horizontal", "foto deitada", "enquadramento da imagem"],
-      "conditionKeywords": ["registrar fotos na horizontal", "sempre que possível foto horizontal", "foto feita na vertical"],
-      "equivalentExpressions": ["tirar a foto deitada", "qual é a orientação correta da foto", "a imagem foi registrada em pé", "foto foi feita na vertical"],
+      "topicKeywords": ["foto horizontal","fotos na horizontal","orientação da foto","enquadramento"],
+      "relatedEvidence": ["registro horizontal","foto deitada","enquadramento da imagem"],
+      "conditionKeywords": ["registrar fotos na horizontal","sempre que possível foto horizontal","foto feita na vertical"],
+      "equivalentExpressions": ["tirar a foto deitada","qual é a orientação correta da foto","a imagem foi registrada em pé","foto foi feita na vertical"],
       "message": "As fotos devem ser feitas na horizontal sempre que isso for possível.",
       "guidance": "Prefira fotos na horizontal sempre que possível; o documento não define conclusão oficial apenas por a foto estar vertical.",
-      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 14"]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 14"],
+      "examples": ["A foto foi feita na vertical; qual é a orientação?"]
     },
     {
       "id": "RULE-RC-01",
@@ -588,15 +663,9 @@
       "priority": 1,
       "category": "Evidência de execução",
       "factGroup": "depois",
-      "topicKeywords": ["depois", "foto crítica", "evidência final", "conclusão da execução", "foto do fim", "foto depois"],
-      "relatedEvidence": ["foto depois", "foto final", "serviço finalizado", "estado final"],
-      "conditionKeywords": [
-        "sem foto depois",
-        "falta foto depois",
-        "faltou a foto depois",
-        "foto depois ausente",
-        "sem foto final"
-      ],
+      "topicKeywords": ["depois","foto crítica","evidência final","conclusão da execução","foto do fim","foto depois"],
+      "relatedEvidence": ["foto depois","foto final","serviço finalizado","estado final"],
+      "conditionKeywords": ["sem foto depois","falta foto depois","faltou a foto depois","foto depois ausente","sem foto final"],
       "equivalentExpressions": [
         "a foto depois não foi apresentada",
         "foto final não foi apresentada",
@@ -604,8 +673,8 @@
         "não evidenciou o serviço finalizado",
         "a foto final não veio"
       ],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não foi apresentada", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
-      "negativeSignals": ["não faltou foto depois", "foto depois foi apresentada", "foto final presente"],
+      "positiveSignals": ["sem","falta","faltar","faltou","faltam","faltaram","ausente","não foi apresentada","não apresentou","não tem","não tiver","não veio","esqueceram"],
+      "negativeSignals": ["não faltou foto depois","foto depois foi apresentada","foto final presente"],
       "examples": ["A foto depois não foi apresentada."],
       "message": "Não foi evidenciada a conclusão da execução do serviço.",
       "guidance": "Reprove a Ordem de Serviço e registre a ausência da evidência final."
@@ -618,43 +687,41 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Evidência de execução",
-      "topicKeywords": ["etapas obrigatórias", "fotos obrigatórias", "evidências obrigatórias", "duas etapas"],
-      "relatedEvidence": ["duas fotos", "duas etapas", "nenhuma foto", "nenhuma evidência"],
-      "conditionKeywords": [
-        "faltaram duas fotos",
-        "faltam duas fotos",
-        "sem duas etapas",
-        "sem nenhuma foto",
-        "sem nenhuma evidência"
-      ],
-      "equivalentExpressions": ["apenas uma etapa foi apresentada", "só uma foto foi apresentada", "mandaram só uma foto", "só mandaram uma foto"],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
-      "negativeSignals": ["todas as etapas presentes", "nenhuma foto faltou"],
+      "topicKeywords": ["etapas obrigatórias","fotos obrigatórias","evidências obrigatórias","duas etapas"],
+      "relatedEvidence": ["duas fotos","duas etapas","nenhuma foto","nenhuma evidência"],
+      "conditionKeywords": ["faltaram duas fotos","faltam duas fotos","sem duas etapas","sem nenhuma foto","sem nenhuma evidência"],
+      "equivalentExpressions": ["apenas uma etapa foi apresentada","só uma foto foi apresentada","mandaram só uma foto","só mandaram uma foto"],
+      "positiveSignals": ["sem","falta","faltar","faltou","faltam","faltaram","ausente","não apresentou","não tem","não tiver","não veio","esqueceram"],
+      "negativeSignals": ["todas as etapas presentes","nenhuma foto faltou"],
       "matchPolicy": {
         "minimumMatchedFactGroups": {
           "count": 2,
-          "groups": ["antes", "durante", "depois"]
+          "groups": ["antes","durante","depois"]
         },
         "minimumGroups": {
           "count": 2,
-          "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apresentou"],
-          "negativeSignals": ["presente", "presentes", "foi apresentada", "foram apresentadas", "com foto"],
+          "positiveSignals": ["sem","falta","faltar","faltou","faltam","faltaram","ausente","não apresentou"],
+          "negativeSignals": ["presente","presentes","foi apresentada","foram apresentadas","com foto"],
           "groups": [
-            { "label": "antes", "expressions": ["foto antes", "antes"] },
-            { "label": "durante", "expressions": ["foto durante", "durante"] },
-            { "label": "depois", "expressions": ["foto depois", "foto final", "depois"] }
+            {
+              "label": "antes",
+              "expressions": ["foto antes","antes"]
+            },
+            {
+              "label": "durante",
+              "expressions": ["foto durante","durante"]
+            },
+            {
+              "label": "depois",
+              "expressions": ["foto depois","foto final","depois"]
+            }
           ]
         }
       },
-      "examples": [
-        "Faltaram as fotos antes e durante.",
-        "Não mostrou o aperto da virola e também não tem foto antes."
-      ],
+      "examples": ["Faltaram as fotos antes e durante.","Não mostrou o aperto da virola e também não tem foto antes."],
       "message": "Não foi evidenciada a execução do serviço em etapas suficientes.",
       "guidance": "Reprove a Ordem de Serviço e registre quais etapas não foram evidenciadas.",
-      "sourceReferences": [
-        "Orientação operacional — 2026-08-06 — responsável do projeto: duas etapas de execução sem evidência resultam em Reprovado"
-      ]
+      "sourceReferences": ["Orientação operacional — 2026-08-06 — responsável do projeto: duas etapas de execução sem evidência resultam em Reprovado"]
     },
     {
       "id": "RULE-RC-03",
@@ -664,17 +731,14 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Local de execução",
-      "topicKeywords": ["local de execução", "endereço da ordem", "endereço do serviço"],
-      "conditionKeywords": ["local incorreto", "endereço diferente", "endereço errado", "lugar errado", "local errado"],
-      "equivalentExpressions": ["executado em outro endereço", "instalação diferente da ordem"],
-      "negativeSignals": ["local correto", "endereço confirmado"],
+      "topicKeywords": ["local de execução","endereço da ordem","endereço do serviço"],
+      "conditionKeywords": ["local incorreto","endereço diferente","endereço errado","lugar errado","local errado"],
+      "equivalentExpressions": ["executado em outro endereço","instalação diferente da ordem"],
+      "negativeSignals": ["local correto","endereço confirmado"],
       "examples": ["O reparo foi executado em outro endereço."],
       "message": "O serviço foi executado em local incorreto.",
       "guidance": "Reprove a Ordem de Serviço e registre a divergência de local.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slide 3",
-        "IT - Reparo de Cavalete.docx, página 5, item 5.3.1"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 3","IT - Reparo de Cavalete.docx, página 5, item 5.3.1"]
     },
     {
       "id": "RULE-RC-04",
@@ -684,11 +748,12 @@
       "severity": "Reprovado",
       "priority": 1,
       "category": "Validade da execução",
-      "topicKeywords": ["necessidade técnica", "validade da execução", "reparo necessário"],
-      "conditionKeywords": ["sem necessidade", "não precisava", "não havia necessidade"],
+      "topicKeywords": ["necessidade técnica","validade da execução","reparo necessário"],
+      "conditionKeywords": ["sem necessidade","não precisava","não havia necessidade"],
       "equivalentExpressions": ["reparo desnecessário"],
       "message": "Não havia necessidade técnica para executar o serviço.",
-      "guidance": "Reprove a Ordem de Serviço e registre a ausência de necessidade técnica."
+      "guidance": "Reprove a Ordem de Serviço e registre a ausência de necessidade técnica.",
+      "examples": ["A equipe executou o reparo, mas não havia necessidade."]
     },
     {
       "id": "RULE-RC-05",
@@ -698,28 +763,16 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Identificação",
-      "topicKeywords": ["identificação do hidrômetro", "número do hidrômetro", "foto do chassi"],
-      "relatedEvidence": ["foto do chassi", "chassi", "número do hidrômetro", "hidrômetro", "número do hd"],
-      "conditionKeywords": [
-        "sem foto do chassi",
-        "falta foto do chassi",
-        "chassi ilegível",
-        "sem hidrômetro",
-        "sem número do hd"
-      ],
-      "equivalentExpressions": [
-        "chassi está ilegível",
-        "número do hidrômetro não aparece",
-        "identificação do hidrômetro ausente"
-      ],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "ilegível", "não aparece", "não tem", "não veio", "esqueceram"],
-      "negativeSignals": ["chassi legível", "número do hidrômetro visível"],
+      "topicKeywords": ["identificação do hidrômetro","número do hidrômetro","foto do chassi"],
+      "relatedEvidence": ["foto do chassi","chassi","número do hidrômetro","hidrômetro","número do hd"],
+      "conditionKeywords": ["sem foto do chassi","falta foto do chassi","chassi ilegível","sem hidrômetro","sem número do hd"],
+      "equivalentExpressions": ["chassi está ilegível","número do hidrômetro não aparece","identificação do hidrômetro ausente"],
+      "positiveSignals": ["sem","falta","faltar","faltou","faltam","faltaram","ausente","ilegível","não aparece","não tem","não veio","esqueceram"],
+      "negativeSignals": ["chassi legível","número do hidrômetro visível"],
       "message": "A identificação do hidrômetro na foto do chassi está ausente ou ilegível.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade da identificação.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slide 6",
-        "IT - Reparo de Cavalete.docx, página 6, padrão de fotos"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 6","IT - Reparo de Cavalete.docx, página 6, padrão de fotos"],
+      "examples": ["O número do hidrômetro não aparece na foto do chassi."]
     },
     {
       "id": "RULE-RC-06",
@@ -730,18 +783,16 @@
       "priority": 2,
       "category": "Evidência de execução",
       "factGroup": "antes",
-      "topicKeywords": ["antes", "etapa antes", "evidência anterior", "foto antes"],
-      "relatedEvidence": ["foto antes", "antes da execução"],
-      "conditionKeywords": ["sem foto antes", "falta foto antes", "faltou a foto antes", "foto antes ausente"],
-      "equivalentExpressions": ["a foto antes não foi apresentada", "não apresentou a foto antes"],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não foi apresentada", "não apresentou", "não tem", "não tiver", "não veio", "esqueceram"],
-      "negativeSignals": ["não faltou foto antes", "foto antes foi apresentada", "foto antes presente"],
+      "topicKeywords": ["antes","etapa antes","evidência anterior","foto antes"],
+      "relatedEvidence": ["foto antes","antes da execução"],
+      "conditionKeywords": ["sem foto antes","falta foto antes","faltou a foto antes","foto antes ausente"],
+      "equivalentExpressions": ["a foto antes não foi apresentada","não apresentou a foto antes"],
+      "positiveSignals": ["sem","falta","faltar","faltou","faltam","faltaram","ausente","não foi apresentada","não apresentou","não tem","não tiver","não veio","esqueceram"],
+      "negativeSignals": ["não faltou foto antes","foto antes foi apresentada","foto antes presente"],
       "message": "A foto anterior à execução não foi apresentada.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência anterior.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slides 9 e 10",
-        "IT - Reparo de Cavalete.docx, páginas 5 a 7, padrão de fotos"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slides 9 e 10","IT - Reparo de Cavalete.docx, páginas 5 a 7, padrão de fotos"],
+      "examples": ["A foto antes não foi apresentada."]
     },
     {
       "id": "RULE-RC-07",
@@ -752,16 +803,7 @@
       "priority": 2,
       "category": "Evidência de execução",
       "factGroup": "durante",
-      "topicKeywords": [
-        "durante",
-        "etapa durante",
-        "evidência durante",
-        "foto durante",
-        "execução do reparo",
-        "reparo em andamento",
-        "aperto da virola",
-        "virola"
-      ],
+      "topicKeywords": ["durante","etapa durante","evidência durante","foto durante","execução do reparo","reparo em andamento","aperto da virola","virola"],
       "relatedEvidence": [
         "registro do aperto",
         "foto durante",
@@ -804,12 +846,27 @@
         "ninguém registrou a equipe trabalhando",
         "não registraram a equipe trabalhando"
       ],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não apareceu", "não foi apresentada", "não apresentou", "não mostrou", "não evidenciou", "não registrou", "não tem", "não tiver", "não veio", "esqueceram"],
-      "negativeSignals": ["não faltou foto durante", "foto durante foi apresentada", "foto durante presente"],
-      "examples": [
-        "Não mostrou a equipe apertando a virola.",
-        "Sem foto fazendo o reparo."
+      "positiveSignals": [
+        "sem",
+        "falta",
+        "faltar",
+        "faltou",
+        "faltam",
+        "faltaram",
+        "ausente",
+        "não apareceu",
+        "não foi apresentada",
+        "não apresentou",
+        "não mostrou",
+        "não evidenciou",
+        "não registrou",
+        "não tem",
+        "não tiver",
+        "não veio",
+        "esqueceram"
       ],
+      "negativeSignals": ["não faltou foto durante","foto durante foi apresentada","foto durante presente"],
+      "examples": ["Não mostrou a equipe apertando a virola.","Sem foto fazendo o reparo."],
       "message": "A execução do reparo em andamento não foi evidenciada.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência intermediária.",
       "sourceReferences": [
@@ -826,16 +883,9 @@
       "severity": "Não Conforme",
       "priority": 2,
       "category": "Evidência complementar",
-      "topicKeywords": ["troca do lacre", "evidência do lacre", "foto do lacre", "lacre antes e depois", "novo lacre"],
-      "relatedEvidence": ["foto do lacre", "troca do lacre", "lacre", "lacre inicial", "lacre final", "novo lacre"],
-      "conditionKeywords": [
-        "sem foto do lacre",
-        "falta foto do lacre",
-        "troca do lacre não evidenciada",
-        "sem foto do lacre inicial",
-        "sem foto do lacre final",
-        "novo lacre não evidenciado"
-      ],
+      "topicKeywords": ["troca do lacre","evidência do lacre","foto do lacre","lacre antes e depois","novo lacre"],
+      "relatedEvidence": ["foto do lacre","troca do lacre","lacre","lacre inicial","lacre final","novo lacre"],
+      "conditionKeywords": ["sem foto do lacre","falta foto do lacre","troca do lacre não evidenciada","sem foto do lacre inicial","sem foto do lacre final","novo lacre não evidenciado"],
       "equivalentExpressions": [
         "não comprovou a troca do lacre",
         "evidência do lacre ausente",
@@ -843,14 +893,12 @@
         "não mostrou o lacre antes e depois",
         "não evidenciou o novo lacre instalado"
       ],
-      "positiveSignals": ["sem", "falta", "faltar", "faltou", "faltam", "faltaram", "ausente", "não evidenciada", "não comprovou", "não tem", "não veio", "não botaram", "esqueceram"],
-      "negativeSignals": ["troca do lacre comprovada", "foto do lacre presente", "lacres antes e depois presentes"],
+      "positiveSignals": ["sem","falta","faltar","faltou","faltam","faltaram","ausente","não evidenciada","não comprovou","não tem","não veio","não botaram","esqueceram"],
+      "negativeSignals": ["troca do lacre comprovada","foto do lacre presente","lacres antes e depois presentes"],
       "message": "Não foi apresentada evidência da troca do lacre.",
       "guidance": "Aprove com a correção cabível e registre a Não Conformidade do lacre.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slide 12",
-        "IT - Reparo de Cavalete.docx, páginas 4 e 7"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slide 12","IT - Reparo de Cavalete.docx, páginas 4 e 7"],
+      "examples": ["Não evidenciaram o lacre novo instalado."]
     },
     {
       "id": "RULE-RC-09",
@@ -860,7 +908,7 @@
       "severity": "Conforme",
       "priority": 3,
       "category": "Conclusão positiva",
-      "topicKeywords": ["aprovação", "conformidade", "evidências completas", "serviço correto"],
+      "topicKeywords": ["aprovação","conformidade","evidências completas","serviço correto"],
       "conditionKeywords": [
         "serviço executado corretamente e todas as evidências obrigatórias estão presentes",
         "evidências completas e serviço correto",
@@ -872,13 +920,11 @@
         "as evidências estão completas e o serviço está correto",
         "evidências estão completas e serviço correto"
       ],
-      "negativeSignals": ["evidência ausente", "foto ausente", "execução incorreta"],
+      "negativeSignals": ["evidência ausente","foto ausente","execução incorreta"],
       "message": "A execução correta e todas as evidências obrigatórias foram confirmadas.",
       "guidance": "Aprove a Ordem de Serviço como Conforme.",
-      "sourceReferences": [
-        "Procedimentos - Reparo de Cavalete.ppt, slides 9 e 10",
-        "IT - Reparo de Cavalete.docx, páginas 5 a 7"
-      ]
+      "sourceReferences": ["Procedimentos - Reparo de Cavalete.ppt, slides 9 e 10","IT - Reparo de Cavalete.docx, páginas 5 a 7"],
+      "examples": ["O serviço está correto e todas as evidências foram apresentadas."]
     },
     {
       "id": "RULE-RC-PARAM-01",
@@ -887,12 +933,25 @@
       "description": "O reparo de ramal deve ser incluído como adicional executado quando, além do reparo no cavalete, a equipe também interveio e reparou o ramal.",
       "priority": 4,
       "category": "Parametrização operacional",
-      "topicKeywords": ["adicional executado de ramal", "desdobro executado de ramal", "reparo no cavalete e no ramal", "executado ramal"],
-      "relatedEvidence": ["intervenção no ramal", "local da intervenção no ramal", "reparo do ramal", "cavalete e ramal"],
-      "conditionKeywords": ["incluir reparo de ramal no adicional executado", "fez o cavalete e também reparou o ramal", "executou reparo no ramal além do cavalete", "substituiu o registro e mexeu no cavalete e no ramal"],
-      "equivalentExpressions": ["quando aceitar ramal no executado", "quando lançar o desdobro de ramal executado", "mexeu no cavalete e no ramal", "trocou o registro e trabalhou no cavalete e ramal"],
-      "examples": ["A equipe reparou o cavalete e também abriu o passeio para reparar o ramal; quando uso o adicional executado?", "Substituiu o registro e mexeu no cavalete e no ramal."],
-      "mandatoryConditions": ["O reparo no ramal foi efetivamente executado na mesma visita.", "Há evidência fotográfica do local da intervenção no ramal."],
+      "topicKeywords": ["adicional executado de ramal","desdobro executado de ramal","reparo no cavalete e no ramal","executado ramal"],
+      "relatedEvidence": ["intervenção no ramal","local da intervenção no ramal","reparo do ramal","cavalete e ramal"],
+      "conditionKeywords": [
+        "incluir reparo de ramal no adicional executado",
+        "fez o cavalete e também reparou o ramal",
+        "executou reparo no ramal além do cavalete",
+        "substituiu o registro e mexeu no cavalete e no ramal"
+      ],
+      "equivalentExpressions": [
+        "quando aceitar ramal no executado",
+        "quando lançar o desdobro de ramal executado",
+        "mexeu no cavalete e no ramal",
+        "trocou o registro e trabalhou no cavalete e ramal"
+      ],
+      "examples": [
+        "A equipe reparou o cavalete e também abriu o passeio para reparar o ramal; quando uso o adicional executado?",
+        "Substituiu o registro e mexeu no cavalete e no ramal."
+      ],
+      "mandatoryConditions": ["O reparo no ramal foi efetivamente executado na mesma visita.","Há evidência fotográfica do local da intervenção no ramal."],
       "exceptions": ["Não incluir apenas porque o ramal foi mencionado; é necessário comprovar a intervenção executada."],
       "message": "Inclua o reparo de ramal como Adicional Executado somente quando ele tiver sido realizado além do serviço no cavalete e o local da intervenção no ramal estiver evidenciado.",
       "guidance": "Confirme nas fotos a intervenção no ramal e escolha a variação correspondente ao revestimento do local.",
@@ -905,10 +964,16 @@
       "description": "A variação do reparo de ramal é definida pelo revestimento do ponto onde ocorreu a intervenção.",
       "priority": 4,
       "category": "Parametrização operacional",
-      "topicKeywords": ["ramal calçada", "ramal bloco paralelo", "ramal terra", "ramal asfalto", "pedra portuguesa", "miracema", "intertravado", "paralelepípedo"],
-      "relatedEvidence": ["passeio de concreto", "calçada de concreto", "bloco", "paralelepípedo", "pedra portuguesa", "miracema", "intertravado", "terra", "asfalto"],
-      "conditionKeywords": ["qual reparo de ramal escolher pelo piso", "reparo de ramal em calçada de concreto", "reparo de ramal em bloco ou paralelo", "reparo de ramal em terra", "reparo de ramal em asfalto"],
-      "equivalentExpressions": ["qual tipo de ramal lançar", "qual ramal usar conforme o revestimento", "ramal feito no passeio", "ramal feito no asfalto"],
+      "topicKeywords": ["ramal calçada","ramal bloco paralelo","ramal terra","ramal asfalto","pedra portuguesa","miracema","intertravado","paralelepípedo"],
+      "relatedEvidence": ["passeio de concreto","calçada de concreto","bloco","paralelepípedo","pedra portuguesa","miracema","intertravado","terra","asfalto"],
+      "conditionKeywords": [
+        "qual reparo de ramal escolher pelo piso",
+        "reparo de ramal em calçada de concreto",
+        "reparo de ramal em bloco ou paralelo",
+        "reparo de ramal em terra",
+        "reparo de ramal em asfalto"
+      ],
+      "equivalentExpressions": ["qual tipo de ramal lançar","qual ramal usar conforme o revestimento","ramal feito no passeio","ramal feito no asfalto"],
       "examples": ["O reparo foi feito sobre piso intertravado; qual tipo de ramal devo lançar?"],
       "message": "Use Ramal - Calçada para passeio de concreto; Bloco/Paralelo para calçada ou rua com bloco, paralelepípedo, pedra portuguesa, miracema ou intertravado; Terra para solo de terra; e Asfalto para intervenção no asfalto.",
       "guidance": "Identifique nas fotos o revestimento exatamente no ponto da intervenção e selecione a variação correspondente.",
@@ -921,10 +986,17 @@
       "description": "Furto/Vandalismo, Escavação e Retirada de Material e Padronização de Cavalete não são usados como adicional executado no Reparo de Cavalete.",
       "priority": 4,
       "category": "Parametrização operacional",
-      "topicKeywords": ["furto vandalismo no executado", "furto e vandalismo no executado", "escavação no executado", "retirada de material no executado", "padronização no executado", "adicional não usado"],
-      "relatedEvidence": ["furto ou vandalismo", "escavação e retirada de material", "padronização de cavalete"],
-      "conditionKeywords": ["não usar furto vandalismo no executado", "não usar escavação e retirada de material no executado", "não usar padronização de cavalete no executado"],
-      "equivalentExpressions": ["posso colocar furto no executado", "posso lançar escavação como executado", "padronização entra no desdobro executado"],
+      "topicKeywords": [
+        "furto vandalismo no executado",
+        "furto e vandalismo no executado",
+        "escavação no executado",
+        "retirada de material no executado",
+        "padronização no executado",
+        "adicional não usado"
+      ],
+      "relatedEvidence": ["furto ou vandalismo","escavação e retirada de material","padronização de cavalete"],
+      "conditionKeywords": ["não usar furto vandalismo no executado","não usar escavação e retirada de material no executado","não usar padronização de cavalete no executado"],
+      "equivalentExpressions": ["posso colocar furto no executado","posso lançar escavação como executado","padronização entra no desdobro executado"],
       "examples": ["Posso colocar Furto/Vandalismo como adicional executado?"],
       "exceptions": ["Furto/Vandalismo como adicional executado gera duplicidade."],
       "message": "Não lance Furto/Vandalismo, Escavação e Retirada de Material ou Padronização de Cavalete como Adicional Executado neste serviço. Furto/Vandalismo geraria duplicidade.",
@@ -938,15 +1010,15 @@
       "description": "Quando a intervenção envolve escavação, devem ser avaliados os desdobros de reaterro e repavimentação correspondentes ao que foi executado ou ficou pendente.",
       "priority": 4,
       "category": "Parametrização operacional",
-      "topicKeywords": ["reaterro", "repavimentação", "escavação", "abriu vala", "desdobro depois da escavação"],
-      "relatedEvidence": ["intervenção com escavação", "vala aberta", "reaterro executado", "recomposição do pavimento"],
-      "conditionKeywords": ["houve intervenção com escavação", "quando incluir reaterro", "quando incluir repavimentação", "abriu a vala"],
-      "equivalentExpressions": ["se cavou precisa de reaterro", "se abriu o piso precisa repavimentar", "teve escavação"],
+      "topicKeywords": ["reaterro","repavimentação","escavação","abriu vala","desdobro depois da escavação"],
+      "relatedEvidence": ["intervenção com escavação","vala aberta","reaterro executado","recomposição do pavimento"],
+      "conditionKeywords": ["houve intervenção com escavação","quando incluir reaterro","quando incluir repavimentação","abriu a vala"],
+      "equivalentExpressions": ["se cavou precisa de reaterro","se abriu o piso precisa repavimentar","teve escavação"],
       "examples": ["A equipe abriu uma vala e concluiu o reaterro; qual desdobro usar?"],
       "mandatoryConditions": ["Houve escavação no local da intervenção."],
       "message": "Havendo escavação, avalie o Reaterro e a Repavimentação adequados ao revestimento. Use Adicional Executado para o que foi concluído na visita e Adicional Posterior para o que será feito depois.",
       "guidance": "Confirme pelas fotos se houve escavação, o revestimento do local e quais etapas foram realmente concluídas.",
-      "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026", "IT - Reparo de Ramal de Água.pdf, páginas 4, 6 e 8"]
+      "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026","IT - Reparo de Ramal de Água.pdf, páginas 4, 6 e 8"]
     },
     {
       "id": "RULE-RC-PARAM-05",
@@ -955,12 +1027,12 @@
       "description": "Quando a necessidade de reparar o ramal é identificada, mas a intervenção não é executada durante a visita, deve ser gerado o reparo de ramal disponível como adicional posterior.",
       "priority": 4,
       "category": "Parametrização operacional",
-      "topicKeywords": ["reparo de ramal posterior", "ramal não executado", "intervenção pendente no ramal", "desdobro posterior de ramal"],
-      "relatedEvidence": ["necessidade de intervenção no ramal", "reparo do ramal pendente", "ramal não reparado"],
-      "conditionKeywords": ["reparo de ramal necessário mas não executado", "intervenção no ramal ficou pendente", "gerar reparo de ramal posterior"],
-      "equivalentExpressions": ["viram que precisa mexer no ramal mas não fizeram", "ramal vai ficar para outra equipe", "quando lançar ramal no posterior"],
+      "topicKeywords": ["reparo de ramal posterior","ramal não executado","intervenção pendente no ramal","desdobro posterior de ramal"],
+      "relatedEvidence": ["necessidade de intervenção no ramal","reparo do ramal pendente","ramal não reparado"],
+      "conditionKeywords": ["reparo de ramal necessário mas não executado","intervenção no ramal ficou pendente","gerar reparo de ramal posterior"],
+      "equivalentExpressions": ["viram que precisa mexer no ramal mas não fizeram","ramal vai ficar para outra equipe","quando lançar ramal no posterior"],
       "examples": ["Identificaram que o ramal precisa de reparo, mas não fizeram na visita."],
-      "mandatoryConditions": ["A necessidade de intervenção no ramal foi identificada.", "O reparo do ramal não foi executado na visita."],
+      "mandatoryConditions": ["A necessidade de intervenção no ramal foi identificada.","O reparo do ramal não foi executado na visita."],
       "message": "Use o Reparo de Ramal como Adicional Posterior quando a intervenção for necessária, mas não tiver sido executada na visita.",
       "guidance": "Registre a necessidade e selecione, entre as opções disponíveis no sistema, o serviço compatível com o local da intervenção.",
       "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026"]
@@ -968,17 +1040,22 @@
     {
       "id": "RULE-RR-INFO-01",
       "serviceId": "reparo-ramal-agua-asfalto",
-      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo", "reparo-ramal-agua-calcada", "reparo-ramal-agua-terra", "reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Padrão fotográfico do reparo de ramal",
       "description": "O conjunto fotográfico deve identificar o endereço e o local, mostrar como o vazamento foi encontrado, evidenciar o reparo e o método empregado e registrar a finalização.",
       "priority": 4,
       "category": "Evidência fotográfica",
-      "topicKeywords": ["fotos do reparo de ramal", "quais fotos comprovam o reparo de ramal", "foto antes do ramal", "foto durante do ramal", "foto depois do ramal", "padrão de fotos"],
-      "relatedEvidence": ["fachada", "local do vazamento", "reparo executado", "método utilizado", "foto da finalização"],
-      "conditionKeywords": ["padrão fotográfico do reparo de ramal", "quais fotos comprovam o reparo de ramal", "fotos obrigatórias do ramal"],
-      "equivalentExpressions": ["o que precisa aparecer nas fotos do ramal", "como provar que consertaram o ramal", "quais imagens o ramal precisa ter"],
+      "topicKeywords": ["fotos do reparo de ramal","quais fotos comprovam o reparo de ramal","foto antes do ramal","foto durante do ramal","foto depois do ramal","padrão de fotos"],
+      "relatedEvidence": ["fachada","local do vazamento","reparo executado","método utilizado","foto da finalização"],
+      "conditionKeywords": ["padrão fotográfico do reparo de ramal","quais fotos comprovam o reparo de ramal","fotos obrigatórias do ramal"],
+      "equivalentExpressions": ["o que precisa aparecer nas fotos do ramal","como provar que consertaram o ramal","quais imagens o ramal precisa ter"],
       "examples": ["Quais fotos comprovam um Reparo de Ramal de Água?"],
-      "mandatoryConditions": ["Fachada ou local que confirme o endereço.", "Local do vazamento antes da intervenção.", "Reparo executado e método utilizado.", "Local após o reaterro primário."],
+      "mandatoryConditions": [
+        "Fachada ou local que confirme o endereço.",
+        "Local do vazamento antes da intervenção.",
+        "Reparo executado e método utilizado.",
+        "Local após o reaterro primário."
+      ],
       "message": "O reparo de ramal precisa mostrar: fachada/local, situação do vazamento, reparo executado com o método usado e finalização após o reaterro primário.",
       "guidance": "Compare as fotos com essas quatro evidências. A base ainda não define uma conclusão oficial automática para a falta isolada de cada uma delas.",
       "sourceReferences": ["IT----Reparo-de-Ramal-de-Agua.pdf, páginas 4, 5, 7 e 8"]
@@ -986,18 +1063,18 @@
     {
       "id": "RULE-RR-INFO-02",
       "serviceId": "reparo-ramal-agua-asfalto",
-      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo", "reparo-ramal-agua-calcada", "reparo-ramal-agua-terra", "reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Evidência da intervenção no ramal",
       "description": "As imagens devem permitir identificar que a intervenção ocorreu no ramal e mostrar o reparo de conexão, tubulação, desobstrução ou substituição efetivamente realizado.",
       "priority": 4,
       "category": "Execução do serviço",
-      "topicKeywords": ["intervenção no ramal", "reparo da conexão", "reparo da tubulação", "desobstrução do ramal", "substituição do ramal"],
-      "relatedEvidence": ["conexão do ramal", "tubulação do ramal", "trecho danificado", "novo segmento", "desobstrução", "ramal substituído"],
-      "conditionKeywords": ["não mostrou a intervenção no ramal", "reparo do ramal não aparece", "mostrar o local reparado no ramal"],
-      "equivalentExpressions": ["não dá para ver onde mexeram no ramal", "só mostrou o cavalete", "não provou o conserto do ramal"],
+      "topicKeywords": ["intervenção no ramal","reparo da conexão","reparo da tubulação","desobstrução do ramal","substituição do ramal"],
+      "relatedEvidence": ["conexão do ramal","tubulação do ramal","trecho danificado","novo segmento","desobstrução","ramal substituído"],
+      "conditionKeywords": ["não mostrou a intervenção no ramal","reparo do ramal não aparece","mostrar o local reparado no ramal"],
+      "equivalentExpressions": ["não dá para ver onde mexeram no ramal","só mostrou o cavalete","não provou o conserto do ramal"],
       "examples": ["Só mostrou o cavalete e não provou o conserto do ramal."],
-      "positiveSignals": ["sem", "falta", "não mostrou", "não aparece", "não evidenciou", "não provou"],
-      "negativeSignals": ["intervenção no ramal visível", "reparo do ramal evidenciado"],
+      "positiveSignals": ["sem","falta","não mostrou","não aparece","não evidenciou","não provou"],
+      "negativeSignals": ["intervenção no ramal visível","reparo do ramal evidenciado"],
       "message": "A análise deve conseguir localizar nas fotos a intervenção no ramal e reconhecer o reparo efetivamente realizado.",
       "guidance": "Se a intervenção não estiver visível, registre a falta de evidência e valide a conclusão com o responsável, pois o documento não atribui uma decisão oficial específica.",
       "sourceReferences": ["IT----Reparo-de-Ramal-de-Agua.pdf, páginas 5 a 7"]
@@ -1005,15 +1082,15 @@
     {
       "id": "RULE-RR-INFO-03",
       "serviceId": "reparo-ramal-agua-asfalto",
-      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo", "reparo-ramal-agua-calcada", "reparo-ramal-agua-terra", "reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Finalização e reaterro do reparo de ramal",
       "description": "A finalização deve mostrar o local após o reaterro primário; quando a equipe também fizer o reaterro final em via pública, deve mostrar o recorte regular e a aferição da vala.",
       "priority": 4,
       "category": "Finalização",
-      "topicKeywords": ["finalização do ramal", "reaterro primário", "recorte da vala", "aferição da vala", "foto final"],
-      "relatedEvidence": ["local após o reaterro", "recorte do pavimento", "medição da vala", "limpeza final"],
-      "conditionKeywords": ["foto da finalização do reparo de ramal", "mostrar reaterro primário", "mostrar recorte e aferição da vala"],
-      "equivalentExpressions": ["como deve ficar a foto depois do ramal", "precisa medir a vala", "o que mostrar no fim do reparo"],
+      "topicKeywords": ["finalização do ramal","reaterro primário","recorte da vala","aferição da vala","foto final"],
+      "relatedEvidence": ["local após o reaterro","recorte do pavimento","medição da vala","limpeza final"],
+      "conditionKeywords": ["foto da finalização do reparo de ramal","mostrar reaterro primário","mostrar recorte e aferição da vala"],
+      "equivalentExpressions": ["como deve ficar a foto depois do ramal","precisa medir a vala","o que mostrar no fim do reparo"],
       "examples": ["O que precisa aparecer na foto final do reparo de ramal?"],
       "message": "A foto final deve mostrar o local após o reaterro primário. Se a equipe também concluiu o reaterro final em via pública, deve mostrar o recorte regular e a medição da vala.",
       "guidance": "Verifique também a limpeza do local e se os desdobros de reaterro e repavimentação correspondem ao que foi executado ou ficou pendente.",
@@ -1022,17 +1099,17 @@
     {
       "id": "RULE-RV-INFO-01",
       "serviceId": "reaterro-valas-asfalto",
-      "applicableServiceIds": ["reaterro-valas-calcada", "reaterro-valas-terra"],
+      "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra"],
       "title": "Padrão fotográfico do reaterro de valas",
       "description": "O conjunto fotográfico deve identificar o local, mostrar a condição anterior, todas as etapas de compactação, a metragem e a finalização.",
       "priority": 4,
       "category": "Evidência fotográfica",
-      "topicKeywords": ["fotos do reaterro", "quais fotos comprovam o reaterro", "foto antes do reaterro", "foto durante o reaterro", "foto depois do reaterro", "metragem da vala"],
-      "relatedEvidence": ["fachada e local", "local antes", "execução por camadas", "compactação", "metragem", "finalização"],
-      "conditionKeywords": ["padrão fotográfico do reaterro", "quais fotos comprovam o reaterro", "fotos obrigatórias do reaterro"],
-      "equivalentExpressions": ["o que precisa aparecer nas fotos da vala", "como provar o reaterro", "quais imagens precisa ter"],
+      "topicKeywords": ["fotos do reaterro","quais fotos comprovam o reaterro","foto antes do reaterro","foto durante o reaterro","foto depois do reaterro","metragem da vala"],
+      "relatedEvidence": ["fachada e local","local antes","execução por camadas","compactação","metragem","finalização"],
+      "conditionKeywords": ["padrão fotográfico do reaterro","quais fotos comprovam o reaterro","fotos obrigatórias do reaterro"],
+      "equivalentExpressions": ["o que precisa aparecer nas fotos da vala","como provar o reaterro","quais imagens precisa ter"],
       "examples": ["Quais fotos comprovam o Reaterro de Valas?"],
-      "mandatoryConditions": ["Fachada e local da execução.", "Condição da vala antes do serviço.", "Compactação por camadas durante a execução.", "Dimensões da vala.", "Local finalizado."],
+      "mandatoryConditions": ["Fachada e local da execução.","Condição da vala antes do serviço.","Compactação por camadas durante a execução.","Dimensões da vala.","Local finalizado."],
       "message": "O reaterro deve ter fotos do local, do antes, da execução por camadas e compactação, da metragem e da finalização.",
       "guidance": "Compare as fotos com essas cinco evidências. O documento não atribui sozinho uma conclusão oficial para cada ausência.",
       "sourceReferences": ["IT---Reaterro-de-Valas--novo-.pdf, páginas 5, 8 e 9"]
@@ -1040,18 +1117,23 @@
     {
       "id": "RULE-RV-INFO-02",
       "serviceId": "reaterro-valas-asfalto",
-      "applicableServiceIds": ["reaterro-valas-calcada", "reaterro-valas-terra"],
+      "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra"],
       "title": "Compactação do reaterro por camadas",
       "description": "O reaterro deve ser executado e evidenciado em camadas sucessivas, com proteção da tubulação e compactação adequada ao trecho.",
       "priority": 4,
       "category": "Execução do serviço",
-      "topicKeywords": ["compactação", "sapo compactador", "soquete manual", "camadas do reaterro", "berço", "flancos"],
-      "relatedEvidence": ["berço da tubulação", "flancos", "camada inicial", "soquete manual", "compactador tipo sapo", "camadas sucessivas", "camada por camada", "compactando a vala"],
-      "conditionKeywords": ["não mostrou a compactação por camadas", "compactou direto sobre a tubulação", "não evidenciou o sapo compactador", "não mostrou o soquete manual"],
-      "equivalentExpressions": ["não tem foto compactando a vala", "jogaram todo o material de uma vez", "não mostrou compactando camada por camada", "não mostrou compactando a vala camada por camada"],
+      "topicKeywords": ["compactação","sapo compactador","soquete manual","camadas do reaterro","berço","flancos"],
+      "relatedEvidence": ["berço da tubulação","flancos","camada inicial","soquete manual","compactador tipo sapo","camadas sucessivas","camada por camada","compactando a vala"],
+      "conditionKeywords": ["não mostrou a compactação por camadas","compactou direto sobre a tubulação","não evidenciou o sapo compactador","não mostrou o soquete manual"],
+      "equivalentExpressions": [
+        "não tem foto compactando a vala",
+        "jogaram todo o material de uma vez",
+        "não mostrou compactando camada por camada",
+        "não mostrou compactando a vala camada por camada"
+      ],
       "examples": ["Não mostrou compactando a vala camada por camada."],
-      "positiveSignals": ["sem", "falta", "não mostrou", "não evidenciou", "direto sobre", "todo de uma vez"],
-      "negativeSignals": ["compactação por camadas evidenciada", "soquete manual visível", "sapo compactador visível"],
+      "positiveSignals": ["sem","falta","não mostrou","não evidenciou","direto sobre","todo de uma vez"],
+      "negativeSignals": ["compactação por camadas evidenciada","soquete manual visível","sapo compactador visível"],
       "message": "A execução deve mostrar o berço, os flancos e a proteção inicial compactados manualmente quando aplicável; depois, as camadas subsequentes devem ser compactadas com equipamento adequado.",
       "guidance": "Não aceite uma imagem final como prova de todas as etapas internas. Se faltar o passo a passo, registre a ausência e valide a conclusão oficial com o responsável.",
       "sourceReferences": ["IT---Reaterro-de-Valas--novo-.pdf, páginas 5 a 8"]
@@ -1059,18 +1141,18 @@
     {
       "id": "RULE-RV-INFO-03",
       "serviceId": "reaterro-valas-asfalto",
-      "applicableServiceIds": ["reaterro-valas-calcada", "reaterro-valas-terra"],
+      "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra"],
       "title": "Metragem e finalização do reaterro",
       "description": "A vala deve ter as dimensões comprovadas e o local finalizado deve ser registrado após o reaterro primário.",
       "priority": 4,
       "category": "Medição e finalização",
-      "topicKeywords": ["metragem do reaterro", "medição da vala", "foto da finalização", "recorte do pavimento"],
-      "relatedEvidence": ["comprimento da vala", "largura da vala", "área em metros quadrados", "reaterro primário", "recorte regular"],
-      "conditionKeywords": ["sem foto da metragem", "não mostrou as dimensões da vala", "sem foto da finalização do reaterro"],
-      "equivalentExpressions": ["não mediram a vala", "não dá para confirmar a área", "não mostrou como ficou depois"],
+      "topicKeywords": ["metragem do reaterro","medição da vala","foto da finalização","recorte do pavimento"],
+      "relatedEvidence": ["comprimento da vala","largura da vala","área em metros quadrados","reaterro primário","recorte regular"],
+      "conditionKeywords": ["sem foto da metragem","não mostrou as dimensões da vala","sem foto da finalização do reaterro"],
+      "equivalentExpressions": ["não mediram a vala","não dá para confirmar a área","não mostrou como ficou depois"],
       "examples": ["Não dá para confirmar a metragem da vala nas fotos."],
-      "positiveSignals": ["sem", "falta", "não mostrou", "não mediram", "não dá para confirmar"],
-      "negativeSignals": ["metragem visível", "dimensões comprovadas", "finalização apresentada"],
+      "positiveSignals": ["sem","falta","não mostrou","não mediram","não dá para confirmar"],
+      "negativeSignals": ["metragem visível","dimensões comprovadas","finalização apresentada"],
       "message": "As fotos devem permitir confirmar comprimento e largura da vala e mostrar o local após o reaterro primário. Em via pública, quando houver reaterro final pela equipe, também devem mostrar recorte e aferição.",
       "guidance": "Confira se a medição corresponde ao trecho executado e se a finalização está visível; a conclusão oficial para a falta ainda depende de regra classificatória própria.",
       "sourceReferences": ["IT---Reaterro-de-Valas--novo-.pdf, páginas 7 a 9"]
@@ -1078,15 +1160,15 @@
     {
       "id": "RULE-RV-INFO-04",
       "serviceId": "reaterro-valas-asfalto",
-      "applicableServiceIds": ["reaterro-valas-calcada", "reaterro-valas-terra"],
+      "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra"],
       "title": "Retrabalho por problema após o reaterro",
       "description": "Deve ser gerada nova ordem de retrabalho quando houver problema depois do serviço ou quando a equipe não tiver seguido o procedimento de reaterro.",
       "priority": 4,
       "category": "Retrabalho",
-      "topicKeywords": ["retrabalho de reaterro", "problema depois do reaterro", "recalque", "procedimento não seguido"],
-      "relatedEvidence": ["problema após a execução", "falha no reaterro", "equipe não seguiu o procedimento"],
-      "conditionKeywords": ["gerar retrabalho de reaterro", "problema depois do reaterro", "equipe não seguiu o procedimento"],
-      "equivalentExpressions": ["quando mandar refazer o reaterro", "reaterro deu problema", "precisa voltar para corrigir"],
+      "topicKeywords": ["retrabalho de reaterro","problema depois do reaterro","recalque","procedimento não seguido"],
+      "relatedEvidence": ["problema após a execução","falha no reaterro","equipe não seguiu o procedimento"],
+      "conditionKeywords": ["gerar retrabalho de reaterro","problema depois do reaterro","equipe não seguiu o procedimento"],
+      "equivalentExpressions": ["quando mandar refazer o reaterro","reaterro deu problema","precisa voltar para corrigir"],
       "examples": ["O reaterro deu problema depois; quando gerar retrabalho?"],
       "message": "Quando houver problema após o reaterro ou descumprimento do procedimento, deve ser aberta nova ordem para a equipe retornar e corrigir.",
       "guidance": "Registre o problema observado e gere o retrabalho. O documento usa o termo não conformidade, mas não define por si só qual das três conclusões oficiais aplicar à OS analisada.",
@@ -1100,10 +1182,10 @@
       "description": "Substituição de Registro de Cavalete é o serviço aplicável quando somente o registro do cavalete é trocado.",
       "priority": 4,
       "category": "Classificação do serviço",
-      "topicKeywords": ["substituição de registro", "troca somente do registro", "apenas o registro", "quando usar substituição de registro"],
-      "relatedEvidence": ["registro do cavalete", "somente o registro", "apenas o registro"],
-      "conditionKeywords": ["trocou somente o registro do cavalete", "substituiu apenas o registro", "quando usar substituição de registro"],
-      "equivalentExpressions": ["só mexeu no registro", "foi trocado apenas o registro", "qual serviço usar quando troca só o registro"],
+      "topicKeywords": ["substituição de registro","troca somente do registro","apenas o registro","quando usar substituição de registro"],
+      "relatedEvidence": ["registro do cavalete","somente o registro","apenas o registro"],
+      "conditionKeywords": ["trocou somente o registro do cavalete","substituiu apenas o registro","quando usar substituição de registro"],
+      "equivalentExpressions": ["só mexeu no registro","foi trocado apenas o registro","qual serviço usar quando troca só o registro"],
       "examples": ["A equipe trocou somente o registro do cavalete; qual serviço usar?"],
       "message": "Use Substituição de Registro de Cavalete quando a execução se limitar à troca do registro.",
       "guidance": "Se houve intervenção em outras peças do cavalete, mantenha Reparo de Cavalete em vez de tratar como troca exclusiva do registro.",
@@ -1117,10 +1199,17 @@
       "description": "A substituição ou instalação do hidrômetro é com custo quando a avaria é de responsabilidade do cliente.",
       "priority": 4,
       "category": "Classificação do serviço",
-      "topicKeywords": ["substituição de hd com custo", "substituição do hidrômetro com custo", "substituição do hidrômetro é com custo", "troca de hidrômetro com custo", "avaria causada pelo cliente", "responsabilidade do cliente"],
-      "relatedEvidence": ["hidrômetro avariado pelo cliente", "dano causado pelo cliente", "responsabilidade do cliente", "hd ausente por responsabilidade do cliente"],
-      "conditionKeywords": ["avaria do hidrômetro causada pelo cliente", "cliente danificou o hd", "substituição de hd com custo"],
-      "equivalentExpressions": ["o cliente quebrou o hidrômetro", "dano no hd foi por conta do cliente", "troca do relógio com custo"],
+      "topicKeywords": [
+        "substituição de hd com custo",
+        "substituição do hidrômetro com custo",
+        "substituição do hidrômetro é com custo",
+        "troca de hidrômetro com custo",
+        "avaria causada pelo cliente",
+        "responsabilidade do cliente"
+      ],
+      "relatedEvidence": ["hidrômetro avariado pelo cliente","dano causado pelo cliente","responsabilidade do cliente","hd ausente por responsabilidade do cliente"],
+      "conditionKeywords": ["avaria do hidrômetro causada pelo cliente","cliente danificou o hd","substituição de hd com custo"],
+      "equivalentExpressions": ["o cliente quebrou o hidrômetro","dano no hd foi por conta do cliente","troca do relógio com custo"],
       "examples": ["A avaria do hidrômetro foi causada pelo cliente; a troca é com custo?"],
       "message": "Use Substituição de HD com Custo quando a avaria for atribuída ao cliente.",
       "guidance": "Confirme que a responsabilidade do cliente está registrada antes de aplicar a opção com custo.",
@@ -1134,12 +1223,25 @@
       "description": "A substituição ou instalação do hidrômetro é sem custo quando o motivo não é atribuído ao cliente, incluindo erro, equipamento quebrado ou furto.",
       "priority": 4,
       "category": "Classificação do serviço",
-      "topicKeywords": ["substituição de hd sem custo", "substituição do hidrômetro sem custo", "troca de hidrômetro sem custo", "hidrômetro quebrado", "hidrômetro furtado", "hidrômetro foi furtado", "falta do hidrômetro"],
-      "relatedEvidence": ["erro no hidrômetro", "hd quebrado", "hidrômetro furtado", "hidrômetro ausente", "motivo não atribuído ao cliente"],
-      "conditionKeywords": ["hidrômetro quebrado sem responsabilidade do cliente", "hidrômetro furtado", "substituição de hd sem custo", "hidrômetro ausente por motivo não atribuído ao cliente"],
-      "equivalentExpressions": ["furtaram o hd", "o relógio está quebrado", "não tem hidrômetro instalado", "troca do relógio sem custo"],
-      "examples": ["O hidrômetro foi furtado; a substituição é sem custo?", "O HD está quebrado sem culpa do cliente."],
-      "exceptions": ["avaria causada pelo cliente", "responsabilidade do cliente", "cliente quebrou", "cliente danificou"],
+      "topicKeywords": [
+        "substituição de hd sem custo",
+        "substituição do hidrômetro sem custo",
+        "troca de hidrômetro sem custo",
+        "hidrômetro quebrado",
+        "hidrômetro furtado",
+        "hidrômetro foi furtado",
+        "falta do hidrômetro"
+      ],
+      "relatedEvidence": ["erro no hidrômetro","hd quebrado","hidrômetro furtado","hidrômetro ausente","motivo não atribuído ao cliente"],
+      "conditionKeywords": [
+        "hidrômetro quebrado sem responsabilidade do cliente",
+        "hidrômetro furtado",
+        "substituição de hd sem custo",
+        "hidrômetro ausente por motivo não atribuído ao cliente"
+      ],
+      "equivalentExpressions": ["furtaram o hd","o relógio está quebrado","não tem hidrômetro instalado","troca do relógio sem custo"],
+      "examples": ["O hidrômetro foi furtado; a substituição é sem custo?","O HD está quebrado sem culpa do cliente."],
+      "exceptions": ["avaria causada pelo cliente","responsabilidade do cliente","cliente quebrou","cliente danificou"],
       "message": "Use Substituição de HD sem Custo para erro, equipamento quebrado, furto ou outro motivo não atribuído ao cliente. A troca do hidrômetro deve ser executada pelo setor Comercial.",
       "guidance": "A opção cobre tanto a reposição de HD ausente quanto a troca do equipamento existente, desde que o motivo não seja responsabilidade do cliente.",
       "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026"]
@@ -1151,10 +1253,10 @@
       "description": "Quando há intervenção no cavalete além da troca do registro, como troca de tubete, virola ou outra peça, o serviço permanece Reparo de Cavalete.",
       "priority": 4,
       "category": "Classificação do serviço",
-      "topicKeywords": ["registro e tubete", "registro e virola", "outras peças do cavalete", "reparo de cavalete"],
-      "relatedEvidence": ["registro e tubete", "registro e virola", "peça do cavalete", "intervenção em outras peças do cavalete"],
-      "conditionKeywords": ["trocou o registro e o tubete", "trocou o registro e a virola", "mexeu em outras peças do cavalete", "registro e qualquer peça do cavalete"],
-      "equivalentExpressions": ["além do registro trocou uma peça do cavalete", "mexeu no cavalete e trocou registro e tubete", "trocou registro virola e tubete"],
+      "topicKeywords": ["registro e tubete","registro e virola","outras peças do cavalete","reparo de cavalete"],
+      "relatedEvidence": ["registro e tubete","registro e virola","peça do cavalete","intervenção em outras peças do cavalete"],
+      "conditionKeywords": ["trocou o registro e o tubete","trocou o registro e a virola","mexeu em outras peças do cavalete","registro e qualquer peça do cavalete"],
+      "equivalentExpressions": ["além do registro trocou uma peça do cavalete","mexeu no cavalete e trocou registro e tubete","trocou registro virola e tubete"],
       "examples": ["A equipe trocou o registro e o tubete do cavalete; qual serviço usar?"],
       "message": "Mantenha Reparo de Cavalete quando, além do registro, houver intervenção em tubete, virola ou qualquer outra peça do cavalete.",
       "guidance": "Use Substituição de Registro somente quando a troca tiver sido exclusiva do registro.",
@@ -1163,19 +1265,315 @@
     {
       "id": "RULE-RR-SCOPE-INFO-01",
       "serviceId": "reparo-ramal-agua-asfalto",
-      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo", "reparo-ramal-agua-calcada", "reparo-ramal-agua-terra", "reparo-ramal-agua-causado-por-terceiros", "reparo-cavalete"],
+      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-cavalete"],
       "title": "Intervenção somente no ramal",
       "description": "Quando a execução ocorreu somente no ramal, sem intervenção no cavalete, o serviço deve ser enquadrado como Reparo de Ramal.",
       "priority": 4,
       "category": "Classificação do serviço",
-      "topicKeywords": ["somente no ramal", "apenas no ramal", "só mexeu no ramal", "reparo de ramal"],
-      "relatedEvidence": ["intervenção no ramal", "sem intervenção no cavalete", "somente ramal"],
-      "conditionKeywords": ["mexeu somente no ramal", "serviço somente no ramal", "intervenção apenas no ramal"],
-      "equivalentExpressions": ["só trabalharam no ramal", "não mexeu no cavalete e reparou o ramal", "foi feito apenas o ramal"],
+      "topicKeywords": ["somente no ramal","apenas no ramal","só mexeu no ramal","reparo de ramal"],
+      "relatedEvidence": ["intervenção no ramal","sem intervenção no cavalete","somente ramal"],
+      "conditionKeywords": ["mexeu somente no ramal","serviço somente no ramal","intervenção apenas no ramal"],
+      "equivalentExpressions": ["só trabalharam no ramal","não mexeu no cavalete e reparou o ramal","foi feito apenas o ramal"],
       "examples": ["A equipe mexeu somente no ramal; qual serviço usar?"],
       "message": "Use Reparo de Ramal quando a intervenção tiver ocorrido somente no ramal.",
       "guidance": "Escolha a variação de Reparo de Ramal correspondente ao revestimento do ponto da intervenção.",
       "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026"]
+    },
+    {
+      "id": "RULE-GERAL-EVID-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Cadeia mínima de evidências do serviço original",
+      "description": "A análise deve conseguir ligar o local e a condição inicial à execução e ao resultado final do serviço original.",
+      "priority": 4,
+      "attentionLevel": "critical",
+      "category": "Evidência do serviço original",
+      "topicKeywords": ["evidências do serviço original","fotos obrigatórias","antes durante e depois","cadeia de evidências"],
+      "relatedEvidence": ["foto antes","foto durante","foto depois","condição inicial","execução do serviço","resultado final"],
+      "positiveSignals": ["sem","falta","faltou","não mostrou","não evidenciou","não apresentou"],
+      "negativeSignals": ["evidência completa","todas as etapas apresentadas","antes durante e depois apresentados"],
+      "conditionKeywords": ["serviço original sem evidência completa","não mostrou todas as etapas do serviço original","faltou evidência do serviço original"],
+      "equivalentExpressions": ["não dá para ligar o antes a execução e ao depois","não comprovou o serviço do começo ao fim"],
+      "examples": ["O serviço original não mostrou todas as etapas.","Quais fotos o serviço original precisa ter?"],
+      "message": "O serviço original precisa mostrar contexto e local, condição inicial ou necessidade, execução e resultado final.",
+      "guidance": "Confira antes, durante e depois como uma sequência do mesmo local. Esta orientação não define sozinha uma conclusão oficial.",
+      "sourceReferences": ["Diretriz de análise informada pelo responsável do projeto em 14/08/2026","Conjunto de ITs operacionais recebido em 14/08/2026"]
+    },
+    {
+      "id": "RULE-GERAL-EVID-02",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Evidências próprias do adicional executado",
+      "description": "Cada adicional ou desdobro executado é um serviço realizado e precisa ter sua própria sequência de antes, execução e resultado final.",
+      "priority": 3,
+      "attentionLevel": "critical",
+      "category": "Adicional executado",
+      "topicKeywords": ["adicional executado","desdobro executado","fotos do desdobro","evidências do adicional"],
+      "relatedEvidence": ["adicional executado","desdobro executado","foto antes do adicional","foto durante do adicional","foto depois do adicional"],
+      "conditionKeywords": [
+        "adicional executado sem foto antes",
+        "adicional executado sem foto durante",
+        "adicional executado sem foto depois",
+        "desdobro executado sem foto antes",
+        "desdobro executado sem foto durante",
+        "desdobro executado sem foto depois",
+        "não mostrou a execução do adicional executado",
+        "não evidenciou o desdobro executado"
+      ],
+      "equivalentExpressions": ["lançou o adicional mas não mostrou fazendo","desdobro foi executado mas não tem as etapas","adicional feito sem comprovação completa"],
+      "examples": ["O reparo de ramal foi lançado no executado, mas não mostrou fazendo.","O desdobro executado ficou sem foto durante."],
+      "message": "O adicional executado precisa ser comprovado como um serviço próprio, com necessidade, execução e resultado final reconhecíveis.",
+      "guidance": "Não considere a simples marcação no sistema como prova. Confira a cadeia fotográfica do original e, separadamente, a de cada adicional executado.",
+      "sourceReferences": ["Diretriz de análise informada pelo responsável do projeto em 14/08/2026","Conjunto de ITs operacionais recebido em 14/08/2026"]
+    },
+    {
+      "id": "RULE-GERAL-EVID-03",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Justificativa do adicional posterior",
+      "description": "O adicional posterior representa trabalho ainda necessário e deve estar apoiado por imagem ou fato que mostre por que ele precisa ser programado.",
+      "priority": 3,
+      "attentionLevel": "critical",
+      "category": "Adicional posterior",
+      "topicKeywords": ["adicional posterior","desdobro posterior","justificativa do posterior","motivo do desdobro"],
+      "relatedEvidence": ["adicional posterior","desdobro posterior","necessidade do serviço posterior","motivo do retorno"],
+      "conditionKeywords": [
+        "adicional posterior sem justificativa",
+        "adicional posterior sem motivo",
+        "desdobro posterior sem justificativa",
+        "desdobro posterior sem motivo",
+        "não mostrou por que precisa do adicional posterior",
+        "não evidenciou a necessidade do desdobro posterior",
+        "lançou o adicional posterior mas não mostrou a necessidade"
+      ],
+      "equivalentExpressions": ["lançou o posterior mas não mostrou a necessidade","não dá para saber por que precisa voltar","pediu desdobro futuro sem comprovar o motivo"],
+      "examples": ["Lançou repavimentação no posterior, mas não mostrou o local que precisa dela."],
+      "message": "O adicional posterior precisa mostrar a condição pendente que justifica o novo serviço; ele não deve ser tratado como já executado.",
+      "guidance": "Confirme se há uma evidência objetiva da necessidade e se o tipo de serviço posterior corresponde ao problema mostrado.",
+      "sourceReferences": ["Diretriz de análise informada pelo responsável do projeto em 14/08/2026","Conjunto de ITs operacionais recebido em 14/08/2026"]
+    },
+    {
+      "id": "RULE-CORTE-INFO-01",
+      "serviceId": "corte-fornecimento-agua",
+      "title": "Sequência de evidências do corte",
+      "description": "O corte deve identificar fachada, chassi e hidrômetro, método empregado, ação de bloqueio e finalização compatível.",
+      "priority": 3,
+      "category": "Execução do corte",
+      "topicKeywords": ["fotos do corte","método de corte","LISC","hóstia","obstructor","corte no ramal","corte na rede"],
+      "relatedEvidence": ["fachada","chassi","hidrômetro","registro fechado","lacre","dispositivo de supressão","água correndo","vala fechada"],
+      "conditionKeywords": ["quais fotos comprovam o corte","padrão fotográfico do corte","como evidenciar o corte"],
+      "equivalentExpressions": ["o que precisa mostrar quando corta a água","como provar que o corte foi feito"],
+      "examples": ["Quais fotos comprovam um corte no ramal?"],
+      "message": "Confira imóvel, hidrômetro, método de corte, execução do bloqueio e finalização. Os elementos mudam conforme LISC, dispositivo de bloqueio, hóstia, obstructor, ramal ou rede.",
+      "guidance": "Identifique primeiro o método executado e só então compare as evidências exigidas para ele.",
+      "sourceReferences": ["IT - Procedimento de Corte.docx","IT - Analise de Serviços - Corte e Pós Corte.docx"]
+    },
+    {
+      "id": "RULE-CORTE-INFO-02",
+      "serviceId": "corte-fornecimento-agua",
+      "title": "Indícios críticos de corte não comprovado",
+      "description": "Ausência de contexto, identificação, água, item de supressão ou visão da intervenção pode impedir que as fotos comprovem o corte realizado.",
+      "priority": 2,
+      "attentionLevel": "critical",
+      "category": "Risco de execução não comprovada",
+      "topicKeywords": ["corte fake","corte fictício","corte não comprovado","indícios de corte falso"],
+      "relatedEvidence": ["fachada","leitura do hidrômetro","água correndo","item de supressão","visão ampla","escavação"],
+      "conditionKeywords": ["corte não foi comprovado","fotos não comprovam o corte","possível corte fictício","possível corte fake"],
+      "equivalentExpressions": ["não dá para ver que realmente cortou","só tem foto fechada sem contexto","não mostrou a intervenção do corte"],
+      "examples": ["Só há uma foto fechada e não aparece água nem o ponto do corte."],
+      "message": "O conjunto tem indícios de execução não comprovada. Isso exige revisão crítica do contexto e do método, sem inventar uma conclusão que não esteja cadastrada.",
+      "guidance": "Verifique fachada, hidrômetro, visão ampla, ponto de intervenção, água e item de supressão conforme o método. Se continuarem insuficientes, valide a classificação com o responsável.",
+      "sourceReferences": ["IT - Analise de Serviços - Corte e Pós Corte.docx"]
+    },
+    {
+      "id": "RULE-RELIG-INFO-01",
+      "serviceId": "religacao-fornecimento-agua",
+      "title": "Evidências da religação conforme o bloqueio encontrado",
+      "description": "A religação deve mostrar o bloqueio encontrado, sua remoção ou reversão e o abastecimento restabelecido conforme o método.",
+      "priority": 3,
+      "category": "Execução da religação",
+      "topicKeywords": ["fotos da religação","religação LISC","religação hóstia","religação ramal","água correndo"],
+      "relatedEvidence": ["bloqueio encontrado","retirada do bloqueio","hidrômetro","água correndo","novo lacre","vala fechada"],
+      "conditionKeywords": ["quais fotos comprovam a religação","padrão fotográfico da religação","como evidenciar a religação"],
+      "equivalentExpressions": ["o que mostrar para provar que religou","como analisar uma religação"],
+      "examples": ["Na religação com hóstia precisa mostrar água correndo?"],
+      "message": "LISC e dispositivo de bloqueio podem ser revertidos sem desmontagem. Obstrução, hóstia, moeda, ramal ou rede exigem evidências da retirada ou reconexão e do fluxo restabelecido.",
+      "guidance": "Compare as fotos com o método de corte realmente encontrado; não cobre desmontagem quando o próprio método não a exige.",
+      "sourceReferences": ["IT - Procedimento de Religação.docx"]
+    },
+    {
+      "id": "RULE-POSC-INFO-01",
+      "serviceId": "vistoria-pos-corte",
+      "title": "Evidências da vistoria pós-corte",
+      "description": "A vistoria deve mostrar o imóvel, o hidrômetro, a situação do abastecimento e qualquer novo corte ou encaminhamento realizado.",
+      "priority": 3,
+      "category": "Vistoria pós-corte",
+      "topicKeywords": ["vistoria pós corte","fotos da vistoria","baixar o corte","situação após o corte"],
+      "relatedEvidence": ["fachada","hidrômetro","situação do corte","abastecimento","novo corte","desdobro posterior"],
+      "conditionKeywords": ["quais fotos da vistoria pós corte","como comprovar a vistoria pós corte","o que verificar depois do corte"],
+      "equivalentExpressions": ["o que olhar na vistoria após cortar","como analisar o pós corte"],
+      "examples": ["O que precisa aparecer na Vistoria Pós-Corte?"],
+      "message": "A vistoria precisa ligar o imóvel e o hidrômetro à situação encontrada e ao encaminhamento adotado, inclusive novo corte ou desdobro quando houver.",
+      "guidance": "Não confunda a vistoria com prova automática de um novo serviço: cada execução adicional precisa das próprias evidências.",
+      "sourceReferences": ["IT - Procedimento Vistoria Pós Corte.docx","IT - Analise de Serviços - Corte e Pós Corte.docx"]
+    },
+    {
+      "id": "RULE-IMPL-INFO-01",
+      "serviceId": "implantacao-ligacao-agua",
+      "title": "Cadeia de evidências da implantação de ligação",
+      "description": "A implantação deve mostrar endereço, rede, ramal, cavalete, hidrômetro, fluxo, medições e finalização.",
+      "priority": 3,
+      "category": "Implantação",
+      "topicKeywords": ["implantação de ligação","fotos da ligação nova","ligação de água","rede ramal cavalete"],
+      "relatedEvidence": ["fachada","rede de água","ramal","cavalete","hidrômetro","água correndo","medição da vala","reaterro"],
+      "conditionKeywords": ["quais fotos comprovam a implantação","padrão fotográfico da ligação de água","como evidenciar a ligação nova"],
+      "equivalentExpressions": ["o que precisa mostrar na implantação","como provar a ligação da rede até o hidrômetro"],
+      "examples": ["Quais etapas precisam aparecer na implantação da ligação?"],
+      "message": "A evidência deve acompanhar a ligação desde a rede até o ramal, cavalete e hidrômetro, incluindo fluxo, números de identificação, medições e condição final.",
+      "guidance": "Confira se o original e cada desdobro de reaterro ou repavimentação têm evidências próprias e coerentes com o revestimento.",
+      "sourceReferences": ["IT - Implantação de Ligação de Agua.docx"]
+    },
+    {
+      "id": "RULE-REDEAGUA-INFO-01",
+      "serviceId": "reparo-rede-agua-asfalto",
+      "title": "Evidências do reparo de rede de água",
+      "description": "O reparo deve identificar local e defeito, mostrar o método executado, dimensões da intervenção e finalização limpa.",
+      "priority": 3,
+      "category": "Reparo de rede",
+      "topicKeywords": ["reparo de rede de água","fotos da rede","vazamento na rede","trecho substituído"],
+      "relatedEvidence": ["fachada","defeito na rede","reparo executado","trecho substituído","medição","profundidade","finalização"],
+      "conditionKeywords": ["quais fotos comprovam o reparo da rede","padrão fotográfico do reparo de rede","como evidenciar o conserto da rede"],
+      "equivalentExpressions": ["o que precisa mostrar no reparo da rede","como provar que consertou a tubulação da rua"],
+      "examples": ["Quais fotos comprovam o Reparo de Rede de Água?"],
+      "message": "O conjunto deve mostrar local, defeito, reparo ou substituição do trecho, medições e profundidade quando aplicáveis, reaterro e resultado final.",
+      "guidance": "Se a intervenção atingir seis metros ou mais, confira o enquadramento de substituição previsto no procedimento.",
+      "sourceReferences": ["IT - Reparo de Rede de Agua.docx"]
+    },
+    {
+      "id": "RULE-ESGOTO-INFO-01",
+      "serviceId": "reparo-rede-esgoto",
+      "title": "Evidências do reparo de rede de esgoto",
+      "description": "O reparo deve mostrar local, defeito, trecho trabalhado, execução, medições e finalização.",
+      "priority": 3,
+      "category": "Reparo de esgoto",
+      "topicKeywords": ["reparo de esgoto","fotos da rede de esgoto","tubulação de esgoto"],
+      "relatedEvidence": ["local do defeito","rede de esgoto","trecho reparado","medição","reaterro","finalização"],
+      "conditionKeywords": ["quais fotos comprovam o reparo de esgoto","padrão fotográfico do reparo de esgoto","como evidenciar o conserto do esgoto"],
+      "equivalentExpressions": ["o que precisa mostrar no reparo da rede de esgoto","como provar que o esgoto foi consertado"],
+      "examples": ["Como comprovar o Reparo de Rede de Esgoto?"],
+      "message": "A sequência deve identificar o defeito, mostrar a intervenção no trecho correto e registrar medições, reaterro e acabamento final.",
+      "guidance": "Confira separadamente os desdobros executados e a necessidade de qualquer serviço posterior.",
+      "sourceReferences": ["IT - Reparo de Rede de Esgoto.docx"]
+    },
+    {
+      "id": "RULE-EXT-INFO-01",
+      "serviceId": "extensao-rede-agua",
+      "title": "Evidências da extensão de rede de água",
+      "description": "A extensão deve formar uma sequência coerente da abertura da vala ao assentamento, conexão, medição, compactação e finalização.",
+      "priority": 3,
+      "category": "Extensão de rede",
+      "topicKeywords": ["extensão de rede","fotos da extensão","assentamento de tubos","vala da rede"],
+      "relatedEvidence": ["local","sinalização","profundidade","tubos assentados","conexões","medição","compactação","finalização"],
+      "conditionKeywords": ["quais fotos comprovam a extensão de rede","padrão fotográfico da extensão","como evidenciar a rede nova"],
+      "equivalentExpressions": ["o que precisa aparecer na extensão de rede","como provar o novo trecho de rede"],
+      "examples": ["Quais etapas precisam aparecer na extensão?"],
+      "message": "Mostre local e segurança, vala e profundidade, tubos e conexões, extensão medida, reaterro compactado e acabamento final.",
+      "guidance": "As fotos devem permitir acompanhar o mesmo trecho do início ao fim, sem depender apenas da imagem final.",
+      "sourceReferences": ["IT - Procedimento de Extensão de Rede de Agua.docx"]
+    },
+    {
+      "id": "RULE-INTER-INFO-01",
+      "serviceId": "interligacao-rede-agua",
+      "title": "Evidência física da interligação de rede",
+      "description": "A interligação precisa mostrar a conexão efetiva entre as redes, e não somente a perfuração ou preparação.",
+      "priority": 2,
+      "attentionLevel": "critical",
+      "category": "Interligação de rede",
+      "topicKeywords": ["interligação de rede","fotos da interligação","somente perfuração","melhorias operacionais"],
+      "relatedEvidence": ["redes conectadas","conexão executada","perfuração","teste","reaterro","finalização"],
+      "conditionKeywords": ["não mostrou a interligação","somente mostrou a perfuração","interligação não evidenciada","não comprovou a conexão entre as redes"],
+      "equivalentExpressions": ["só furou e não mostrou ligando as redes","não aparece uma rede conectada na outra"],
+      "examples": ["A equipe mostrou a perfuração, mas não a ligação entre as redes."],
+      "message": "Perfuração isolada não comprova interligação. O procedimento orienta reenquadrar como Melhorias Operacionais quando a interligação física não foi executada ou evidenciada.",
+      "guidance": "Confirme se as duas redes aparecem efetivamente conectadas. Esta orientação altera o enquadramento do serviço, mas não define sozinha uma das três conclusões oficiais.",
+      "sourceReferences": ["IT - Procedimento de Interligação de Rede de Agua.docx"]
+    },
+    {
+      "id": "RULE-FALTA-INFO-01",
+      "serviceId": "verificacao-falta-agua",
+      "title": "Evidências da verificação de falta de água",
+      "description": "A verificação deve identificar imóvel e hidrômetro, mostrar leitura, teste de pressão e presença ou ausência de fluxo.",
+      "priority": 3,
+      "category": "Verificação operacional",
+      "topicKeywords": ["falta de água","baixa pressão","manômetro","teste de pressão","fotos da verificação"],
+      "relatedEvidence": ["fachada","hidrômetro","chassi","leitura","manômetro","água correndo","ausência de fluxo"],
+      "conditionKeywords": ["quais fotos comprovam a falta de água","padrão fotográfico da verificação","como evidenciar baixa pressão"],
+      "equivalentExpressions": ["o que mostrar quando cliente está sem água","como provar que não tem pressão"],
+      "examples": ["Quais fotos comprovam a falta de água?"],
+      "message": "A análise deve reconhecer o imóvel e hidrômetro e conferir leitura, teste de pressão e resultado de fluxo.",
+      "guidance": "Use o defeito efetivamente mostrado para validar o serviço posterior adequado; não conclua a causa somente pelo relato.",
+      "sourceReferences": ["IT - Procedimento de Falta D'agua.docx"]
+    },
+    {
+      "id": "RULE-PAV-INFO-01",
+      "serviceId": "repavimentacao-calcada",
+      "applicableServiceIds": ["repavimentacao-concreto"],
+      "title": "Evidências da repavimentação de calçada ou concreto",
+      "description": "A repavimentação deve mostrar necessidade, preparo, execução, medições e acabamento final compatível com o local.",
+      "priority": 3,
+      "category": "Repavimentação",
+      "topicKeywords": ["repavimentação de calçada","repavimentação de concreto","fotos da repavimentação","medição do pavimento"],
+      "relatedEvidence": ["fachada","local antes","preparo da base","execução","comprimento","largura","acabamento final","limpeza"],
+      "conditionKeywords": ["quais fotos comprovam a repavimentação da calçada","padrão fotográfico da repavimentação de concreto","como evidenciar a repavimentação"],
+      "equivalentExpressions": ["o que precisa mostrar refazendo a calçada","como provar que recompôs o concreto"],
+      "examples": ["Quais fotos comprovam a repavimentação de calçada?"],
+      "message": "Mostre o local e a necessidade antes, o preparo e a execução, as medidas do trecho e o acabamento final limpo e compatível.",
+      "guidance": "Confira se a metragem pertence ao trecho executado e se a foto final permite comparar o acabamento com o entorno.",
+      "sourceReferences": ["IT - Procedimento de Repavimentação de Calçada.docx","IT - Repavimentação de Concreto.docx"]
+    },
+    {
+      "id": "RULE-PAV-INFO-02",
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2"],
+      "title": "Evidências da repavimentação asfáltica",
+      "description": "A repavimentação asfáltica deve mostrar recorte, preparo, imprimação, aplicação, espessura, compactação, medição e finalização.",
+      "priority": 3,
+      "category": "Repavimentação asfáltica",
+      "topicKeywords": ["repavimentação asfáltica","fotos do asfalto","emulsão","espessura do asfalto","compactação do asfalto"],
+      "relatedEvidence": ["recorte","base preparada","emulsão","massa asfáltica","espessura","compactação","medição","acabamento final"],
+      "conditionKeywords": ["quais fotos comprovam a repavimentação asfáltica","padrão fotográfico do asfalto","como evidenciar a aplicação do asfalto"],
+      "equivalentExpressions": ["o que precisa mostrar refazendo o asfalto","como provar que asfaltou o trecho"],
+      "examples": ["O que precisa aparecer durante a repavimentação asfáltica?"],
+      "message": "A sequência deve mostrar recorte e base, emulsão, massa aplicada, espessura, compactação, dimensões e acabamento final.",
+      "guidance": "Confira a coerência entre área medida, espessura, execução mostrada e acabamento entregue.",
+      "sourceReferences": ["IT - Repavimentação de Asfalto.docx"]
+    },
+    {
+      "id": "RULE-PAV-01",
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2","repavimentacao-calcada","repavimentacao-concreto"],
+      "title": "Medição da repavimentação fora do formato aceito",
+      "description": "Os procedimentos determinam que medições fora do formato visual aceito sejam registradas como não conformidade.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "attentionLevel": "attention",
+      "category": "Medição",
+      "topicKeywords": ["medição da repavimentação","formato da medição","metragem fora do padrão"],
+      "relatedEvidence": ["medição","medição do comprimento","medição da largura","área repavimentada"],
+      "positiveSignals": ["sem","falta","não mostrou","fora do padrão","formato inválido","não aceito"],
+      "negativeSignals": ["medição correta","comprimento e largura visíveis","formato aceito"],
+      "conditionKeywords": [
+        "medição fora do padrão",
+        "medição em formato não aceito",
+        "medição foi apresentada em formato não aceito",
+        "formato de medição inválido",
+        "não mostrou comprimento e largura da repavimentação"
+      ],
+      "equivalentExpressions": ["mediram de um jeito que não é aceito","a metragem não segue o modelo exigido","não dá para confirmar comprimento e largura"],
+      "examples": ["A medição foi apresentada em formato não aceito pelo procedimento."],
+      "message": "A medição da repavimentação está fora do formato aceito e deve ser registrada como Não Conforme.",
+      "guidance": "Corrija ou registre a metragem no formato exigido, mantendo o vínculo com o trecho efetivamente executado.",
+      "sourceReferences": ["IT - Procedimento de Repavimentação de Calçada.docx","IT - Repavimentação de Asfalto.docx","IT - Repavimentação de Concreto.docx"]
     }
   ]
 }

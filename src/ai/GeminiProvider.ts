@@ -309,6 +309,12 @@ function applySemanticMetadata(
   };
 }
 
+function hasGroundedRuleMatch(evaluation: RuleEvaluationResult): boolean {
+  return evaluation.matchedRules.some((rule) =>
+    rule.matchReasons.some((reason) => reason !== 'tema da regra identificado')
+  );
+}
+
 export class GeminiProvider implements AiProvider {
   private readonly semanticCache = new Map<string, {
     interpretation: SemanticInterpretation;
@@ -435,7 +441,11 @@ export class GeminiProvider implements AiProvider {
     // A IA só entra para ligar uma frase desconhecida às expressões cadastradas
     // ou para deixar a explicação mais natural. Ela nunca troca a decisão.
     if (modelClient) {
-      if (rawBaseEvaluation.outcome === 'insufficient' && !rawBaseEvaluation.errorCode) {
+      if (
+        rawBaseEvaluation.outcome === 'insufficient' &&
+        !rawBaseEvaluation.errorCode &&
+        !hasGroundedRuleMatch(rawBaseEvaluation)
+      ) {
         const serviceRecord = this.engine.getServices().find((item) => item.id === service.id);
         const serviceRules = this.engine.getRulesForService(service.id);
         if (serviceRecord) {
@@ -520,6 +530,7 @@ export class GeminiProvider implements AiProvider {
     if (
       modelClient &&
       rawBaseEvaluation.outcome === 'insufficient' &&
+      !hasGroundedRuleMatch(rawBaseEvaluation) &&
       !rawBaseEvaluation.errorCode &&
       !evaluation.semanticInterpretationApplied
     ) {

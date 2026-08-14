@@ -502,9 +502,9 @@
   },
   {
     "name": "serviço cadastrado com regras ainda pendentes",
-    "serviceId": "repavimentacao-calcada",
-    "query": "A calçada foi refeita corretamente.",
-    "intent": "indefinida",
+    "serviceId": "desobstrucao-ramal-agua",
+    "query": "A desobstrução foi executada corretamente.",
+    "intent": "relato_afirmativo",
     "outcome": "insufficient",
     "insufficiencyReason": "service_rules_pending",
     "decision": null,
@@ -597,6 +597,54 @@
     "name": "hidrômetro furtado usa hd sem custo",
     "serviceId": "reparo-cavalete",
     "query": "Qual serviço usar quando o hidrômetro foi furtado?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "desdobro executado sem etapa gera atenção sem decisão inventada",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "O desdobro executado ficou sem foto durante.",
+    "intent": "relato_afirmativo",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "posterior precisa mostrar a necessidade",
+    "serviceId": "implantacao-ligacao-agua",
+    "query": "Lançou o adicional posterior mas não mostrou a necessidade.",
+    "intent": "relato_afirmativo",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "falta de etapa fora do cavalete não herda severidade",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "O serviço original ficou sem foto durante.",
+    "intent": "relato_afirmativo",
+    "outcome": "insufficient",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "medição de repavimentação fora do formato é não conforme",
+    "serviceId": "repavimentacao-calcada",
+    "query": "A medição foi apresentada em formato não aceito.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "consulta sobre extensão de rede usa a nova base",
+    "serviceId": "extensao-rede-agua",
+    "query": "Quais fotos comprovam a extensão de rede?",
     "intent": "pergunta_informativa",
     "outcome": "informational",
     "decision": null,

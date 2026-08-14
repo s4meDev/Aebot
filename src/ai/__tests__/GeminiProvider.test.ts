@@ -416,12 +416,33 @@ describe('GeminiProvider', () => {
     const response = await provider.generateResponse(
       '',
       'O acabamento ficou correto.',
-      { id: 'repavimentacao-calcada', name: 'Repavimentação - Calçada' }
+      { id: 'desobstrucao-ramal-agua', name: 'Desobstrução de Ramal de Água' }
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
     expect(response.decision).toBeNull();
     expect(response.evaluation.insufficiencyReason).toBe('service_rules_pending');
+  });
+
+  it('preserva orientação crítica reconhecida sem marcar falha semântica', async () => {
+    const provider = new GeminiProvider(ruleEngine, {
+      getApiKey: () => 'test-key',
+      humanizeDeterministicResponses: false,
+    });
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await provider.generateResponse(
+      '',
+      'O desdobro executado ficou sem foto durante.',
+      { id: 'reparo-rede-agua-asfalto', name: 'Reparo de Rede de Água - Asfalto' }
+    );
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.insufficiencyReason).toBe('missing_information');
+    expect(response.content).toContain('Atenção crítica');
+    expect(response.content).not.toContain('interpretação semântica não pôde');
   });
 
   it('mantém a decisão determinística quando o modelo tenta alterá-la', async () => {

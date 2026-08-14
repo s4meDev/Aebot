@@ -126,6 +126,7 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
     relevance,
     matchReasons,
     matchedTerms,
+    attentionLevel: rule.attentionLevel,
     guidance: rule.guidance,
     message: rule.message,
   };
@@ -182,6 +183,7 @@ export function retrieveRules(
       ],
       matchedTerms: unique(supportingMatches.flatMap((match) => match.matchedTerms)),
       supportingRuleIds: supportingMatches.map((match) => match.id),
+      attentionLevel: aggregateRule.attentionLevel,
       guidance: aggregateRule.guidance,
       message: aggregateRule.message,
     };
@@ -242,6 +244,7 @@ function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedR
     relevance,
     matchReasons: ['tema da regra identificado'],
     matchedTerms: topicMatches,
+    attentionLevel: rule.attentionLevel,
     guidance: rule.guidance,
     message: rule.message,
   };

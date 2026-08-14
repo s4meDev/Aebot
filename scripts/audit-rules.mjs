@@ -51,6 +51,15 @@ for (const rule of store.rules) {
       structuralErrors.push(`${rule.id}: serviço principal repetido em applicableServiceIds`);
     }
   }
+  if (
+    rule.appliesToAllActiveServices !== undefined &&
+    typeof rule.appliesToAllActiveServices !== 'boolean'
+  ) {
+    structuralErrors.push(`${rule.id}: appliesToAllActiveServices deve ser booleano`);
+  }
+  if (rule.appliesToAllActiveServices && (rule.applicableServiceIds ?? []).length) {
+    structuralErrors.push(`${rule.id}: escopo global não deve repetir serviços aplicáveis`);
+  }
   if (new Set(rule.applicableServiceIds ?? []).size !== (rule.applicableServiceIds ?? []).length) {
     structuralErrors.push(`${rule.id}: serviço aplicável duplicado`);
   }
@@ -68,7 +77,12 @@ for (const rule of store.rules) {
   for (const expression of expressions) {
     const normalized = normalize(expression);
     if (!normalized) continue;
-    for (const serviceId of [rule.serviceId, ...(rule.applicableServiceIds ?? [])]) {
+    const targetServiceIds = rule.appliesToAllActiveServices
+      ? store.services
+          .filter((service) => service.analysisStatus !== 'rules_pending')
+          .map((service) => service.id)
+      : [rule.serviceId, ...(rule.applicableServiceIds ?? [])];
+    for (const serviceId of targetServiceIds) {
       const key = `${serviceId}:${normalized}`;
       const owners = expressionOwners.get(key) ?? [];
       owners.push({ id: rule.id, severity: rule.severity ?? null });

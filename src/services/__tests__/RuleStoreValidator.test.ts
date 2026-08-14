@@ -18,9 +18,9 @@ describe('RuleStoreValidator', () => {
     expect(store.rules.length).toBeGreaterThan(0);
     expect(store.rules.some((rule) => rule.severity === undefined)).toBe(true);
     expect(store.rules.some((rule) => rule.sourceReferences?.length)).toBe(true);
-    expect(store.services).toHaveLength(28);
+    expect(store.services).toHaveLength(36);
     expect(store.services.filter((service) => service.analysisStatus === 'rules_pending'))
-      .toHaveLength(16);
+      .toHaveLength(11);
     expect(store.rules.some((rule) => rule.applicableServiceIds?.length)).toBe(true);
     const repair = store.services.find((service) => service.id === 'reparo-cavalete');
     expect(repair?.parameterization?.serviceExchange).toHaveLength(10);
@@ -94,6 +94,27 @@ describe('RuleStoreValidator', () => {
     const rules = store.rules as Array<Record<string, unknown>>;
     rules[0].sourceReferences = ['fonte válida', ''];
     expect(() => parseRuleStore(store)).toThrow(/sourceReferences/);
+  });
+
+  it('rejeita nível de atenção inválido e campos digitados errado', () => {
+    const invalidAttention = cloneStore();
+    const invalidRules = invalidAttention.rules as Array<Record<string, unknown>>;
+    invalidRules[0].attentionLevel = 'urgente';
+    expect(() => parseRuleStore(invalidAttention)).toThrow(/attentionLevel/);
+
+    const misspelledField = cloneStore();
+    const misspelledRules = misspelledField.rules as Array<Record<string, unknown>>;
+    misspelledRules[0].equivalentExpresions = ['erro de digitação'];
+    expect(() => parseRuleStore(misspelledField)).toThrow(/não é um campo suportado/);
+  });
+
+  it('não permite misturar escopo geral com lista manual de serviços', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    rules[0].appliesToAllActiveServices = true;
+    rules[0].applicableServiceIds = ['reparo-ramal-agua-asfalto'];
+
+    expect(() => parseRuleStore(store)).toThrow(/appliesToAllActiveServices/);
   });
 
   it('rejeita regra agregadora que referencia grupo factual inexistente', () => {

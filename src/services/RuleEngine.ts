@@ -33,8 +33,13 @@ export class RuleEngine {
   }
 
   getRulesForService(serviceId: string): DataRule[] {
+    const serviceIsActive = this.store.services.some(
+      (service) => service.id === serviceId && service.analysisStatus !== 'rules_pending'
+    );
     return this.store.rules.filter((rule) => (
-      rule.serviceId === serviceId || rule.applicableServiceIds?.includes(serviceId)
+      rule.serviceId === serviceId ||
+      rule.applicableServiceIds?.includes(serviceId) ||
+      (serviceIsActive && rule.appliesToAllActiveServices === true)
     ));
   }
 

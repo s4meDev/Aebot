@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AEBOT — Assistente de Análise",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "Assistente de análise de serviços de campo baseado nas regras cadastradas",
   "permissions": ["sidePanel"],
   "host_permissions": [

@@ -17,7 +17,7 @@ export function buildServiceSystemInstruction(
   const ruleCatalog = rules
     .map(
       (rule) =>
-        `[${rule.id}] ${rule.title}\nConclusão: ${rule.severity ?? 'não definida na regra'}\nDescrição: ${rule.description}\nOrientação: ${rule.guidance ?? rule.message}\nFonte opcional: ${(rule.sourceReferences ?? []).join('; ') || 'regra cadastrada diretamente'}`
+        `[${rule.id}] ${rule.title}\nConclusão: ${rule.severity ?? 'não definida na regra'}\nNível de atenção: ${rule.attentionLevel ?? 'normal'}\nDescrição: ${rule.description}\nOrientação: ${rule.guidance ?? rule.message}\nFonte opcional: ${(rule.sourceReferences ?? []).join('; ') || 'regra cadastrada diretamente'}`
     )
     .join('\n\n');
 
@@ -46,6 +46,7 @@ export function buildEvaluationPrompt(
     conclusion: rule.severity ?? null,
     message: rule.message,
     guidance: rule.guidance,
+    attentionLevel: rule.attentionLevel ?? 'normal',
   }));
 
   return `[AVALIAÇÃO DETERMINÍSTICA — NÃO ALTERAR]
@@ -91,6 +92,7 @@ export function buildSemanticInterpretationPrompt(
     ],
     evidenceConcepts: rule.relatedEvidence ?? [],
     examples: rule.examples ?? [],
+    attentionLevel: rule.attentionLevel ?? 'normal',
     sourceReferences: rule.sourceReferences ?? [],
   }));
 

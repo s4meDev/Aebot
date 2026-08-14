@@ -22,7 +22,7 @@ Uma orientação que ensina como executar ou conferir o serviço, mas não defin
 4. Se houver documento ou observação útil, registrá-la opcionalmente em `sourceReferences`.
 5. Cadastrar expressões equivalentes específicas da regra e exemplos informais.
 6. Adicionar casos positivos e negativos em `src/data/regressionCases.json`.
-7. Executar `npm run rules:audit`, `npm test`, `npm run typecheck` e `npm run build`.
+7. Executar `npm run rules:check` e `npm run build`.
 8. Incrementar a versão da base quando o conteúdo entrar em uso.
 
 ## Critério de aceite

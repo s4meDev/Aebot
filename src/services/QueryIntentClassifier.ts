@@ -62,6 +62,12 @@ const FACT_MARKERS = [
   'foi corrigido',
   'esta ilegivel',
   'está ilegível',
+  'fora do padrao',
+  'fora do padrão',
+  'nao aceito',
+  'não aceito',
+  'formato invalido',
+  'formato inválido',
 ];
 
 export function classifyQueryIntent(query: NormalizedText): QueryIntent {

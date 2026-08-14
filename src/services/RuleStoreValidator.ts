@@ -4,15 +4,17 @@ import type {
   DataService,
   DecisionType,
   RuleConclusionMeta,
+  RuleAttentionLevel,
   RuleMatchPolicy,
   RuleStoreSchema,
   ServiceAnalysisStatus,
   ServiceParameterization,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.8.0';
+export const CURRENT_RULE_STORE_VERSION = '2.9.0';
 const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
 const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];
+const RULE_ATTENTION_LEVELS: RuleAttentionLevel[] = ['normal', 'attention', 'critical'];
 const OFFICIAL_DECISIONS: DecisionType[] = ['Conforme', 'Não Conforme', 'Reprovado'];
 type UnknownRecord = Record<string, unknown>;
 
@@ -81,6 +83,31 @@ function optionalString(
   return requiredString(source, key, path, issues) || undefined;
 }
 
+function optionalBoolean(
+  source: UnknownRecord,
+  key: string,
+  path: string,
+  issues: string[]
+): boolean | undefined {
+  if (source[key] === undefined) return undefined;
+  if (typeof source[key] !== 'boolean') {
+    issues.push(`${path}.${key} deve ser booleano`);
+    return undefined;
+  }
+  return source[key] as boolean;
+}
+
+function rejectUnknownKeys(
+  source: UnknownRecord,
+  supportedKeys: readonly string[],
+  path: string,
+  issues: string[]
+): void {
+  for (const key of Object.keys(source)) {
+    if (!supportedKeys.includes(key)) issues.push(`${path}.${key} não é um campo suportado`);
+  }
+}
+
 function parseParameterization(
   value: unknown,
   path: string,
@@ -127,6 +154,12 @@ function parseMatchPolicy(
     issues.push(`${path} deve ser objeto`);
     return undefined;
   }
+  rejectUnknownKeys(
+    source,
+    ['allOf', 'minimumGroups', 'minimumMatchedFactGroups'],
+    path,
+    issues
+  );
 
   const allOf = stringArray(source.allOf, `${path}.allOf`, issues);
   let minimumGroups: RuleMatchPolicy['minimumGroups'];
@@ -135,6 +168,12 @@ function parseMatchPolicy(
     if (!minimumSource) {
       issues.push(`${path}.minimumGroups deve ser objeto`);
     } else {
+      rejectUnknownKeys(
+        minimumSource,
+        ['count', 'positiveSignals', 'negativeSignals', 'groups'],
+        `${path}.minimumGroups`,
+        issues
+      );
       const count = requiredPositiveInteger(minimumSource, 'count', `${path}.minimumGroups`, issues);
       const rawGroups = minimumSource.groups;
       if (!Array.isArray(rawGroups) || rawGroups.length === 0) {
@@ -147,6 +186,7 @@ function parseMatchPolicy(
             issues.push(`${groupPath} deve ser objeto`);
             return { label: '', expressions: [] };
           }
+          rejectUnknownKeys(group, ['label', 'expressions'], groupPath, issues);
           const expressions = stringArray(group.expressions, `${groupPath}.expressions`, issues, true) ?? [];
           if (!expressions.length) issues.push(`${groupPath}.expressions não pode ser vazia`);
           return {
@@ -184,6 +224,12 @@ function parseMatchPolicy(
     if (!minimumSource) {
       issues.push(`${path}.minimumMatchedFactGroups deve ser objeto`);
     } else {
+      rejectUnknownKeys(
+        minimumSource,
+        ['count', 'groups'],
+        `${path}.minimumMatchedFactGroups`,
+        issues
+      );
       const count = requiredPositiveInteger(
         minimumSource,
         'count',
@@ -246,6 +292,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
   if (!source) throw new RuleStoreValidationError(['raiz deve ser objeto']);
 
   const issues: string[] = [];
+  rejectUnknownKeys(source, ['version', 'conclusions', 'services', 'rules'], 'store', issues);
   const version = requiredString(source, 'version', 'store', issues);
   if (version && !/^2\.\d+\.\d+$/.test(version)) {
     issues.push(`store.version ${version} não é suportada`);
@@ -264,6 +311,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
       conclusions[decision] = { severity: decision, priority: 1, description: '' };
       continue;
     }
+    rejectUnknownKeys(conclusion, ['severity', 'priority', 'description'], path, issues);
     const severity = requiredString(conclusion, 'severity', path, issues);
     if (severity !== decision) issues.push(`${path}.severity deve ser ${decision}`);
     conclusions[decision] = {
@@ -293,6 +341,15 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           issues.push(`${path} deve ser objeto`);
           return { id: '', name: '', category: '', summary: '', insights: [] };
         }
+        rejectUnknownKeys(
+          service,
+          [
+            'id', 'name', 'category', 'summary', 'insights', 'suggestedQuestions',
+            'analysisStatus', 'parameterization', 'catalogNameStatus', 'sourceLabel',
+          ],
+          path,
+          issues
+        );
         const analysisStatus = service.analysisStatus === undefined
           ? 'active'
           : requiredString(service, 'analysisStatus', path, issues);
@@ -368,6 +425,19 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
             priority: 1, conditionKeywords: [], message: '',
           };
         }
+        rejectUnknownKeys(
+          item,
+          [
+            'id', 'serviceId', 'applicableServiceIds', 'appliesToAllActiveServices', 'title', 'description',
+            'severity', 'priority', 'conditionKeywords', 'message',
+            'equivalentExpressions', 'positiveSignals', 'negativeSignals',
+            'mandatoryConditions', 'exceptions', 'examples', 'guidance', 'category',
+            'relatedEvidence', 'topicKeywords', 'sourceReferences', 'factGroup',
+            'attentionLevel', 'matchPolicy',
+          ],
+          path,
+          issues
+        );
         const severityValue = item.severity === undefined
           ? undefined
           : requiredString(item, 'severity', path, issues);
@@ -380,6 +450,12 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           applicableServiceIds: stringArray(
             item.applicableServiceIds,
             `${path}.applicableServiceIds`,
+            issues
+          ),
+          appliesToAllActiveServices: optionalBoolean(
+            item,
+            'appliesToAllActiveServices',
+            path,
             issues
           ),
           title: requiredString(item, 'title', path, issues),
@@ -407,6 +483,14 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           topicKeywords: stringArray(item.topicKeywords, `${path}.topicKeywords`, issues),
           sourceReferences: stringArray(item.sourceReferences, `${path}.sourceReferences`, issues),
           factGroup: optionalString(item, 'factGroup', path, issues),
+          attentionLevel: (() => {
+            const value = optionalString(item, 'attentionLevel', path, issues);
+            if (value && !RULE_ATTENTION_LEVELS.includes(value as RuleAttentionLevel)) {
+              issues.push(`${path}.attentionLevel inválido`);
+              return undefined;
+            }
+            return value as RuleAttentionLevel | undefined;
+          })(),
           matchPolicy: parseMatchPolicy(item.matchPolicy, `${path}.matchPolicy`, issues),
         };
         const hasMatchingData =
@@ -430,6 +514,9 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
       issues.push(`regra ${rule.id} referencia serviço inexistente: ${rule.serviceId}`);
     }
     const applicableServiceIds = rule.applicableServiceIds ?? [];
+    if (rule.appliesToAllActiveServices && applicableServiceIds.length) {
+      issues.push(`regra ${rule.id} não deve combinar appliesToAllActiveServices com applicableServiceIds`);
+    }
     if (new Set(applicableServiceIds).size !== applicableServiceIds.length) {
       issues.push(`regra ${rule.id} possui serviços aplicáveis duplicados`);
     }

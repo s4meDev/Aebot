@@ -159,6 +159,8 @@ Regras que evitam acoplamento:
 - `rulesStore.json`: serviços e regras de negócio; é a fonte de verdade funcional. Regras idênticas entre variações usam `applicableServiceIds`, evitando cópias que poderiam divergir.
 - `languageAliases.json`: abreviações e equivalências gerais de linguagem.
 - `regressionCases.json`: frases reais que protegem o comportamento esperado da base.
+- `schemas/rulesStore.schema.json`: autocomplete e validação visual dos campos no VS Code.
+- `.vscode/settings.json`: associa o schema ao arquivo da base para reduzir erros de digitação.
 
 #### `src/services`
 
@@ -246,6 +248,8 @@ Regras que evitam acoplamento:
 - `DEPLOYMENT-40-USERS.md`: publicação e distribuição para os 40 analistas.
 - `CAPACITY-3000-OS.md`: premissas de volume, limites e teste de capacidade.
 - `RULE-INTAKE.md`: processo para cadastrar e revisar regras.
+- `COMO-EDITAR-REGRAS.md`: manutenção prática da base com exemplos seguros.
+- `BASE-DE-CONHECIMENTO-ITS.md`: critérios extraídos das ITs e seus limites classificatórios.
 
 ### Arquivos de teste
 
@@ -294,7 +298,7 @@ Os testes ficam perto da parte que protegem:
 1. Edite `src/data/rulesStore.json`.
 2. Atualize a versão da base.
 3. Acrescente exemplos reais em `src/data/regressionCases.json`.
-4. Rode `npm run rules:audit`, `npm test`, `npm run typecheck` e os builds.
+4. Rode `npm run rules:check` e os builds.
 5. Publique o Worker e gere novamente o `dist` de produção.
 
 Não escreva a regra em TypeScript para “ajudar” o motor.

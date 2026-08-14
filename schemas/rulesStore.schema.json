@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aebot.local/schemas/rulesStore.schema.json",
+  "title": "Base de regras do AEBOT",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "conclusions", "services", "rules"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^2\\.\\d+\\.\\d+$" },
+    "conclusions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Conforme", "Não Conforme", "Reprovado"],
+      "properties": {
+        "Conforme": { "$ref": "#/$defs/conclusion" },
+        "Não Conforme": { "$ref": "#/$defs/conclusion" },
+        "Reprovado": { "$ref": "#/$defs/conclusion" }
+      }
+    },
+    "services": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/service" }
+    },
+    "rules": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rule" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "stringList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyString" },
+      "uniqueItems": true
+    },
+    "conclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["severity", "priority", "description"],
+      "properties": {
+        "severity": { "enum": ["Conforme", "Não Conforme", "Reprovado"] },
+        "priority": { "type": "integer", "minimum": 1 },
+        "description": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "parameterization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serviceExchange": { "$ref": "#/$defs/stringList" },
+        "executedAdditional": { "$ref": "#/$defs/stringList" },
+        "subsequentAdditional": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "category", "summary", "insights"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "category": { "$ref": "#/$defs/nonEmptyString" },
+        "summary": { "$ref": "#/$defs/nonEmptyString" },
+        "insights": { "$ref": "#/$defs/stringList" },
+        "suggestedQuestions": { "$ref": "#/$defs/stringList" },
+        "analysisStatus": { "enum": ["active", "rules_pending"] },
+        "parameterization": { "$ref": "#/$defs/parameterization" },
+        "catalogNameStatus": { "enum": ["confirmed", "needs_confirmation"] },
+        "sourceLabel": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "conditionGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "expressions"],
+      "properties": {
+        "label": { "$ref": "#/$defs/nonEmptyString" },
+        "expressions": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "matchPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allOf": { "$ref": "#/$defs/stringList" },
+        "minimumGroups": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["count", "groups"],
+          "properties": {
+            "count": { "type": "integer", "minimum": 1 },
+            "positiveSignals": { "$ref": "#/$defs/stringList" },
+            "negativeSignals": { "$ref": "#/$defs/stringList" },
+            "groups": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/conditionGroup" }
+            }
+          }
+        },
+        "minimumMatchedFactGroups": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["count", "groups"],
+          "properties": {
+            "count": { "type": "integer", "minimum": 1 },
+            "groups": { "$ref": "#/$defs/stringList" }
+          }
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "serviceId", "title", "description", "priority", "conditionKeywords", "message"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^RULE-[A-Z0-9-]+$" },
+        "serviceId": { "type": "string", "minLength": 1 },
+        "applicableServiceIds": { "$ref": "#/$defs/stringList" },
+        "appliesToAllActiveServices": { "type": "boolean" },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "description": { "$ref": "#/$defs/nonEmptyString" },
+        "severity": { "enum": ["Conforme", "Não Conforme", "Reprovado"] },
+        "priority": { "type": "integer", "minimum": 1 },
+        "conditionKeywords": { "$ref": "#/$defs/stringList" },
+        "message": { "$ref": "#/$defs/nonEmptyString" },
+        "equivalentExpressions": { "$ref": "#/$defs/stringList" },
+        "positiveSignals": { "$ref": "#/$defs/stringList" },
+        "negativeSignals": { "$ref": "#/$defs/stringList" },
+        "mandatoryConditions": { "$ref": "#/$defs/stringList" },
+        "exceptions": { "$ref": "#/$defs/stringList" },
+        "examples": { "$ref": "#/$defs/stringList" },
+        "guidance": { "$ref": "#/$defs/nonEmptyString" },
+        "category": { "$ref": "#/$defs/nonEmptyString" },
+        "relatedEvidence": { "$ref": "#/$defs/stringList" },
+        "topicKeywords": { "$ref": "#/$defs/stringList" },
+        "sourceReferences": { "$ref": "#/$defs/stringList" },
+        "factGroup": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+        "attentionLevel": { "enum": ["normal", "attention", "critical"] },
+        "matchPolicy": { "$ref": "#/$defs/matchPolicy" }
+      }
+    }
+  }
+}
