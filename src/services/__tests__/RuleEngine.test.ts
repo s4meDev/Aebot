@@ -641,6 +641,98 @@ describe('RuleEngine — ranking e serviço', () => {
     }
   });
 
+  it('compartilha as conclusões gerais de evidência com todas as variações de ramal', () => {
+    const serviceIds = [
+      'reparo-ramal-agua-asfalto',
+      'reparo-ramal-agua-bloco-paralelo',
+      'reparo-ramal-agua-calcada',
+      'reparo-ramal-agua-terra',
+      'reparo-ramal-agua-causado-por-terceiros',
+    ];
+
+    for (const serviceId of serviceIds) {
+      const after = ruleEngine.evaluatePrompt('Sem foto depois.', serviceId);
+      const before = ruleEngine.evaluatePrompt('Sem foto antes.', serviceId);
+      const during = ruleEngine.evaluatePrompt(
+        'Sem foto durante o reparo de ramal.',
+        serviceId
+      );
+      const twoStages = ruleEngine.evaluatePrompt(
+        'Sem foto antes e sem foto durante o reparo de ramal.',
+        serviceId
+      );
+      const complete = ruleEngine.evaluatePrompt(
+        'Tudo correto e evidências completas.',
+        serviceId
+      );
+
+      expect(after.decision).toBe('Reprovado');
+      expect(after.primaryRule?.id).toBe('RULE-RC-01');
+      expect(before.decision).toBe('Não Conforme');
+      expect(before.primaryRule?.id).toBe('RULE-RC-06');
+      expect(during.decision).toBe('Não Conforme');
+      expect(during.primaryRule?.id).toBe('RULE-RR-04');
+      expect(twoStages.decision).toBe('Reprovado');
+      expect(twoStages.primaryRule?.id).toBe('RULE-RC-02');
+      expect(complete.decision).toBe('Conforme');
+      expect(complete.primaryRule?.id).toBe('RULE-RC-09');
+    }
+  });
+
+  it('não exige chassi, hidrômetro, lacre ou virola no reparo de ramal', () => {
+    const serviceId = 'reparo-ramal-agua-calcada';
+    const chassis = ruleEngine.evaluatePrompt(
+      'O reparo de ramal está sem foto do chassi e do hidrômetro.',
+      serviceId
+    );
+    const seal = ruleEngine.evaluatePrompt('Sem foto do lacre.', serviceId);
+    const ferrule = ruleEngine.evaluatePrompt('Não mostrou apertando a virola.', serviceId);
+
+    expect(chassis.decision).toBeNull();
+    expect(chassis.outcome).toBe('advisory');
+    expect(chassis.primaryRule?.id).toBe('RULE-RR-INFO-04');
+    expect(chassis.reasoningSummary).toContain('não é obrigatória');
+    expect(chassis.matchedRules.some((rule) => rule.id === 'RULE-RC-05')).toBe(false);
+    expect(seal.decision).toBeNull();
+    expect(seal.matchedRules.some((rule) => rule.id === 'RULE-RC-08')).toBe(false);
+    expect(ferrule.decision).toBeNull();
+    expect(ferrule.matchedRules.some((rule) => rule.id === 'RULE-RC-07')).toBe(false);
+  });
+
+  it('orienta recomposição conforme o revestimento do reparo de ramal', () => {
+    for (const serviceId of [
+      'reparo-ramal-agua-asfalto',
+      'reparo-ramal-agua-bloco-paralelo',
+      'reparo-ramal-agua-calcada',
+    ]) {
+      const result = ruleEngine.evaluatePrompt(
+        'Abriu o pavimento para fazer o reparo de ramal; o que precisa compor?',
+        serviceId
+      );
+      expect(result.decision).toBeNull();
+      expect(result.matchedRules.some((rule) => rule.id === 'RULE-RR-PARAM-01')).toBe(true);
+      expect(result.reasoningSummary).toContain('reaterro e a repavimentação');
+    }
+
+    const earth = ruleEngine.evaluatePrompt(
+      'Ramal Terra precisa de desdobro de repavimentação?',
+      'reparo-ramal-agua-terra'
+    );
+    expect(earth.decision).toBeNull();
+    expect(earth.primaryRule?.id).toBe('RULE-RR-PARAM-02');
+    expect(earth.reasoningSummary).toContain('não cobre repavimentação');
+  });
+
+  it('não exige recomposição de pavimento quando ele não foi aberto', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Não houve abertura do pavimento; preciso lançar repavimentação do ramal?',
+      'reparo-ramal-agua-asfalto'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.matchedRules.some((rule) => rule.id === 'RULE-RR-PARAM-01')).toBe(false);
+  });
+
   it('orienta falta de evidência no ramal sem inventar conclusão oficial', () => {
     const result = ruleEngine.evaluatePrompt(
       'Só mostrou o cavalete e não provou o conserto do ramal.',

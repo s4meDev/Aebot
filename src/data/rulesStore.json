@@ -1,5 +1,5 @@
 {
-  "version": "2.10.1",
+  "version": "2.11.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -106,7 +106,8 @@
       "insights": [
         "As fotos devem identificar o local, a situação encontrada, o reparo executado e a finalização.",
         "A intervenção no ramal precisa estar visível; mencionar somente o cavalete não comprova o reparo do ramal.",
-        "O documento técnico descreve as evidências obrigatórias, mas não define sozinho a conclusão oficial para cada ausência."
+        "Não é obrigatória foto do chassi ou do hidrômetro neste serviço.",
+        "A abertura do asfalto normalmente exige reaterro e repavimentação coerentes com o que foi executado ou ficou pendente."
       ],
       "suggestedQuestions": ["Quais fotos comprovam o reparo do ramal?","O que deve aparecer na foto da finalização?"],
       "analysisStatus": "active"
@@ -119,7 +120,8 @@
       "insights": [
         "Abrange bloco, paralelepípedo, pedra portuguesa, miracema e piso intertravado.",
         "As fotos devem identificar o local, a situação encontrada, o reparo executado e a finalização.",
-        "O documento técnico descreve as evidências obrigatórias, mas não define sozinho a conclusão oficial para cada ausência."
+        "Não é obrigatória foto do chassi ou do hidrômetro neste serviço.",
+        "A abertura do piso normalmente exige reaterro e recomposição do revestimento correspondente."
       ],
       "analysisStatus": "active",
       "catalogNameStatus": "needs_confirmation",
@@ -133,7 +135,8 @@
       "insights": [
         "As fotos devem identificar o local, a situação encontrada, o reparo executado e a finalização.",
         "Quando a intervenção necessária não for executada na visita, este serviço pode ser indicado como adicional posterior.",
-        "O documento técnico descreve as evidências obrigatórias, mas não define sozinho a conclusão oficial para cada ausência."
+        "Não é obrigatória foto do chassi ou do hidrômetro neste serviço.",
+        "A abertura da calçada normalmente exige reaterro e repavimentação coerentes com o que foi executado ou ficou pendente."
       ],
       "analysisStatus": "active"
     },
@@ -145,7 +148,8 @@
       "insights": [
         "As fotos devem identificar o local, a situação encontrada, o reparo executado e a finalização.",
         "A intervenção no ramal precisa estar visível.",
-        "O documento técnico descreve as evidências obrigatórias, mas não define sozinho a conclusão oficial para cada ausência."
+        "Não é obrigatória foto do chassi ou do hidrômetro neste serviço.",
+        "O solo deve ser reaterrado e finalizado, mas Ramal Terra não exige repavimentação apenas por ser um reparo de ramal."
       ],
       "analysisStatus": "active"
     },
@@ -157,7 +161,7 @@
       "insights": [
         "O final do nome ainda precisa ser confirmado em uma captura sem corte.",
         "O padrão técnico geral de reparo de ramal exige identificação do local, situação encontrada, reparo e finalização.",
-        "O documento técnico descreve as evidências obrigatórias, mas não define sozinho a conclusão oficial para cada ausência."
+        "Não é obrigatória foto do chassi ou do hidrômetro; reaterro e repavimentação dependem do revestimento mostrado na intervenção."
       ],
       "analysisStatus": "active",
       "catalogNameStatus": "needs_confirmation",
@@ -465,6 +469,7 @@
     {
       "id": "RULE-RC-10",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Foto da fachada ausente ou sem visão ampla",
       "description": "A fachada do imóvel deve ser registrada de forma ampla para identificar corretamente o local da intervenção e vinculá-lo à Ordem de Serviço.",
       "severity": "Não Conforme",
@@ -529,6 +534,7 @@
     {
       "id": "RULE-RC-INFO-01",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Validação da origem, matrícula e endereço da OS",
       "description": "Antes da análise, deve-se verificar a origem da OS matriz, confirmar se o endereço corresponde ao da OS mãe e consultar a matrícula. Em campo, a equipe valida georreferência, endereço, imóvel, ligação e cavalete correto.",
       "priority": 4,
@@ -641,6 +647,7 @@
     {
       "id": "RULE-RC-INFO-08",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Orientação de enquadramento das fotos",
       "description": "Sempre que for possível, as fotos do serviço devem ser registradas na horizontal para melhorar o enquadramento e a leitura das evidências.",
       "priority": 4,
@@ -657,8 +664,9 @@
     {
       "id": "RULE-RC-01",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Falta da foto depois da execução",
-      "description": "Falta de evidência do hidrômetro reparado, serviço finalizado ou estado final do cavalete.",
+      "description": "Falta de evidência do serviço finalizado ou do estado final do local reparado.",
       "severity": "Reprovado",
       "priority": 1,
       "category": "Evidência de execução",
@@ -682,6 +690,7 @@
     {
       "id": "RULE-RC-02",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Ausência de duas ou mais etapas",
       "description": "Faltam ao menos duas das etapas antes, durante ou depois, ou nenhuma etapa foi apresentada.",
       "severity": "Reprovado",
@@ -726,6 +735,7 @@
     {
       "id": "RULE-RC-03",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Serviço no local incorreto",
       "description": "Serviço executado em endereço ou instalação divergente da Ordem de Serviço.",
       "severity": "Reprovado",
@@ -743,6 +753,7 @@
     {
       "id": "RULE-RC-04",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Serviço sem necessidade",
       "description": "Não havia necessidade técnica para realizar o reparo.",
       "severity": "Reprovado",
@@ -777,6 +788,7 @@
     {
       "id": "RULE-RC-06",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Falta da foto antes da execução",
       "description": "Ausência de foto que justifique a abertura da Ordem de Serviço.",
       "severity": "Não Conforme",
@@ -903,6 +915,7 @@
     {
       "id": "RULE-RC-09",
       "serviceId": "reparo-cavalete",
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
       "title": "Execução correta com evidências completas",
       "description": "O serviço foi executado corretamente e todas as evidências obrigatórias estão presentes.",
       "severity": "Conforme",
@@ -1330,6 +1343,110 @@
       "message": "A foto final deve mostrar o local após o reaterro primário. Se a equipe também concluiu o reaterro final em via pública, deve mostrar o recorte regular e a medição da vala.",
       "guidance": "Verifique também a limpeza do local e se os desdobros de reaterro e repavimentação correspondem ao que foi executado ou ficou pendente.",
       "sourceReferences": ["IT----Reparo-de-Ramal-de-Agua.pdf, páginas 4, 6 e 8"]
+    },
+    {
+      "id": "RULE-RR-04",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "title": "Falta da foto durante o reparo de ramal",
+      "description": "Ausência de foto que mostre a intervenção no ramal em andamento, sem exigir componentes próprios do cavalete.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Evidência de execução",
+      "factGroup": "durante",
+      "topicKeywords": ["foto durante do ramal","execução do reparo de ramal","intervenção no ramal em andamento"],
+      "relatedEvidence": ["foto durante","ramal sendo reparado","intervenção no ramal","reparo da tubulação","conexão sendo reparada"],
+      "conditionKeywords": [
+        "sem foto durante o reparo de ramal",
+        "falta foto durante do ramal",
+        "foto durante do ramal ausente",
+        "sem foto da intervenção no ramal",
+        "não mostrou o ramal sendo reparado"
+      ],
+      "equivalentExpressions": [
+        "não mostrou mexendo no ramal",
+        "não tem foto fazendo o reparo do ramal",
+        "não registrou a equipe consertando a tubulação do ramal",
+        "só mostrou o antes e o depois do ramal"
+      ],
+      "positiveSignals": ["sem","falta","faltou","ausente","não mostrou","não registrou","não tem"],
+      "negativeSignals": ["reparo do ramal em andamento visível","foto durante do ramal apresentada","intervenção no ramal evidenciada"],
+      "examples": ["Não mostrou a equipe fazendo o reparo do ramal."],
+      "message": "A execução do reparo no ramal em andamento não foi evidenciada.",
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência durante; não cobre foto de chassi ou hidrômetro.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026","IT----Reparo-de-Ramal-de-Agua.pdf"]
+    },
+    {
+      "id": "RULE-RR-PARAM-01",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada"],
+      "title": "Recomposição do pavimento no reparo de ramal",
+      "description": "Nos reparos de ramal em asfalto, calçada ou bloco, a abertura do pavimento normalmente exige reaterro e recomposição do revestimento.",
+      "priority": 2,
+      "attentionLevel": "attention",
+      "category": "Parametrização operacional",
+      "topicKeywords": ["compor pavimento do ramal","repavimentação do reparo de ramal","reaterro do reparo de ramal","recomposição da calçada","recomposição do asfalto","recomposição do bloco"],
+      "relatedEvidence": ["vala aberta","pavimento aberto","calçada aberta","asfalto aberto","bloco retirado","reaterro","repavimentação"],
+      "conditionKeywords": [
+        "reparo de ramal em asfalto com abertura de pavimento",
+        "reparo de ramal em calçada com abertura de pavimento",
+        "reparo de ramal em bloco com abertura do piso",
+        "ramal com pavimento aberto precisa de recomposição"
+      ],
+      "equivalentExpressions": [
+        "abriu o asfalto para mexer no ramal",
+        "abriu o asfalto para fazer o reparo de ramal",
+        "abriu o pavimento para fazer o reparo de ramal",
+        "quebrou a calçada para reparar o ramal",
+        "tirou os blocos para acessar o ramal",
+        "reparo de ramal precisa compor o pavimento"
+      ],
+      "exceptions": ["não houve abertura do pavimento","pavimento não foi afetado","intervenção ocorreu em terra"],
+      "examples": ["Abriu a calçada para reparar o ramal; quais desdobros preciso conferir?"],
+      "message": "Quando o reparo de ramal abrir asfalto, calçada ou piso em blocos, confira o reaterro e a repavimentação correspondentes ao revestimento.",
+      "guidance": "Use Adicional Executado para a recomposição concluída na visita e Adicional Posterior para o pavimento que ficou pendente. Exija evidência da vala e do revestimento antes de manter o desdobro.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
+    },
+    {
+      "id": "RULE-RR-PARAM-02",
+      "serviceId": "reparo-ramal-agua-terra",
+      "title": "Finalização do reparo de ramal em terra",
+      "description": "Ramal Terra exige reaterro e finalização do solo, mas não exige desdobro de repavimentação apenas por ser um reparo de ramal.",
+      "priority": 2,
+      "category": "Parametrização operacional",
+      "topicKeywords": ["ramal terra","reaterro do ramal terra","repavimentação no ramal terra","finalização em terra"],
+      "relatedEvidence": ["solo de terra","vala em terra","reaterro","compactação","acabamento do solo"],
+      "conditionKeywords": ["ramal terra precisa de repavimentação","ramal terra precisa de desdobro de repavimentação","como finalizar o reparo de ramal em terra","reaterro do ramal terra"],
+      "equivalentExpressions": ["precisa compor pavimento no ramal terra","terra precisa de repavimentação","o que lançar depois de reparar ramal na terra"],
+      "examples": ["Ramal Terra precisa de desdobro de repavimentação?"],
+      "message": "No Ramal Terra, confira o reaterro e a finalização do solo; não cobre repavimentação se não houver outro revestimento afetado.",
+      "guidance": "Mantenha um desdobro posterior somente quando as fotos mostrarem outra recomposição realmente necessária.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
+    },
+    {
+      "id": "RULE-RR-INFO-04",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "title": "Chassi e hidrômetro não obrigatórios no reparo de ramal",
+      "description": "A análise do reparo de ramal não exige foto do chassi ou identificação do hidrômetro como etapa obrigatória.",
+      "priority": 1,
+      "category": "Padrão de evidências",
+      "topicKeywords": ["chassi no reparo de ramal","hidrômetro no reparo de ramal","foto do hd no ramal"],
+      "relatedEvidence": ["foto do chassi","número do hidrômetro","foto do hidrômetro","número do hd"],
+      "conditionKeywords": [
+        "reparo de ramal não precisa foto do chassi",
+        "sem foto do chassi no reparo de ramal",
+        "sem hidrômetro nas fotos do reparo de ramal"
+      ],
+      "equivalentExpressions": [
+        "ramal sem foto do hd",
+        "precisa mostrar o chassi no reparo de ramal",
+        "posso cobrar hidrômetro no ramal"
+      ],
+      "examples": ["O Reparo de Ramal está sem foto do chassi; isso é Não Conforme?"],
+      "message": "Não. Foto do chassi ou do hidrômetro não é obrigatória para analisar o Reparo de Ramal.",
+      "guidance": "Avalie fachada/local, situação inicial, intervenção no ramal, execução e finalização. Não aplique a regra de identificação do hidrômetro usada no Reparo de Cavalete.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
     },
     {
       "id": "RULE-RV-INFO-01",

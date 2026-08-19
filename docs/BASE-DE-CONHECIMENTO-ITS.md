@@ -28,6 +28,7 @@ Essa exigência geral orienta a análise, mas não cria automaticamente uma conc
 - Indícios críticos aparecem com `attentionLevel`, mas isso não autoriza a IA a escolher uma conclusão.
 - Regras próprias do Reparo de Cavalete continuam específicas desse serviço.
 - Medição de repavimentação em formato não aceito foi cadastrada como `Não Conforme`, pois os procedimentos determinam explicitamente esse registro.
+- Reparo de Ramal compartilha as conclusões de ausência de etapas do Reparo de Cavalete, sem exigir chassi ou hidrômetro. Quando houver abertura de asfalto, calçada ou bloco, a análise confere reaterro e recomposição; em Ramal Terra, confere reaterro e finalização do solo.
 - Serviços ainda sem conteúdo suficiente permanecem com `analysisStatus: "rules_pending"`.
 
 Para manter ou ampliar a base, siga `docs/COMO-EDITAR-REGRAS.md`.

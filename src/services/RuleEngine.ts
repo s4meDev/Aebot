@@ -125,7 +125,12 @@ export class RuleEngine {
     // 3. Perguntas sobre a regra recebem explicação, não conclusão de uma OS real.
     if (intent === 'pergunta_informativa') {
       const candidatesById = new Map<string, (typeof candidates)[number]>();
-      for (const rule of [...candidates, ...topicalCandidates]) {
+      // Se o cenário completo encontrou regra, não mistura regras que apenas
+      // compartilham uma palavra do assunto. Isso mantém a resposta específica.
+      const informationalCandidates = candidates.length
+        ? candidates
+        : topicalCandidates;
+      for (const rule of informationalCandidates) {
         const current = candidatesById.get(rule.id);
         if (!current || rule.score > current.score) candidatesById.set(rule.id, rule);
       }

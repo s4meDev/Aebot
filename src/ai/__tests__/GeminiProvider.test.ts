@@ -478,6 +478,54 @@ describe('GeminiProvider', () => {
     expect(response.content).not.toContain('Ausência de desdobro obrigatório');
   });
 
+  it('aplica ao reparo de ramal as conclusões comuns sem cobrar chassi', async () => {
+    const provider = new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    });
+    const service = {
+      id: 'reparo-ramal-agua-calcada',
+      name: 'Reparo de Ramal de Água - Calçada',
+    };
+
+    const missingDuring = await provider.generateResponse(
+      '',
+      'Sem foto durante o reparo de ramal.',
+      service
+    );
+    const missingChassis = await provider.generateResponse(
+      '',
+      'O reparo de ramal está sem foto do chassi e do hidrômetro.',
+      service
+    );
+
+    expect(missingDuring.decision).toBe('Não Conforme');
+    expect(missingDuring.evaluation.primaryRule?.id).toBe('RULE-RR-04');
+    expect(missingChassis.decision).toBeNull();
+    expect(missingChassis.evaluation.primaryRule?.id).toBe('RULE-RR-INFO-04');
+    expect(missingChassis.content).toContain('não é obrigatória');
+  });
+
+  it('orienta pavimento no ramal e preserva a exceção do Ramal Terra', async () => {
+    const provider = new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    });
+    const paved = await provider.generateResponse(
+      '',
+      'Abriu o asfalto para fazer o reparo de ramal.',
+      { id: 'reparo-ramal-agua-asfalto', name: 'Reparo de Ramal de Água - Asfalto' }
+    );
+    const earth = await provider.generateResponse(
+      '',
+      'Ramal Terra precisa de desdobro de repavimentação?',
+      { id: 'reparo-ramal-agua-terra', name: 'Reparo de Ramal de Água - Terra' }
+    );
+
+    expect(paved.decision).toBeNull();
+    expect(paved.content).toContain('reaterro e a repavimentação');
+    expect(earth.decision).toBeNull();
+    expect(earth.content).toContain('não cobre repavimentação');
+  });
+
   it('aplica a falta geral de parametrização sem depender de um serviço específico', async () => {
     const response = await new GeminiProvider(ruleEngine, {
       humanizeDeterministicResponses: false,

@@ -742,5 +742,61 @@
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
+  },
+  {
+    "name": "reparo de ramal sem foto depois reprova",
+    "serviceId": "reparo-ramal-agua-asfalto",
+    "query": "Sem foto depois.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "reparo de ramal sem foto durante é não conforme",
+    "serviceId": "reparo-ramal-agua-calcada",
+    "query": "Sem foto durante o reparo de ramal.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "reparo de ramal sem duas etapas reprova",
+    "serviceId": "reparo-ramal-agua-terra",
+    "query": "Sem foto antes e sem foto durante o reparo de ramal.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 3
+  },
+  {
+    "name": "reparo de ramal não exige chassi ou hidrômetro",
+    "serviceId": "reparo-ramal-agua-bloco-paralelo",
+    "query": "O reparo de ramal está sem foto do chassi e do hidrômetro.",
+    "intent": "relato_afirmativo",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "ramal em asfalto aberto orienta recomposição do pavimento",
+    "serviceId": "reparo-ramal-agua-asfalto",
+    "query": "Abriu o asfalto para fazer o reparo de ramal.",
+    "intent": "indefinida",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "ramal terra não exige repavimentação automática",
+    "serviceId": "reparo-ramal-agua-terra",
+    "query": "Ramal Terra precisa de desdobro de repavimentação?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
   }
 ]

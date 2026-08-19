@@ -123,6 +123,36 @@ assert(
   'Orientação para retirar desdobro sem evidência de vala divergiu.'
 );
 
+const ramalMissingDuring = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-ramal-agua-calcada',
+    prompt: 'Sem foto durante o reparo de ramal.',
+    history: [],
+  }),
+})).json();
+assert(
+  ramalMissingDuring.result?.decision === 'Não Conforme' &&
+    ramalMissingDuring.result?.evaluation?.primaryRule?.id === 'RULE-RR-04',
+  'Conclusão compartilhada de falta da etapa durante no Ramal divergiu.'
+);
+
+const ramalWithoutChassis = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-ramal-agua-calcada',
+    prompt: 'O reparo de ramal está sem foto do chassi e do hidrômetro.',
+    history: [],
+  }),
+})).json();
+assert(
+  ramalWithoutChassis.result?.decision === null &&
+    ramalWithoutChassis.result?.evaluation?.primaryRule?.id === 'RULE-RR-INFO-04',
+  'Exclusão de chassi e hidrômetro no Ramal divergiu.'
+);
+
 const contextualAnalysis = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },
