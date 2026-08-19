@@ -390,7 +390,7 @@ describe('RuleEngine — ranking e serviço', () => {
   it('não herda a severidade do cavalete para falta de etapa em outro serviço', () => {
     const result = ruleEngine.evaluatePrompt(
       'O serviço original ficou sem foto durante.',
-      'reparo-rede-agua-asfalto'
+      'implantacao-ligacao-agua'
     );
 
     expect(result.decision).toBeNull();
@@ -567,19 +567,19 @@ describe('RuleEngine — ranking e serviço', () => {
         'reparo-ramal-agua-asfalto',
         'Na Baixada 2, qual é a sequência do desdobro de asfalto?',
         'RULE-PARAM-ASFALTO-BAIXADA-LAGOS-01',
-        'Manutenção → Reaterro → Repavimentação de Asfalto',
+        'desdobre o pavimento como Reaterro',
       ],
       [
         'reparo-rede-agua-asfalto',
         'Qual o desdobro de asfalto no Centro Sul?',
         'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01',
-        'Manutenção → Concreto → Repavimentação de Asfalto',
+        'desdobre o pavimento como Concreto',
       ],
       [
-        'reparo-cavalete',
+        'reparo-rede-agua-asfalto',
         'Na Leste é asfalto ou concreto?',
         'RULE-PARAM-ASFALTO-LESTE-01',
-        'Manutenção → Repavimentação de Asfalto ou Concreto',
+        'Repavimentação de Asfalto ou Repavimentação de Concreto',
       ],
     ] as const;
 
@@ -604,6 +604,57 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(result.matchedRules.map((rule) => rule.id)).toContain(
       'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01'
     );
+  });
+
+  it('pede a superintendência quando ela é indispensável para escolher o pavimento', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Qual desdobro de pavimento devo usar?',
+      'reparo-ramal-agua-asfalto'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.outcome).toBe('advisory');
+    expect(result.primaryRule?.id).toBe('RULE-PARAM-ASFALTO-CONTEXTO-01');
+    expect(result.advisory?.missingInformation).toEqual([
+      'Qual é a superintendência da OS: Baixada 1, Baixada 2, Lagos, Norte, Centro-Sul, Comunidades ou Leste?',
+    ]);
+  });
+
+  it('aplica Não Conforme e indica a troca para cada desdobro regional indevido', () => {
+    const cases = [
+      [
+        'Na Baixada 1 colocaram Concreto no desdobro do pavimento.',
+        'RULE-PARAM-ASFALTO-BAIXADA-INDEVIDO-01',
+        'Reaterro',
+      ],
+      [
+        'No Norte lançaram Reaterro como desdobro do pavimento.',
+        'RULE-PARAM-ASFALTO-NORTE-INDEVIDO-01',
+        'Concreto',
+      ],
+      [
+        'Na Leste colocaram Reaterro como desdobro do pavimento.',
+        'RULE-PARAM-ASFALTO-LESTE-INDEVIDO-01',
+        'Repavimentação',
+      ],
+    ] as const;
+
+    for (const [query, ruleId, correction] of cases) {
+      const result = ruleEngine.evaluatePrompt(query, 'reparo-rede-agua-asfalto');
+      expect(result.decision).toBe('Não Conforme');
+      expect(result.primaryRule?.id).toBe(ruleId);
+      expect(result.primaryRule?.guidance).toContain(correction);
+    }
+  });
+
+  it('não chama o desdobro regional correto de indevido', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'No Norte lançaram Concreto como desdobro do pavimento.',
+      'reparo-ramal-agua-asfalto'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.matchedRules.some((rule) => rule.id.includes('INDEVIDO'))).toBe(false);
   });
 
   it('consulta os novos serviços sem cair em regras pendentes', () => {
@@ -792,6 +843,61 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(result.decision).toBeNull();
     expect(result.outcome).toBe('advisory');
     expect(result.matchedRules.some((rule) => rule.id === 'RULE-RR-INFO-02')).toBe(true);
+  });
+
+  it('aplica ao reparo de rede as conclusões gerais de antes, durante e depois', () => {
+    const serviceId = 'reparo-rede-agua-asfalto';
+    const after = ruleEngine.evaluatePrompt('Sem foto depois.', serviceId);
+    const before = ruleEngine.evaluatePrompt('Sem foto antes.', serviceId);
+    const during = ruleEngine.evaluatePrompt('Sem foto durante o reparo de rede.', serviceId);
+    const twoStages = ruleEngine.evaluatePrompt(
+      'Sem foto antes e sem foto durante o reparo de rede.',
+      serviceId
+    );
+    const complete = ruleEngine.evaluatePrompt(
+      'Tudo correto e evidências completas.',
+      serviceId
+    );
+
+    expect(after.decision).toBe('Reprovado');
+    expect(after.primaryRule?.id).toBe('RULE-RC-01');
+    expect(before.decision).toBe('Não Conforme');
+    expect(before.primaryRule?.id).toBe('RULE-RC-06');
+    expect(during.decision).toBe('Não Conforme');
+    expect(during.primaryRule?.id).toBe('RULE-REDEAGUA-02');
+    expect(twoStages.decision).toBe('Reprovado');
+    expect(twoStages.primaryRule?.id).toBe('RULE-RC-02');
+    expect(complete.decision).toBe('Conforme');
+    expect(complete.primaryRule?.id).toBe('RULE-RC-09');
+  });
+
+  it('não exige chassi ou hidrômetro no reparo de rede', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'O reparo de rede está sem foto do chassi e do hidrômetro.',
+      'reparo-rede-agua-asfalto'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.primaryRule?.id).toBe('RULE-REDEAGUA-INFO-02');
+    expect(result.reasoningSummary).toContain('não é obrigatória');
+    expect(result.matchedRules.some((rule) => rule.id === 'RULE-RC-05')).toBe(false);
+  });
+
+  it('zera e pontua a metragem da rede que não foi comprovada', () => {
+    const unproven = ruleEngine.evaluatePrompt(
+      'Puseram cinco metros no formulário, mas não mostraram a medição da rede.',
+      'reparo-rede-agua-asfalto'
+    );
+    const proven = ruleEngine.evaluatePrompt(
+      'A metragem foi comprovada e a trena aparece nas fotos.',
+      'reparo-rede-agua-asfalto'
+    );
+
+    expect(unproven.decision).toBe('Não Conforme');
+    expect(unproven.primaryRule?.id).toBe('RULE-REDEAGUA-01');
+    expect(unproven.primaryRule?.guidance).toContain('Zere a metragem');
+    expect(proven.decision).toBeNull();
+    expect(proven.primaryRule?.id).not.toBe('RULE-REDEAGUA-01');
   });
 
   it('compartilha o padrão fotográfico entre os tipos de reaterro', () => {

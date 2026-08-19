@@ -126,6 +126,28 @@ function lastUserMessage(history: AiMessage[]): AiMessage | undefined {
   return undefined;
 }
 
+function lastMessageIndex(history: AiMessage[], role: AiMessage['role']): number {
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    if (history[index].role === role) return index;
+  }
+  return -1;
+}
+
+function isAnswerToClarification(prompt: string, history: AiMessage[]): boolean {
+  const normalizedPrompt = normalizeText(prompt);
+  if (!normalizedPrompt.value || normalizedPrompt.tokens.length > 8) return false;
+
+  const lastUserIndex = lastMessageIndex(history, 'user');
+  const lastAssistantIndex = lastMessageIndex(history, 'assistant');
+  if (lastUserIndex < 0 || lastAssistantIndex <= lastUserIndex) return false;
+
+  const assistantText = normalizeText(history[lastAssistantIndex].content).value;
+  return assistantText.includes('para concluir a classificacao') ||
+    assistantText.includes('preciso saber') ||
+    assistantText.includes('informe a superintendencia') ||
+    assistantText.includes('o que falta confirmar');
+}
+
 function expandAdditiveContinuation(previousText: string, current: string): string {
   const normalizedPrevious = normalizeText(previousText).value;
   const normalizedCurrent = normalizeText(current).value;
@@ -153,7 +175,12 @@ export function resolveContextualQuery(
   const previous = lastUserMessage(history);
   const normalizedCurrent = normalizeText(current).value;
   const isCorrection = Boolean(correctionPrefix(normalizedCurrent));
-  if (!current || !previous || (!isCorrection && !isContextualFollowUp(current))) {
+  const answersClarification = isAnswerToClarification(current, history);
+  if (
+    !current ||
+    !previous ||
+    (!isCorrection && !answersClarification && !isContextualFollowUp(current))
+  ) {
     return { query: current, contextApplied: false };
   }
 
@@ -168,7 +195,9 @@ export function resolveContextualQuery(
   return {
     // Mantém a fronteira entre a mensagem anterior e a continuação. Isso
     // evita que a interrogação da frase nova transforme o fato anterior em pergunta.
-    query: `${previousText}. ${expandedCurrent}`,
+    query: answersClarification
+      ? `${previousText}. Informação solicitada: ${expandedCurrent}`
+      : `${previousText}. ${expandedCurrent}`,
     contextApplied: true,
     mode: isCorrection ? 'correction' : 'continuation',
     sourceMessageId: previous.id,

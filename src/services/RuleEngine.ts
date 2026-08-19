@@ -139,6 +139,29 @@ export class RuleEngine {
         this.getConclusions()
       );
 
+      if (primaryRule?.missingInformation?.length) {
+        const advisory = buildGroundedAdvisory(service, rankedRules);
+        return {
+          serviceId,
+          ruleStoreVersion: this.store.version,
+          normalizedQuery: normalized.value,
+          contextApplied: false,
+          intent,
+          outcome: 'advisory',
+          decision: null,
+          hasSufficientEvidence: false,
+          matchedRules: rankedRules,
+          primaryRule,
+          conflicts: [],
+          confidence: confidenceFromScore(primaryRule.score),
+          reasoningSummary: advisory.summary,
+          requiresHumanValidation: true,
+          advisory,
+          insufficiencyReason: 'missing_information',
+          serviceContext,
+        };
+      }
+
       if (primaryRule) {
         const additionalRules = rankedRules.length > 1
           ? ` Também se relacionam à dúvida: ${rankedRules.slice(1).map((rule) => rule.id).join(', ')}.`

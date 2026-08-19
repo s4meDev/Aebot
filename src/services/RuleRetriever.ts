@@ -129,6 +129,7 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
     attentionLevel: rule.attentionLevel,
     guidance: rule.guidance,
     message: rule.message,
+    missingInformation: rule.missingInformation,
   };
 }
 
@@ -186,6 +187,7 @@ export function retrieveRules(
       attentionLevel: aggregateRule.attentionLevel,
       guidance: aggregateRule.guidance,
       message: aggregateRule.message,
+      missingInformation: aggregateRule.missingInformation,
     };
     const directAggregate = matchesById.get(aggregateRule.id);
     // Se a mesma regra também casou pelo texto, preserva os melhores dados dos dois caminhos.
@@ -247,6 +249,7 @@ function matchInformationalRule(query: NormalizedText, rule: DataRule): MatchedR
     attentionLevel: rule.attentionLevel,
     guidance: rule.guidance,
     message: rule.message,
+    missingInformation: rule.missingInformation,
   };
 }
 
@@ -350,6 +353,7 @@ export function retrieveRelatedRules(
       attentionLevel: rule.attentionLevel,
       guidance: rule.guidance,
       message: rule.message,
+      missingInformation: rule.missingInformation,
     } satisfies MatchedRule];
   })
     .sort((left, right) => right.score - left.score || left.priority - right.priority)

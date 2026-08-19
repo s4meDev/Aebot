@@ -624,7 +624,7 @@
   },
   {
     "name": "falta de etapa fora do cavalete não herda severidade",
-    "serviceId": "reparo-rede-agua-asfalto",
+    "serviceId": "implantacao-ligacao-agua",
     "query": "O serviço original ficou sem foto durante.",
     "intent": "relato_afirmativo",
     "outcome": "advisory",
@@ -800,7 +800,7 @@
     "minimumMatches": 1
   },
   {
-    "name": "baixada e lagos usam reaterro antes da repavimentação de asfalto",
+    "name": "baixada e lagos usam reaterro como desdobro de pavimento",
     "serviceId": "reparo-ramal-agua-asfalto",
     "query": "Na Baixada 1, qual o fluxo do desdobro de asfalto?",
     "intent": "pergunta_informativa",
@@ -809,7 +809,7 @@
     "minimumMatches": 1
   },
   {
-    "name": "centro sul usa concreto antes da repavimentação de asfalto",
+    "name": "centro sul usa concreto como desdobro de pavimento",
     "serviceId": "reparo-rede-agua-asfalto",
     "query": "Qual o desdobro de asfalto no Centro Sul?",
     "intent": "pergunta_informativa",
@@ -819,7 +819,7 @@
   },
   {
     "name": "leste orienta repavimentação de asfalto ou concreto",
-    "serviceId": "reparo-cavalete",
+    "serviceId": "reparo-rede-agua-asfalto",
     "query": "Na Leste é asfalto ou concreto?",
     "intent": "pergunta_informativa",
     "outcome": "informational",
@@ -834,5 +834,79 @@
     "outcome": "decision",
     "decision": "Não Conforme",
     "minimumMatches": 2
+  },
+  {
+    "name": "pergunta de pavimento sem superintendência pede o dado faltante",
+    "serviceId": "reparo-ramal-agua-asfalto",
+    "query": "Qual desdobro de pavimento devo usar?",
+    "intent": "pergunta_informativa",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "baixada com concreto é desdobro indevido",
+    "serviceId": "reparo-ramal-agua-asfalto",
+    "query": "Na Baixada 1 colocaram Concreto no desdobro do pavimento.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 2
+  },
+  {
+    "name": "norte com reaterro é desdobro indevido",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "No Norte lançaram Reaterro como desdobro do pavimento.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 2
+  },
+  {
+    "name": "leste com reaterro é desdobro indevido",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "Na Leste colocaram Reaterro como desdobro do pavimento.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 2
+  },
+  {
+    "name": "reparo de rede sem foto durante é não conforme",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "Sem foto durante o reparo de rede.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "reparo de rede sem foto depois reprova",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "Sem foto depois.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "metragem da rede não comprovada é zerada e não conforme",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "Puseram metros no formulário sem provar a medição da rede.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "reparo de rede não exige chassi ou hidrômetro",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "O reparo de rede está sem foto do chassi e do hidrômetro.",
+    "intent": "relato_afirmativo",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
   }
 ]

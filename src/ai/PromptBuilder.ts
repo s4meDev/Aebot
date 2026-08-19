@@ -17,7 +17,7 @@ export function buildServiceSystemInstruction(
   const ruleCatalog = rules
     .map(
       (rule) =>
-        `[${rule.id}] ${rule.title}\nConclusão: ${rule.severity ?? 'não definida na regra'}\nNível de atenção: ${rule.attentionLevel ?? 'normal'}\nDescrição: ${rule.description}\nOrientação: ${rule.guidance ?? rule.message}\nFonte opcional: ${(rule.sourceReferences ?? []).join('; ') || 'regra cadastrada diretamente'}`
+        `[${rule.id}] ${rule.title}\nConclusão: ${rule.severity ?? 'não definida na regra'}\nNível de atenção: ${rule.attentionLevel ?? 'normal'}\nDescrição: ${rule.description}\nOrientação: ${rule.guidance ?? rule.message}\nInformação a solicitar: ${(rule.missingInformation ?? []).join(' ') || 'nenhuma'}\nFonte opcional: ${(rule.sourceReferences ?? []).join('; ') || 'regra cadastrada diretamente'}`
     )
     .join('\n\n');
 
@@ -26,6 +26,7 @@ Use exclusivamente a avaliação determinística e as regras fornecidas.
 Nunca crie, altere ou complete regras por conhecimento geral.
 Se a decisão for nula, não escolha uma conclusão oficial.
 Quando houver advisory, ofereça o direcionamento fundamentado e diga o que ainda precisa ser confirmado.
+Quando advisory trouxer missingInformation, faça somente essas perguntas objetivas; não invente outros dados obrigatórios.
 Se a intenção for hipótese, descreva o resultado como cenário, não como fato ocorrido.
 Se o resultado for informativo, explique a regra sem classificar uma Ordem de Serviço real.
 Seja curto, simples e natural.
@@ -47,6 +48,7 @@ export function buildEvaluationPrompt(
     conclusion: rule.severity ?? null,
     message: rule.message,
     guidance: rule.guidance,
+    missingInformation: rule.missingInformation,
     attentionLevel: rule.attentionLevel ?? 'normal',
   }));
 

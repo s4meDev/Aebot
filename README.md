@@ -47,12 +47,14 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - painel administrativo protegido por credencial separada;
 - Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
-- 64 regras e orientações baseadas nas diretrizes do produto e nos materiais recebidos;
+- 71 regras e orientações baseadas nas diretrizes do produto e nos materiais recebidos;
 - cadeia de evidências do original, do adicional executado e do adicional posterior tratada de forma explícita;
 - ausência de Troca, Adicional Executado ou Adicional Posterior necessário resulta em Não Conforme; impossibilidade de trocar para o serviço correto resulta em Reprovado;
 - critérios de desdobro para ramal, reaterro e repavimentação cadastrados; falhas sem conclusão oficial definida recebem orientação prática sem decisão automática.
 - Reparo de Ramal compartilha as conclusões de antes, durante e depois do Cavalete, mas não exige chassi/hidrômetro; a recomposição depende do revestimento, e Ramal Terra não exige pavimento.
-- Desdobros de asfalto consideram a superintendência: Baixada/Lagos usam Reaterro; Norte/Centro-Sul/Comunidades usam Concreto; Leste segue para Repavimentação de Asfalto ou Concreto.
+- Em Reparo de Ramal ou Rede no asfalto, o desdobro de pavimento considera a superintendência: Baixada/Lagos usam Reaterro; Norte/Centro-Sul/Comunidades usam Concreto; Leste usa Repavimentação de Asfalto ou Concreto. Desdobro diferente é corrigido como Não Conforme.
+- Reparo de Rede compartilha as regras gerais de antes, durante e depois do Ramal; metragem lançada sem comprovação é zerada e pontuada como Não Conforme.
+- Quando uma regra depende de contexto ausente, o AEBOT faz uma pergunta objetiva e aproveita a resposta curta do analista na continuação do mesmo caso.
 
 ## Carregar a extensão no Chrome
 

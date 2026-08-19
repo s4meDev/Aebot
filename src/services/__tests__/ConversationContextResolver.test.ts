@@ -70,6 +70,34 @@ describe('ConversationContextResolver', () => {
     expect(result.mode).toBe('correction');
   });
 
+  it('liga uma resposta curta à devolutiva feita pelo AEBOT', () => {
+    const clarificationHistory: AiMessage[] = [
+      {
+        id: 'regional-question',
+        role: 'user',
+        content: 'Qual desdobro de pavimento devo usar?',
+        timestamp: '10:10',
+      },
+      {
+        id: 'clarification',
+        role: 'assistant',
+        content: 'Para concluir a classificação:\nInforme a superintendência da OS.',
+        timestamp: '10:11',
+      },
+    ];
+
+    expect(resolveContextualQuery('Norte', clarificationHistory)).toEqual({
+      query: 'Qual desdobro de pavimento devo usar. Informação solicitada: Norte',
+      contextApplied: true,
+      mode: 'continuation',
+      sourceMessageId: 'regional-question',
+    });
+  });
+
+  it('não liga uma resposta curta quando o AEBOT não pediu esclarecimento', () => {
+    expect(resolveContextualQuery('Norte', history).contextApplied).toBe(false);
+  });
+
   it.each([
     'Outro caso',
     'É outro caso',

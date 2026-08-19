@@ -75,6 +75,7 @@ Uma orientação que seja realmente igual para **todos os serviços ativos** pod
 - `topicKeywords`: termos usados apenas para localizar uma orientação em perguntas.
 - `examples`: frases reais, sem dados pessoais.
 - `sourceReferences`: origem opcional da orientação.
+- `missingInformation`: perguntas objetivas que o AEBOT deve devolver quando essa regra depender de um dado ausente, como superintendência, tipo de equipe ou frente do serviço. Use somente quando a informação mudar diretamente a regra aplicável.
 
 Prefira frases completas. Termos soltos como “foto”, “antes” ou “ausência” não devem provar uma irregularidade.
 

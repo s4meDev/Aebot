@@ -21,7 +21,7 @@ Essa exigência geral orienta a análise, mas não cria automaticamente uma conc
 - Manutenção: implantação de ligação, reparos de cavalete, ramal, rede de água e rede de esgoto, extensão e interligação de rede.
 - Operação: verificação de falta de água.
 - Repavimentação: reaterro de valas, calçada, asfalto e concreto.
-- Fluxograma regional de asfalto: Baixada 1, Baixada 2 e Lagos seguem Manutenção → Reaterro → Repavimentação de Asfalto; Norte, Centro-Sul e Comunidades seguem Manutenção → Concreto → Repavimentação de Asfalto; Leste segue Manutenção → Repavimentação de Asfalto ou Concreto.
+- Fluxograma regional de asfalto: em Reparo de Ramal ou Rede, Baixada 1, Baixada 2 e Lagos usam Reaterro como desdobro de pavimento; Norte, Centro-Sul e Comunidades usam Concreto; Leste usa Repavimentação de Asfalto ou de Concreto. Lançamento diferente deve ser trocado e pontuado como Não Conforme por desdobro indevido.
 
 ## Limites importantes
 
@@ -30,6 +30,7 @@ Essa exigência geral orienta a análise, mas não cria automaticamente uma conc
 - Regras próprias do Reparo de Cavalete continuam específicas desse serviço.
 - Medição de repavimentação em formato não aceito foi cadastrada como `Não Conforme`, pois os procedimentos determinam explicitamente esse registro.
 - Reparo de Ramal compartilha as conclusões de ausência de etapas do Reparo de Cavalete, sem exigir chassi ou hidrômetro. Quando houver abertura de asfalto, calçada ou bloco, a análise confere reaterro e recomposição; em Ramal Terra, confere reaterro e finalização do solo.
+- Reparo de Rede compartilha as conclusões gerais de local e etapas antes, durante e depois, sem exigir chassi ou hidrômetro. A metragem do formulário só é mantida quando as evidências comprovam o trecho; caso contrário, é zerada e registrada como Não Conforme.
 - Serviços ainda sem conteúdo suficiente permanecem com `analysisStatus: "rules_pending"`.
 
 Para manter ou ampliar a base, siga `docs/COMO-EDITAR-REGRAS.md`.

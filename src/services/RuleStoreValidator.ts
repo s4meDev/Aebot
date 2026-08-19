@@ -11,7 +11,7 @@ import type {
   ServiceParameterization,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.11.1';
+export const CURRENT_RULE_STORE_VERSION = '2.12.0';
 const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
 const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];
 const RULE_ATTENTION_LEVELS: RuleAttentionLevel[] = ['normal', 'attention', 'critical'];
@@ -433,7 +433,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
             'equivalentExpressions', 'positiveSignals', 'negativeSignals',
             'mandatoryConditions', 'exceptions', 'examples', 'guidance', 'category',
             'relatedEvidence', 'topicKeywords', 'sourceReferences', 'factGroup',
-            'attentionLevel', 'matchPolicy',
+            'attentionLevel', 'matchPolicy', 'missingInformation',
           ],
           path,
           issues
@@ -482,6 +482,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           relatedEvidence: stringArray(item.relatedEvidence, `${path}.relatedEvidence`, issues),
           topicKeywords: stringArray(item.topicKeywords, `${path}.topicKeywords`, issues),
           sourceReferences: stringArray(item.sourceReferences, `${path}.sourceReferences`, issues),
+          missingInformation: stringArray(item.missingInformation, `${path}.missingInformation`, issues),
           factGroup: optionalString(item, 'factGroup', path, issues),
           attentionLevel: (() => {
             const value = optionalString(item, 'attentionLevel', path, issues);

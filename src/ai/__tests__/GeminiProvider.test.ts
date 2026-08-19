@@ -526,6 +526,47 @@ describe('GeminiProvider', () => {
     expect(earth.content).toContain('não cobre repavimentação');
   });
 
+  it('pede a superintendência e usa a resposta curta para completar o caso', async () => {
+    const provider = new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    });
+    const service = {
+      id: 'reparo-ramal-agua-asfalto',
+      name: 'Reparo de Ramal de Água - Asfalto',
+    };
+    const question = 'Qual desdobro de pavimento devo usar?';
+    const first = await provider.generateResponse('', question, service, []);
+    const history: AiMessage[] = [
+      { id: 'regional-user', role: 'user', content: question, timestamp: '10:00' },
+      { id: 'regional-assistant', role: 'assistant', content: first.content, timestamp: '10:01' },
+    ];
+    const completed = await provider.generateResponse('', 'Norte', service, history);
+
+    expect(first.decision).toBeNull();
+    expect(first.evaluation.outcome).toBe('advisory');
+    expect(first.content).toContain('Qual é a superintendência da OS');
+    expect(completed.evaluation.contextApplied).toBe(true);
+    expect(completed.evaluation.outcome).toBe('informational');
+    expect(completed.evaluation.primaryRule?.id).toBe(
+      'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01'
+    );
+    expect(completed.content).toContain('desdobre o pavimento como Concreto');
+  });
+
+  it('humaniza a metragem de rede sem alterar a Não Conformidade', async () => {
+    const response = await new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    }).generateResponse(
+      '',
+      'Colocaram metragem no formulário, mas não mostraram medindo a rede.',
+      { id: 'reparo-rede-agua-asfalto', name: 'Reparo de Rede de Água - Asfalto' }
+    );
+
+    expect(response.decision).toBe('Não Conforme');
+    expect(response.evaluation.primaryRule?.id).toBe('RULE-REDEAGUA-01');
+    expect(response.content).toContain('Zere a metragem');
+  });
+
   it('aplica a falta geral de parametrização sem depender de um serviço específico', async () => {
     const response = await new GeminiProvider(ruleEngine, {
       humanizeDeterministicResponses: false,

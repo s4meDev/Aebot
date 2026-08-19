@@ -87,6 +87,8 @@ export interface DataRule {
   topicKeywords?: string[];
   /** Referências opcionais; regras informadas pelos responsáveis não dependem de documento formal. */
   sourceReferences?: string[];
+  /** Perguntas objetivas quando a regra depende de um dado que não veio no relato. */
+  missingInformation?: string[];
   /** Grupo factual reutilizável por regras agregadoras do mesmo serviço. */
   factGroup?: string;
   /** Destaca risco operacional sem criar ou alterar uma conclusão oficial. */
@@ -140,6 +142,8 @@ export interface MatchedRule {
   attentionLevel?: RuleAttentionLevel;
   guidance?: string;
   message: string;
+  /** Perguntas cadastradas para completar o contexto antes de decidir. */
+  missingInformation?: string[];
 }
 
 export interface EvaluationConflict {

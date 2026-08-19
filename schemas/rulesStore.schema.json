@@ -136,6 +136,7 @@
         "relatedEvidence": { "$ref": "#/$defs/stringList" },
         "topicKeywords": { "$ref": "#/$defs/stringList" },
         "sourceReferences": { "$ref": "#/$defs/stringList" },
+        "missingInformation": { "$ref": "#/$defs/stringList" },
         "factGroup": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
         "attentionLevel": { "enum": ["normal", "attention", "critical"] },
         "matchPolicy": { "$ref": "#/$defs/matchPolicy" }

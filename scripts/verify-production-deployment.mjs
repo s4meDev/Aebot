@@ -169,6 +169,52 @@ assert(
   'Orientação regional de desdobro do asfalto divergiu.'
 );
 
+const missingRegionalContext = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-ramal-agua-asfalto',
+    prompt: 'Qual desdobro de pavimento devo usar?',
+    history: [],
+  }),
+})).json();
+assert(
+  missingRegionalContext.result?.evaluation?.outcome === 'advisory' &&
+    missingRegionalContext.result?.evaluation?.advisory?.missingInformation?.some(
+      (item) => item.includes('superintendência')
+    ),
+  'Devolutiva para superintendência ausente divergiu.'
+);
+
+const completedRegionalContext = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-ramal-agua-asfalto',
+    prompt: 'Norte',
+    history: [
+      {
+        id: 'deployment-regional-user',
+        role: 'user',
+        content: 'Qual desdobro de pavimento devo usar?',
+        timestamp: '09:10',
+      },
+      {
+        id: 'deployment-regional-assistant',
+        role: 'assistant',
+        content: missingRegionalContext.result.content,
+        timestamp: '09:11',
+      },
+    ],
+  }),
+})).json();
+assert(
+  completedRegionalContext.result?.evaluation?.contextApplied === true &&
+    completedRegionalContext.result?.evaluation?.primaryRule?.id ===
+      'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01',
+  'Resposta curta à devolutiva regional não completou o caso.'
+);
+
 const missingRegionalAsphaltFlow = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },
@@ -184,6 +230,37 @@ assert(
       (rule) => rule.id === 'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01'
     ),
   'Combinação da falta de desdobro com o fluxo regional divergiu.'
+);
+
+const wrongRegionalAsphaltFlow = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-rede-agua-asfalto',
+    prompt: 'No Norte lançaram Reaterro como desdobro do pavimento.',
+    history: [],
+  }),
+})).json();
+assert(
+  wrongRegionalAsphaltFlow.result?.decision === 'Não Conforme' &&
+    wrongRegionalAsphaltFlow.result?.evaluation?.primaryRule?.id ===
+      'RULE-PARAM-ASFALTO-NORTE-INDEVIDO-01',
+  'Desdobro regional indevido não foi classificado corretamente.'
+);
+
+const unprovenNetworkLength = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-rede-agua-asfalto',
+    prompt: 'Puseram metros no formulário sem provar a medição da rede.',
+    history: [],
+  }),
+})).json();
+assert(
+  unprovenNetworkLength.result?.decision === 'Não Conforme' &&
+    unprovenNetworkLength.result?.evaluation?.primaryRule?.id === 'RULE-REDEAGUA-01',
+  'Metragem de rede sem comprovação não foi classificada corretamente.'
 );
 
 const contextualAnalysis = await (await request('/v1/analyze', {

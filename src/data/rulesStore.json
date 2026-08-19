@@ -1,5 +1,5 @@
 {
-  "version": "2.11.1",
+  "version": "2.12.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -174,8 +174,11 @@
       "summary": "Reparo de rede de água em área com pavimento asfáltico.",
       "insights": [
         "As fotos devem identificar local, defeito, método executado, medições e finalização.",
+        "As etapas antes, durante e depois seguem o padrão geral do Reparo de Ramal, sem exigir chassi ou hidrômetro.",
+        "A metragem informada no formulário deve estar comprovada nas evidências; sem comprovação, o campo deve ser zerado e pontuado como Não Conforme.",
         "Intervenções com seis metros ou mais exigem conferência do enquadramento como substituição de rede."
       ],
+      "suggestedQuestions": ["Quais fotos comprovam o reparo de rede?","O que fazer com metragem não comprovada?"],
       "analysisStatus": "active"
     },
     {
@@ -469,7 +472,7 @@
     {
       "id": "RULE-RC-10",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Foto da fachada ausente ou sem visão ampla",
       "description": "A fachada do imóvel deve ser registrada de forma ampla para identificar corretamente o local da intervenção e vinculá-lo à Ordem de Serviço.",
       "severity": "Não Conforme",
@@ -647,7 +650,7 @@
     {
       "id": "RULE-RC-INFO-08",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Orientação de enquadramento das fotos",
       "description": "Sempre que for possível, as fotos do serviço devem ser registradas na horizontal para melhorar o enquadramento e a leitura das evidências.",
       "priority": 4,
@@ -664,7 +667,7 @@
     {
       "id": "RULE-RC-01",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Falta da foto depois da execução",
       "description": "Falta de evidência do serviço finalizado ou do estado final do local reparado.",
       "severity": "Reprovado",
@@ -690,7 +693,7 @@
     {
       "id": "RULE-RC-02",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Ausência de duas ou mais etapas",
       "description": "Faltam ao menos duas das etapas antes, durante ou depois, ou nenhuma etapa foi apresentada.",
       "severity": "Reprovado",
@@ -735,7 +738,7 @@
     {
       "id": "RULE-RC-03",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Serviço no local incorreto",
       "description": "Serviço executado em endereço ou instalação divergente da Ordem de Serviço.",
       "severity": "Reprovado",
@@ -753,7 +756,7 @@
     {
       "id": "RULE-RC-04",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Serviço sem necessidade",
       "description": "Não havia necessidade técnica para realizar o reparo.",
       "severity": "Reprovado",
@@ -788,7 +791,7 @@
     {
       "id": "RULE-RC-06",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Falta da foto antes da execução",
       "description": "Ausência de foto que justifique a abertura da Ordem de Serviço.",
       "severity": "Não Conforme",
@@ -915,7 +918,7 @@
     {
       "id": "RULE-RC-09",
       "serviceId": "reparo-cavalete",
-      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros"],
+      "applicableServiceIds": ["reparo-ramal-agua-asfalto","reparo-ramal-agua-bloco-paralelo","reparo-ramal-agua-calcada","reparo-ramal-agua-terra","reparo-ramal-agua-causado-por-terceiros","reparo-rede-agua-asfalto"],
       "title": "Execução correta com evidências completas",
       "description": "O serviço foi executado corretamente e todas as evidências obrigatórias estão presentes.",
       "severity": "Conforme",
@@ -1270,10 +1273,10 @@
     },
     {
       "id": "RULE-PARAM-ASFALTO-BAIXADA-LAGOS-01",
-      "serviceId": "reparo-cavalete",
-      "appliesToAllActiveServices": true,
-      "title": "Fluxo de desdobros de asfalto da Baixada e Lagos",
-      "description": "Para Baixada 1, Baixada 2 e Lagos, o fluxo regional referente ao asfalto segue Manutenção, Reaterro e Repavimentação de Asfalto.",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-rede-agua-asfalto"],
+      "title": "Desdobro de pavimento da Baixada e Lagos",
+      "description": "Em Reparo de Ramal ou Reparo de Rede no asfalto da Baixada 1, Baixada 2 e Lagos, o desdobro de pavimento a selecionar é Reaterro.",
       "priority": 2,
       "category": "Parametrização regional",
       "topicKeywords": ["desdobro de asfalto na baixada","desdobro de asfalto em lagos","fluxo da baixada 1","fluxo da baixada 2","fluxo de lagos"],
@@ -1291,25 +1294,34 @@
         "na baixada 1 qual a sequência do desdobro de asfalto",
         "na baixada 2 qual a sequência do desdobro de asfalto",
         "na baixada como desdobra asfalto",
-        "asfalto da baixada passa por reaterro",
-        "asfalto de lagos passa por reaterro",
-        "qual o caminho da manutenção até a repavimentação na baixada",
-        "baixada um e dois usam reaterro antes da repavimentação"
+        "na baixada o desdobro do pavimento é reaterro",
+        "em lagos o desdobro do pavimento é reaterro",
+        "qual desdobro selecionar na baixada",
+        "baixada um e dois usam reaterro como desdobro"
       ],
       "examples": ["Na Baixada 2, qual é a sequência do desdobro de asfalto?"],
-      "message": "Na Baixada 1, Baixada 2 e Lagos, a sequência é: Manutenção → Reaterro → Repavimentação de Asfalto.",
-      "guidance": "Confirme a superintendência da OS e siga essa sequência ao conferir os desdobros do trecho em asfalto.",
+      "message": "Na Baixada 1, Baixada 2 e Lagos, desdobre o pavimento como Reaterro.",
+      "guidance": "Use Reaterro no Adicional Executado ou Posterior conforme o que foi concluído ou ficou pendente. Se outro desdobro foi lançado, troque para Reaterro e pontue o desdobro indevido.",
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "serviço em asfalto", "expressions": ["reparo de ramal no asfalto","reparo de rede no asfalto","desdobro de pavimento","desdobro de asfalto"]},
+            {"label": "superintendência", "expressions": ["baixada 1","baixada 2","baixada um","baixada dois","baixada","lagos"]}
+          ]
+        }
+      },
       "sourceReferences": ["Fluxograma dos critérios de desdobros referente ao asfalto, imagem recebida em 19/08/2026"]
     },
     {
       "id": "RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01",
-      "serviceId": "reparo-cavalete",
-      "appliesToAllActiveServices": true,
-      "title": "Fluxo de desdobros de asfalto do Norte, Centro-Sul e Comunidades",
-      "description": "Para Norte, Centro-Sul e Comunidades, o fluxo regional referente ao asfalto segue Manutenção, Concreto e Repavimentação de Asfalto.",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-rede-agua-asfalto"],
+      "title": "Desdobro de pavimento do Norte, Centro-Sul e Comunidades",
+      "description": "Em Reparo de Ramal ou Reparo de Rede no asfalto do Norte, Centro-Sul e Comunidades, o desdobro de pavimento a selecionar é Concreto.",
       "priority": 2,
       "category": "Parametrização regional",
-      "topicKeywords": ["desdobro de asfalto no norte","desdobro de asfalto no centro sul","desdobro de asfalto nas comunidades","concreto antes da repavimentação"],
+      "topicKeywords": ["desdobro de asfalto no norte","desdobro de asfalto no centro sul","desdobro de asfalto nas comunidades","concreto como desdobro do pavimento"],
       "relatedEvidence": ["superintendência norte","superintendência centro-sul","comunidades","manutenção","concreto","repavimentação de asfalto"],
       "conditionKeywords": [
         "fluxo de desdobro do asfalto no norte",
@@ -1319,24 +1331,33 @@
         "qual desdobro usar para asfalto no centro sul"
       ],
       "equivalentExpressions": [
-        "no norte vai concreto antes da repavimentação de asfalto",
-        "faltou desdobro no norte não lançaram concreto antes da repavimentação de asfalto",
+        "no norte o desdobro do pavimento é concreto",
+        "faltou desdobro no norte não lançaram concreto",
         "qual o desdobro de asfalto no centro sul",
         "como desdobra asfalto nas comunidades",
-        "centro-sul usa concreto e depois repavimentação de asfalto",
-        "fluxo regional norte manutenção concreto asfalto"
+        "centro-sul usa concreto como desdobro",
+        "comunidades usam concreto para o pavimento"
       ],
       "examples": ["No Centro-Sul, qual é o fluxo do desdobro de asfalto?"],
-      "message": "No Norte, Centro-Sul e Comunidades, a sequência é: Manutenção → Concreto → Repavimentação de Asfalto.",
-      "guidance": "Confirme a superintendência da OS e siga essa sequência ao conferir os desdobros do trecho em asfalto.",
+      "message": "No Norte, Centro-Sul e Comunidades, desdobre o pavimento como Concreto.",
+      "guidance": "Use Concreto no Adicional Executado ou Posterior conforme o que foi concluído ou ficou pendente. Se outro desdobro foi lançado, troque para Concreto e pontue o desdobro indevido.",
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "serviço em asfalto", "expressions": ["reparo de ramal no asfalto","reparo de rede no asfalto","desdobro de pavimento","desdobro de asfalto"]},
+            {"label": "superintendência", "expressions": ["norte","centro sul","centro-sul","comunidades"]}
+          ]
+        }
+      },
       "sourceReferences": ["Fluxograma dos critérios de desdobros referente ao asfalto, imagem recebida em 19/08/2026"]
     },
     {
       "id": "RULE-PARAM-ASFALTO-LESTE-01",
-      "serviceId": "reparo-cavalete",
-      "appliesToAllActiveServices": true,
-      "title": "Fluxo de desdobros de asfalto da Leste",
-      "description": "Para a Leste, o fluxo regional referente ao asfalto segue Manutenção e Repavimentação de Asfalto ou Concreto.",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-rede-agua-asfalto"],
+      "title": "Desdobro de pavimento da Leste",
+      "description": "Em Reparo de Ramal ou Reparo de Rede no asfalto da Leste, o desdobro de pavimento a selecionar é Repavimentação de Asfalto ou Repavimentação de Concreto, conforme o pavimento evidenciado.",
       "priority": 2,
       "category": "Parametrização regional",
       "topicKeywords": ["desdobro de asfalto na leste","fluxo de asfalto da leste","repavimentação de asfalto ou concreto na leste"],
@@ -1350,12 +1371,128 @@
         "como desdobra asfalto na leste",
         "na leste é asfalto ou concreto",
         "qual o fluxo regional da leste para asfalto",
-        "leste vai direto da manutenção para repavimentação"
+        "leste usa repavimentação de asfalto ou de concreto"
       ],
       "examples": ["Na Leste, o desdobro vai para asfalto ou concreto?"],
-      "message": "Na Leste, a sequência é: Manutenção → Repavimentação de Asfalto ou Concreto.",
-      "guidance": "Confirme a superintendência da OS e use o tipo de repavimentação compatível com o pavimento mostrado nas evidências.",
+      "message": "Na Leste, desdobre o pavimento como Repavimentação de Asfalto ou Repavimentação de Concreto, conforme o revestimento evidenciado.",
+      "guidance": "Use a repavimentação compatível no Adicional Executado ou Posterior. Se foi lançado outro tipo, faça a troca e pontue o desdobro indevido.",
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "serviço em asfalto", "expressions": ["reparo de ramal no asfalto","reparo de rede no asfalto","desdobro de pavimento","desdobro de asfalto"]},
+            {"label": "superintendência", "expressions": ["leste"]}
+          ]
+        }
+      },
       "sourceReferences": ["Fluxograma dos critérios de desdobros referente ao asfalto, imagem recebida em 19/08/2026"]
+    },
+    {
+      "id": "RULE-PARAM-ASFALTO-CONTEXTO-01",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-rede-agua-asfalto"],
+      "title": "Superintendência necessária para escolher o desdobro de pavimento",
+      "description": "A escolha do desdobro de pavimento em reparos de ramal ou rede no asfalto depende da superintendência da OS.",
+      "priority": 1,
+      "category": "Parametrização regional",
+      "topicKeywords": ["qual desdobro de pavimento","desdobro do asfalto","reaterro ou concreto","desdobro correto da pavimentação"],
+      "relatedEvidence": ["reparo de ramal no asfalto","reparo de rede no asfalto","desdobro de pavimento","superintendência"],
+      "conditionKeywords": [
+        "qual desdobro de pavimento devo usar",
+        "qual desdobro usar no reparo de ramal no asfalto",
+        "qual desdobro usar no reparo de rede no asfalto",
+        "qual é o desdobro correto do pavimento"
+      ],
+      "equivalentExpressions": [
+        "colocaram reaterro no desdobro está certo",
+        "colocaram concreto no desdobro está certo",
+        "vai reaterro concreto ou repavimentação",
+        "o que desdobrar de pavimento"
+      ],
+      "exceptions": ["baixada 1","baixada 2","baixada um","baixada dois","baixada","lagos","norte","centro sul","centro-sul","comunidades","leste"],
+      "examples": ["O reparo de ramal foi no asfalto; qual desdobro de pavimento devo usar?"],
+      "message": "O desdobro correto muda conforme a superintendência da OS.",
+      "guidance": "Informe a superintendência para que o AEBOT indique o desdobro correto sem adivinhar.",
+      "missingInformation": ["Qual é a superintendência da OS: Baixada 1, Baixada 2, Lagos, Norte, Centro-Sul, Comunidades ou Leste?"],
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
+    },
+    {
+      "id": "RULE-PARAM-ASFALTO-BAIXADA-INDEVIDO-01",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-rede-agua-asfalto"],
+      "title": "Desdobro de pavimento indevido na Baixada ou Lagos",
+      "description": "Na Baixada 1, Baixada 2 e Lagos, usar desdobro de pavimento diferente de Reaterro exige correção da parametrização.",
+      "severity": "Não Conforme",
+      "priority": 1,
+      "category": "Parametrização regional",
+      "conditionKeywords": ["desdobro indevido na baixada","desdobro indevido em lagos","desdobro diferente de reaterro na baixada"],
+      "equivalentExpressions": ["na baixada colocaram concreto","em lagos lançaram concreto","na baixada lançaram repavimentação direto"],
+      "relatedEvidence": ["desdobro de pavimento","concreto","repavimentação direta","superintendência baixada","superintendência lagos"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "superintendência", "expressions": ["baixada 1","baixada 2","baixada um","baixada dois","baixada","lagos"]},
+            {"label": "desdobro incorreto", "expressions": ["lançaram concreto","colocaram concreto","desdobro de concreto","lançaram repavimentação de asfalto","repavimentação direta","desdobro diferente de reaterro"]}
+          ]
+        }
+      },
+      "examples": ["Na Baixada 1 colocaram Concreto como desdobro do pavimento."],
+      "message": "O desdobro de pavimento está indevido para a Baixada ou Lagos e precisa ser trocado para Reaterro.",
+      "guidance": "Troque o desdobro para Reaterro e registre a Não Conformidade por desdobro indevido.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
+    },
+    {
+      "id": "RULE-PARAM-ASFALTO-NORTE-INDEVIDO-01",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-rede-agua-asfalto"],
+      "title": "Desdobro de pavimento indevido no Norte, Centro-Sul ou Comunidades",
+      "description": "No Norte, Centro-Sul e Comunidades, usar desdobro de pavimento diferente de Concreto exige correção da parametrização.",
+      "severity": "Não Conforme",
+      "priority": 1,
+      "category": "Parametrização regional",
+      "conditionKeywords": ["desdobro indevido no norte","desdobro indevido no centro sul","desdobro diferente de concreto nas comunidades"],
+      "equivalentExpressions": ["no norte colocaram reaterro","no centro sul lançaram reaterro","nas comunidades lançaram repavimentação direto"],
+      "relatedEvidence": ["desdobro de pavimento","reaterro","repavimentação direta","superintendência norte","superintendência centro-sul","comunidades"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "superintendência", "expressions": ["norte","centro sul","centro-sul","comunidades"]},
+            {"label": "desdobro incorreto", "expressions": ["lançaram reaterro","colocaram reaterro","desdobro de reaterro","lançaram repavimentação de asfalto","repavimentação direta","desdobro diferente de concreto"]}
+          ]
+        }
+      },
+      "examples": ["No Norte lançaram Reaterro como desdobro do pavimento."],
+      "message": "O desdobro de pavimento está indevido para Norte, Centro-Sul ou Comunidades e precisa ser trocado para Concreto.",
+      "guidance": "Troque o desdobro para Concreto e registre a Não Conformidade por desdobro indevido.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
+    },
+    {
+      "id": "RULE-PARAM-ASFALTO-LESTE-INDEVIDO-01",
+      "serviceId": "reparo-ramal-agua-asfalto",
+      "applicableServiceIds": ["reparo-rede-agua-asfalto"],
+      "title": "Desdobro de pavimento indevido na Leste",
+      "description": "Na Leste, usar desdobro de pavimento diferente de Repavimentação de Asfalto ou Repavimentação de Concreto exige correção da parametrização.",
+      "severity": "Não Conforme",
+      "priority": 1,
+      "category": "Parametrização regional",
+      "conditionKeywords": ["desdobro indevido na leste","desdobro diferente de asfalto ou concreto na leste"],
+      "equivalentExpressions": ["na leste colocaram reaterro","na leste lançaram reaterro"],
+      "relatedEvidence": ["desdobro de pavimento","reaterro","superintendência leste"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "superintendência", "expressions": ["leste"]},
+            {"label": "desdobro incorreto", "expressions": ["lançaram reaterro","colocaram reaterro","desdobro de reaterro","desdobro diferente de asfalto ou concreto"]}
+          ]
+        }
+      },
+      "examples": ["Na Leste colocaram Reaterro como desdobro do pavimento."],
+      "message": "O desdobro de pavimento está indevido para a Leste e precisa ser trocado para Repavimentação de Asfalto ou de Concreto.",
+      "guidance": "Troque para a Repavimentação compatível com o pavimento evidenciado e registre a Não Conformidade por desdobro indevido.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
     },
     {
       "id": "RULE-RC-PARAM-05",
@@ -1889,6 +2026,75 @@
       "message": "O conjunto deve mostrar local, defeito, reparo ou substituição do trecho, medições e profundidade quando aplicáveis, reaterro e resultado final.",
       "guidance": "Se a intervenção atingir seis metros ou mais, confira o enquadramento de substituição previsto no procedimento.",
       "sourceReferences": ["IT - Reparo de Rede de Agua.docx"]
+    },
+    {
+      "id": "RULE-REDEAGUA-INFO-02",
+      "serviceId": "reparo-rede-agua-asfalto",
+      "title": "Chassi e hidrômetro não obrigatórios no reparo de rede",
+      "description": "A análise do reparo de rede não exige foto do chassi ou identificação do hidrômetro como etapa obrigatória.",
+      "priority": 1,
+      "category": "Padrão de evidências",
+      "topicKeywords": ["chassi no reparo de rede","hidrômetro no reparo de rede","foto do hd na rede"],
+      "relatedEvidence": ["foto do chassi","número do hidrômetro","foto do hidrômetro","número do hd"],
+      "conditionKeywords": ["sem foto do chassi no reparo de rede","sem hidrômetro nas fotos do reparo de rede","reparo de rede precisa mostrar o chassi"],
+      "equivalentExpressions": ["rede sem foto do hd","posso cobrar hidrômetro no reparo de rede"],
+      "examples": ["O Reparo de Rede está sem foto do chassi; isso é Não Conforme?"],
+      "message": "Não. Foto do chassi ou do hidrômetro não é obrigatória para analisar o Reparo de Rede.",
+      "guidance": "Avalie fachada/local, defeito, intervenção na rede, execução, metragem aplicável e finalização.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
+    },
+    {
+      "id": "RULE-REDEAGUA-01",
+      "serviceId": "reparo-rede-agua-asfalto",
+      "title": "Metragem da rede informada sem comprovação",
+      "description": "Quando o formulário informa metros de rede que não são comprovados pelas fotos ou medições da OS, o valor deve ser zerado e a divergência pontuada.",
+      "severity": "Não Conforme",
+      "priority": 1,
+      "category": "Metragem da rede",
+      "topicKeywords": ["metragem da rede","metros no formulário","metragem não comprovada","zerar metragem"],
+      "relatedEvidence": ["metragem no formulário","metros de rede informados","medição da rede","trena","extensão do trecho"],
+      "conditionKeywords": [
+        "metragem da rede no formulário sem comprovação",
+        "metros informados não aparecem nas fotos",
+        "metragem informada não foi comprovada",
+        "lançaram metros de rede sem medição"
+      ],
+      "equivalentExpressions": [
+        "colocaram metragem mas não mostraram medindo",
+        "colocaram metragem no formulário mas não mostraram medindo a rede",
+        "puseram metros no formulário sem provar",
+        "informou cinco metros mas as fotos não comprovam",
+        "tem metragem lançada sem trena",
+        "metros não comprovados na os"
+      ],
+      "positiveSignals": ["sem comprovação","não comprovou","não mostraram","não aparece","sem medição","sem trena"],
+      "negativeSignals": ["metragem comprovada","medição visível","trena apresentada","formulário zerado","metros comprovados"],
+      "exceptions": ["metragem comprovada","metragem foi comprovada","medição visível","trena apresentada","trena aparece nas fotos","formulário zerado","metros comprovados"],
+      "examples": ["Informaram quatro metros de rede no formulário, mas não há foto comprovando a medição."],
+      "message": "A metragem lançada para o reparo de rede não foi comprovada pelas evidências.",
+      "guidance": "Zere a metragem não comprovada no formulário e registre a Não Conformidade. Considere somente os metros que as fotos e medições permitirem confirmar.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026"]
+    },
+    {
+      "id": "RULE-REDEAGUA-02",
+      "serviceId": "reparo-rede-agua-asfalto",
+      "title": "Falta da foto durante o reparo de rede",
+      "description": "Ausência de foto que mostre a intervenção na rede de água em andamento.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Evidência de execução",
+      "factGroup": "durante",
+      "topicKeywords": ["foto durante da rede","execução do reparo de rede","intervenção na rede em andamento"],
+      "relatedEvidence": ["foto durante","rede sendo reparada","intervenção na rede","trecho de rede aberto","tubulação sendo reparada"],
+      "conditionKeywords": ["sem foto durante o reparo de rede","falta foto durante da rede","foto durante da rede ausente","sem foto da intervenção na rede"],
+      "equivalentExpressions": ["não mostrou mexendo na rede","não tem foto fazendo o reparo da rede","só mostrou o antes e o depois da rede"],
+      "positiveSignals": ["sem","falta","faltou","ausente","não mostrou","não tem"],
+      "negativeSignals": ["reparo da rede em andamento visível","foto durante da rede apresentada","intervenção na rede evidenciada"],
+      "exceptions": ["desdobro executado","adicional executado","desdobro posterior","adicional posterior"],
+      "examples": ["Não mostrou a equipe fazendo o reparo da rede."],
+      "message": "A execução do reparo na rede em andamento não foi evidenciada.",
+      "guidance": "Aprove com a correção cabível e registre a Não Conformidade da evidência durante.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 19/08/2026","IT - Reparo de Rede de Agua.docx"]
     },
     {
       "id": "RULE-ESGOTO-INFO-01",

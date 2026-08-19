@@ -18,6 +18,7 @@ describe('RuleStoreValidator', () => {
     expect(store.rules.length).toBeGreaterThan(0);
     expect(store.rules.some((rule) => rule.severity === undefined)).toBe(true);
     expect(store.rules.some((rule) => rule.sourceReferences?.length)).toBe(true);
+    expect(store.rules.some((rule) => rule.missingInformation?.length)).toBe(true);
     expect(store.services).toHaveLength(36);
     expect(store.services.filter((service) => service.analysisStatus === 'rules_pending'))
       .toHaveLength(11);
