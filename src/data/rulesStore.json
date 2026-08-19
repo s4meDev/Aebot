@@ -1,5 +1,5 @@
 {
-  "version": "2.11.0",
+  "version": "2.11.1",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -1267,6 +1267,95 @@
       "message": "O desdobro necessário de repavimentação não foi lançado. A parametrização precisa ser corrigida e o caso deve ser registrado como Não Conforme.",
       "guidance": "Se a recomposição foi concluída na visita, inclua a Repavimentação correspondente no Adicional Executado. Se ficou para uma execução futura, inclua no Adicional Posterior. Use as fotos para escolher o revestimento correto.",
       "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 14/08/2026"]
+    },
+    {
+      "id": "RULE-PARAM-ASFALTO-BAIXADA-LAGOS-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Fluxo de desdobros de asfalto da Baixada e Lagos",
+      "description": "Para Baixada 1, Baixada 2 e Lagos, o fluxo regional referente ao asfalto segue Manutenção, Reaterro e Repavimentação de Asfalto.",
+      "priority": 2,
+      "category": "Parametrização regional",
+      "topicKeywords": ["desdobro de asfalto na baixada","desdobro de asfalto em lagos","fluxo da baixada 1","fluxo da baixada 2","fluxo de lagos"],
+      "relatedEvidence": ["superintendência baixada 1","superintendência baixada 2","superintendência lagos","manutenção","reaterro","repavimentação de asfalto"],
+      "conditionKeywords": [
+        "fluxo de desdobro do asfalto na baixada 1",
+        "fluxo de desdobro do asfalto na baixada 2",
+        "fluxo de desdobro do asfalto em lagos",
+        "qual desdobro usar para asfalto na baixada",
+        "qual desdobro usar para asfalto em lagos"
+      ],
+      "equivalentExpressions": [
+        "na baixada 1 qual o fluxo do desdobro de asfalto",
+        "na baixada 2 qual e a sequência do desdobro de asfalto",
+        "na baixada 1 qual a sequência do desdobro de asfalto",
+        "na baixada 2 qual a sequência do desdobro de asfalto",
+        "na baixada como desdobra asfalto",
+        "asfalto da baixada passa por reaterro",
+        "asfalto de lagos passa por reaterro",
+        "qual o caminho da manutenção até a repavimentação na baixada",
+        "baixada um e dois usam reaterro antes da repavimentação"
+      ],
+      "examples": ["Na Baixada 2, qual é a sequência do desdobro de asfalto?"],
+      "message": "Na Baixada 1, Baixada 2 e Lagos, a sequência é: Manutenção → Reaterro → Repavimentação de Asfalto.",
+      "guidance": "Confirme a superintendência da OS e siga essa sequência ao conferir os desdobros do trecho em asfalto.",
+      "sourceReferences": ["Fluxograma dos critérios de desdobros referente ao asfalto, imagem recebida em 19/08/2026"]
+    },
+    {
+      "id": "RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Fluxo de desdobros de asfalto do Norte, Centro-Sul e Comunidades",
+      "description": "Para Norte, Centro-Sul e Comunidades, o fluxo regional referente ao asfalto segue Manutenção, Concreto e Repavimentação de Asfalto.",
+      "priority": 2,
+      "category": "Parametrização regional",
+      "topicKeywords": ["desdobro de asfalto no norte","desdobro de asfalto no centro sul","desdobro de asfalto nas comunidades","concreto antes da repavimentação"],
+      "relatedEvidence": ["superintendência norte","superintendência centro-sul","comunidades","manutenção","concreto","repavimentação de asfalto"],
+      "conditionKeywords": [
+        "fluxo de desdobro do asfalto no norte",
+        "fluxo de desdobro do asfalto no centro sul",
+        "fluxo de desdobro do asfalto nas comunidades",
+        "qual desdobro usar para asfalto no norte",
+        "qual desdobro usar para asfalto no centro sul"
+      ],
+      "equivalentExpressions": [
+        "no norte vai concreto antes da repavimentação de asfalto",
+        "faltou desdobro no norte não lançaram concreto antes da repavimentação de asfalto",
+        "qual o desdobro de asfalto no centro sul",
+        "como desdobra asfalto nas comunidades",
+        "centro-sul usa concreto e depois repavimentação de asfalto",
+        "fluxo regional norte manutenção concreto asfalto"
+      ],
+      "examples": ["No Centro-Sul, qual é o fluxo do desdobro de asfalto?"],
+      "message": "No Norte, Centro-Sul e Comunidades, a sequência é: Manutenção → Concreto → Repavimentação de Asfalto.",
+      "guidance": "Confirme a superintendência da OS e siga essa sequência ao conferir os desdobros do trecho em asfalto.",
+      "sourceReferences": ["Fluxograma dos critérios de desdobros referente ao asfalto, imagem recebida em 19/08/2026"]
+    },
+    {
+      "id": "RULE-PARAM-ASFALTO-LESTE-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Fluxo de desdobros de asfalto da Leste",
+      "description": "Para a Leste, o fluxo regional referente ao asfalto segue Manutenção e Repavimentação de Asfalto ou Concreto.",
+      "priority": 2,
+      "category": "Parametrização regional",
+      "topicKeywords": ["desdobro de asfalto na leste","fluxo de asfalto da leste","repavimentação de asfalto ou concreto na leste"],
+      "relatedEvidence": ["superintendência leste","manutenção","repavimentação de asfalto","repavimentação de concreto"],
+      "conditionKeywords": [
+        "fluxo de desdobro do asfalto na leste",
+        "qual desdobro usar para asfalto na leste",
+        "na leste é repavimentação de asfalto ou concreto"
+      ],
+      "equivalentExpressions": [
+        "como desdobra asfalto na leste",
+        "na leste é asfalto ou concreto",
+        "qual o fluxo regional da leste para asfalto",
+        "leste vai direto da manutenção para repavimentação"
+      ],
+      "examples": ["Na Leste, o desdobro vai para asfalto ou concreto?"],
+      "message": "Na Leste, a sequência é: Manutenção → Repavimentação de Asfalto ou Concreto.",
+      "guidance": "Confirme a superintendência da OS e use o tipo de repavimentação compatível com o pavimento mostrado nas evidências.",
+      "sourceReferences": ["Fluxograma dos critérios de desdobros referente ao asfalto, imagem recebida em 19/08/2026"]
     },
     {
       "id": "RULE-RC-PARAM-05",

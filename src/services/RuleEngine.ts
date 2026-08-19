@@ -289,8 +289,14 @@ export class RuleEngine {
     const conflictSummary = conflicts.length
       ? ` Em conflito, a regra ${primaryRule.id} prevaleceu pelos critérios de aplicabilidade e desempate.`
       : '';
-    const additionalRules = rankedRules.length > 1
-      ? ` Outras regras relevantes: ${rankedRules.slice(1).map((rule) => rule.id).join(', ')}.`
+    // A regra classificatória decide, mas orientações que casaram diretamente
+    // continuam no resultado para explicar o contexto completo ao analista.
+    const supportingGuidance = guidanceCandidates
+      .filter((rule) => !rankedRules.some((rankedRule) => rankedRule.id === rule.id))
+      .sort((left, right) => right.score - left.score || left.priority - right.priority);
+    const allMatchedRules = [...rankedRules, ...supportingGuidance];
+    const additionalRules = allMatchedRules.length > 1
+      ? ` Outras regras relevantes: ${allMatchedRules.slice(1).map((rule) => rule.id).join(', ')}.`
       : '';
 
     return {
@@ -302,7 +308,7 @@ export class RuleEngine {
       outcome: 'decision',
       decision: primaryRule.severity,
       hasSufficientEvidence: true,
-      matchedRules: rankedRules,
+      matchedRules: allMatchedRules,
       primaryRule,
       conflicts,
       confidence: confidenceFromScore(primaryRule.score),

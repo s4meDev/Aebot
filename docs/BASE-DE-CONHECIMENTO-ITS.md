@@ -21,6 +21,7 @@ Essa exigência geral orienta a análise, mas não cria automaticamente uma conc
 - Manutenção: implantação de ligação, reparos de cavalete, ramal, rede de água e rede de esgoto, extensão e interligação de rede.
 - Operação: verificação de falta de água.
 - Repavimentação: reaterro de valas, calçada, asfalto e concreto.
+- Fluxograma regional de asfalto: Baixada 1, Baixada 2 e Lagos seguem Manutenção → Reaterro → Repavimentação de Asfalto; Norte, Centro-Sul e Comunidades seguem Manutenção → Concreto → Repavimentação de Asfalto; Leste segue Manutenção → Repavimentação de Asfalto ou Concreto.
 
 ## Limites importantes
 

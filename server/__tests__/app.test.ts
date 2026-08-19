@@ -102,7 +102,10 @@ describe('API AEBOT', () => {
     expect(response.status).toBe(200);
     expect(body.ruleStoreVersion).toBe(ruleEngine.getRuleStoreVersion());
     expect(body.services).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 'reparo-cavalete', ruleCount: 37 }),
+      expect.objectContaining({
+        id: 'reparo-cavalete',
+        ruleCount: ruleEngine.getRulesForService('reparo-cavalete').length,
+      }),
     ]));
   });
 

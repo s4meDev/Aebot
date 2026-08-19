@@ -47,11 +47,12 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - painel administrativo protegido por credencial separada;
 - Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
-- 61 regras e orientações baseadas nas diretrizes do produto e nas ITs recebidas;
+- 64 regras e orientações baseadas nas diretrizes do produto e nos materiais recebidos;
 - cadeia de evidências do original, do adicional executado e do adicional posterior tratada de forma explícita;
 - ausência de Troca, Adicional Executado ou Adicional Posterior necessário resulta em Não Conforme; impossibilidade de trocar para o serviço correto resulta em Reprovado;
 - critérios de desdobro para ramal, reaterro e repavimentação cadastrados; falhas sem conclusão oficial definida recebem orientação prática sem decisão automática.
 - Reparo de Ramal compartilha as conclusões de antes, durante e depois do Cavalete, mas não exige chassi/hidrômetro; a recomposição depende do revestimento, e Ramal Terra não exige pavimento.
+- Desdobros de asfalto consideram a superintendência: Baixada/Lagos usam Reaterro; Norte/Centro-Sul/Comunidades usam Concreto; Leste segue para Repavimentação de Asfalto ou Concreto.
 
 ## Carregar a extensão no Chrome
 

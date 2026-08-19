@@ -153,6 +153,39 @@ assert(
   'Exclusão de chassi e hidrômetro no Ramal divergiu.'
 );
 
+const regionalAsphaltFlow = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-ramal-agua-asfalto',
+    prompt: 'Qual o desdobro de asfalto no Centro Sul?',
+    history: [],
+  }),
+})).json();
+assert(
+  regionalAsphaltFlow.result?.decision === null &&
+    regionalAsphaltFlow.result?.evaluation?.primaryRule?.id ===
+      'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01',
+  'Orientação regional de desdobro do asfalto divergiu.'
+);
+
+const missingRegionalAsphaltFlow = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-ramal-agua-asfalto',
+    prompt: 'Faltou desdobro no Norte: não lançaram concreto antes da repavimentação de asfalto.',
+    history: [],
+  }),
+})).json();
+assert(
+  missingRegionalAsphaltFlow.result?.decision === 'Não Conforme' &&
+    missingRegionalAsphaltFlow.result?.evaluation?.matchedRules?.some(
+      (rule) => rule.id === 'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01'
+    ),
+  'Combinação da falta de desdobro com o fluxo regional divergiu.'
+);
+
 const contextualAnalysis = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },

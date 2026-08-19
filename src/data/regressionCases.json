@@ -798,5 +798,41 @@
     "outcome": "informational",
     "decision": null,
     "minimumMatches": 1
+  },
+  {
+    "name": "baixada e lagos usam reaterro antes da repavimentação de asfalto",
+    "serviceId": "reparo-ramal-agua-asfalto",
+    "query": "Na Baixada 1, qual o fluxo do desdobro de asfalto?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "centro sul usa concreto antes da repavimentação de asfalto",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "Qual o desdobro de asfalto no Centro Sul?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "leste orienta repavimentação de asfalto ou concreto",
+    "serviceId": "reparo-cavalete",
+    "query": "Na Leste é asfalto ou concreto?",
+    "intent": "pergunta_informativa",
+    "outcome": "informational",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "falta do desdobro regional obrigatório é não conforme",
+    "serviceId": "reparo-ramal-agua-asfalto",
+    "query": "Faltou desdobro no Norte: não lançaram concreto antes da repavimentação de asfalto.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 2
   }
 ]

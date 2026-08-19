@@ -228,9 +228,14 @@ describe('RuleEngine — recuperação e evidência', () => {
       selectedServiceId
     );
     expect(result.matchedRules.length).toBeGreaterThanOrEqual(2);
-    expect(new Set(result.matchedRules.map((item) => item.severity))).toEqual(
+    expect(new Set(
+      result.matchedRules
+        .map((item) => item.severity)
+        .filter((severity): severity is DecisionType => severity !== null)
+    )).toEqual(
       new Set<DecisionType>(['Reprovado', 'Não Conforme'])
     );
+    expect(result.matchedRules.some((item) => item.severity === null)).toBe(true);
   });
 
   it('registra conflito entre conclusões diferentes', () => {
@@ -554,6 +559,51 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(question.outcome).toBe('informational');
     expect(question.decision).toBeNull();
     expect(negated.decision).toBeNull();
+  });
+
+  it('orienta o fluxo de asfalto conforme a superintendência informada', () => {
+    const cases = [
+      [
+        'reparo-ramal-agua-asfalto',
+        'Na Baixada 2, qual é a sequência do desdobro de asfalto?',
+        'RULE-PARAM-ASFALTO-BAIXADA-LAGOS-01',
+        'Manutenção → Reaterro → Repavimentação de Asfalto',
+      ],
+      [
+        'reparo-rede-agua-asfalto',
+        'Qual o desdobro de asfalto no Centro Sul?',
+        'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01',
+        'Manutenção → Concreto → Repavimentação de Asfalto',
+      ],
+      [
+        'reparo-cavalete',
+        'Na Leste é asfalto ou concreto?',
+        'RULE-PARAM-ASFALTO-LESTE-01',
+        'Manutenção → Repavimentação de Asfalto ou Concreto',
+      ],
+    ] as const;
+
+    for (const [serviceId, query, ruleId, expectedFlow] of cases) {
+      const result = ruleEngine.evaluatePrompt(query, serviceId);
+      expect(result.intent).toBe('pergunta_informativa');
+      expect(result.outcome).toBe('informational');
+      expect(result.decision).toBeNull();
+      expect(result.primaryRule?.id).toBe(ruleId);
+      expect(result.reasoningSummary).toContain(expectedFlow);
+    }
+  });
+
+  it('combina o fluxo regional com Não Conforme quando o desdobro obrigatório faltou', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'Faltou desdobro no Norte: não lançaram concreto antes da repavimentação de asfalto.',
+      'reparo-ramal-agua-asfalto'
+    );
+
+    expect(result.decision).toBe('Não Conforme');
+    expect(result.primaryRule?.id).toBe('RULE-PARAM-GERAL-01');
+    expect(result.matchedRules.map((rule) => rule.id)).toContain(
+      'RULE-PARAM-ASFALTO-NORTE-CENTROSUL-01'
+    );
   });
 
   it('consulta os novos serviços sem cair em regras pendentes', () => {
