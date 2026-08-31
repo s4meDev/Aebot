@@ -27,9 +27,6 @@ function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig {
     geminiApiKey: '',
     geminiModel: 'gemini-test',
     geminiFallbackModel: 'gemini-fallback-test',
-    aiProvider: 'auto',
-    ollamaBaseUrl: 'http://127.0.0.1:11434',
-    ollamaModel: '',
     humanizeDeterministicResponses: false,
     bodyLimitBytes: 32_768,
     rateLimitPerMinute: 60,
@@ -56,6 +53,7 @@ function service(): AnalysisService {
       ruleStoreVersion: ruleEngine.getRuleStoreVersion(),
       aiConfigured: false,
       aiProvider: 'none',
+      aiProviders: [],
       geminiConfigured: false,
     }),
   };

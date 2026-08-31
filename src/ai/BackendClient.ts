@@ -8,7 +8,8 @@ export interface BackendHealth {
   service: 'aebot-api';
   ruleStoreVersion: string;
   aiConfigured: boolean;
-  aiProvider: 'gemini' | 'ollama' | 'workers-ai' | 'none';
+  aiProvider: 'gemini' | 'workers-ai' | 'none';
+  aiProviders: Array<'gemini' | 'workers-ai'>;
   /** Indica se o backend possui ao menos uma credencial de acesso cadastrada. */
   accessConfigured?: boolean;
   feedbackConfigured?: boolean;
@@ -85,7 +86,11 @@ function parseHealth(value: unknown): BackendHealth | null {
     (health.feedbackConfigured !== undefined && typeof health.feedbackConfigured !== 'boolean') ||
     (health.adminConfigured !== undefined && typeof health.adminConfigured !== 'boolean') ||
     (health.aiConfigured !== undefined && typeof health.aiConfigured !== 'boolean') ||
-    (health.aiProvider !== undefined && !['gemini', 'ollama', 'workers-ai', 'none'].includes(String(health.aiProvider)))
+    (health.aiProvider !== undefined && !['gemini', 'workers-ai', 'none'].includes(String(health.aiProvider))) ||
+    (health.aiProviders !== undefined && (
+      !Array.isArray(health.aiProviders) ||
+      health.aiProviders.some((provider) => !['gemini', 'workers-ai'].includes(String(provider)))
+    ))
   ) {
     return null;
   }
@@ -96,11 +101,16 @@ function parseHealth(value: unknown): BackendHealth | null {
     aiConfigured: typeof health.aiConfigured === 'boolean'
       ? health.aiConfigured
       : health.geminiConfigured,
-    aiProvider: health.aiProvider === 'ollama' || health.aiProvider === 'gemini' || health.aiProvider === 'workers-ai'
+    aiProvider: health.aiProvider === 'gemini' || health.aiProvider === 'workers-ai'
       ? health.aiProvider
       : health.geminiConfigured
         ? 'gemini'
         : 'none',
+    aiProviders: Array.isArray(health.aiProviders)
+      ? health.aiProviders as Array<'gemini' | 'workers-ai'>
+      : health.aiProvider === 'gemini' || health.aiProvider === 'workers-ai'
+        ? [health.aiProvider]
+        : [],
     geminiConfigured: health.geminiConfigured,
     accessConfigured: health.accessConfigured as boolean | undefined,
     feedbackConfigured: health.feedbackConfigured as boolean | undefined,

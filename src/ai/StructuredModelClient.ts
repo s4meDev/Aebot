@@ -1,4 +1,4 @@
-export type StructuredModelProvider = 'gemini' | 'ollama' | 'workers-ai';
+export type StructuredModelProvider = 'gemini' | 'workers-ai';
 
 export interface StructuredModelContent {
   role: 'user' | 'model';
@@ -14,6 +14,8 @@ export interface StructuredModelResult {
 /** Transporte de modelo que apenas produz JSON; nunca calcula a decisão da OS. */
 export interface StructuredModelClient {
   readonly provider: StructuredModelProvider;
+  /** Ordem real dos provedores que podem atender esta chamada. */
+  readonly providerChain: readonly StructuredModelProvider[];
   /** Identidade segura para separar caches de modelos/configurações diferentes. */
   readonly cacheKey: string;
   request(
@@ -23,9 +25,10 @@ export interface StructuredModelClient {
   ): Promise<StructuredModelResult>;
 }
 
-/** Tenta o modelo local primeiro e usa o externo somente diante de falha técnica. */
+/** Usa o próximo provedor online somente diante de falha técnica ou limite de cota. */
 export class FallbackStructuredModelClient implements StructuredModelClient {
   readonly provider: StructuredModelProvider;
+  readonly providerChain: readonly StructuredModelProvider[];
   readonly cacheKey: string;
 
   constructor(
@@ -33,6 +36,8 @@ export class FallbackStructuredModelClient implements StructuredModelClient {
     private readonly fallback: StructuredModelClient
   ) {
     this.provider = primary.provider;
+    this.providerChain = [...primary.providerChain, ...fallback.providerChain]
+      .filter((provider, index, providers) => providers.indexOf(provider) === index);
     this.cacheKey = `${primary.cacheKey}|fallback:${fallback.cacheKey}`;
   }
 

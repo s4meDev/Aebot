@@ -17,8 +17,8 @@ Extensão MV3 (40 instalações)
 Cloudflare Worker
   -> AnalysisService compartilhado
   -> RuleEngine + rulesStore.json
-  -> Workers AI opcional
-  -> Gemini opcional como contingência
+  -> Gemini 2.5 Flash-Lite como interpretação principal
+  -> Workers AI com gpt-oss-20b como contingência
   -> D1 para feedback escrito pelos analistas
 ```
 
@@ -30,7 +30,7 @@ A decisão oficial nunca é delegada ao modelo. Perguntas resolvidas pelo motor 
 - Node.js 22.12 ou superior na máquina que gera os pacotes;
 - 40 identificadores operacionais, sem nomes completos ou dados pessoais desnecessários;
 - chave pública da extensão ou publicação pela Chrome Web Store para manter o mesmo ID;
-- decisão da empresa sobre permissão para enviar dúvidas ao Workers AI e, opcionalmente, ao Gemini.
+- decisão da empresa sobre permissão para enviar dúvidas aos provedores online Gemini e Workers AI.
 
 ## 1. Gerar acessos individuais
 
@@ -119,13 +119,13 @@ npm run pilot:check -- https://aebot-api.pedrolucasbotelho.workers.dev
 
 O `wrangler.jsonc` já configura Workers AI, limite de 240 requisições por minuto por analista, limite menor para acessos não autenticados e corpo máximo de 32 KiB.
 
-Gemini é opcional. Se a política de dados permitir e for necessário como contingência:
+Gemini é o primeiro provedor online quando a política de dados permitir:
 
 ```powershell
-npx wrangler secret put GEMINI_API_KEY
+npm run cloudflare:ai:configure
 ```
 
-A chave fica em secret criptografado da Cloudflare, nunca no pacote da extensão. Os limites do Gemini pertencem ao projeto da API, não a cada token do AEBOT.
+A chave fica em secret criptografado da Cloudflare, nunca no pacote da extensão. Os limites do Gemini pertencem ao projeto da API, não a cada token do AEBOT. Sem essa chave, o Worker usa somente o Workers AI.
 
 ## 5. Gerar e instalar a extensão
 

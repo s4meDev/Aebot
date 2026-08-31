@@ -4,7 +4,7 @@ import type {
   StructuredModelResult,
 } from './StructuredModelClient';
 
-export const DEFAULT_WORKERS_AI_MODEL = '@cf/meta/llama-3.2-3b-instruct';
+export const DEFAULT_WORKERS_AI_MODEL = '@cf/openai/gpt-oss-20b';
 
 export interface WorkersAiBinding {
   run(model: string, input: Record<string, unknown>): Promise<unknown>;
@@ -33,6 +33,7 @@ function isRateLimitError(error: unknown): boolean {
 /** Cliente fino para o binding nativo do Workers AI. A decisão continua no RuleEngine. */
 export class WorkersAiModelClient implements StructuredModelClient {
   readonly provider = 'workers-ai' as const;
+  readonly providerChain = ['workers-ai'] as const;
   readonly cacheKey: string;
   readonly model: string;
 

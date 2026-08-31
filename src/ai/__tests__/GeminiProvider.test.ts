@@ -269,8 +269,8 @@ describe('GeminiProvider', () => {
   });
 
   it('rejeita identificador de modelo inseguro e usa o padrão', () => {
-    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-flash-latest');
-    expect(normalizeGeminiModel('gemini-2.5-flash')).toBe('gemini-flash-latest');
+    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-2.5-flash-lite');
+    expect(normalizeGeminiModel('gemini-2.5-flash')).toBe('gemini-2.5-flash');
     expect(normalizeGeminiModel('gemini-modelo_seguro.1')).toBe('gemini-modelo_seguro.1');
   });
 
@@ -382,6 +382,10 @@ describe('GeminiProvider', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/gemini-flash-latest:');
     expect(String(fetchMock.mock.calls[2]?.[0])).toContain('/gemini-flash-lite-latest:');
+    expect(String(fetchMock.mock.calls[0]?.[0])).not.toContain('test-key');
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({
+      'x-goog-api-key': 'test-key',
+    });
     expect(response.provider).toBe('gemini');
     expect(response.decision).toBe('Não Conforme');
   });
@@ -701,7 +705,7 @@ describe('GeminiProvider', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
-    expect(request.generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'MINIMAL' });
+    expect(request.generationConfig.thinkingConfig).toEqual({ thinkingBudget: 0 });
     expect(response.provider).toBe('gemini');
     expect(response.decision).toBe('Não Conforme');
     expect(response.evaluation.semanticInterpretationApplied).toBe(true);

@@ -17,7 +17,7 @@ Não altere nem compartilhe o token recebido. Ele identifica somente o acesso op
 1. Clique em **Config**.
 2. Cole o token individual entregue pelo responsável.
 3. Clique em **Salvar Alterações**. O AEBOT valida API, token e catálogo antes de salvar.
-4. Confirme que o chat mostra **Backend + Workers AI**.
+4. Confirme que o chat mostra **Online · Gemini** ou **Online · Workers AI**.
 
 Se o token não for aceito, copie a mensagem de erro e informe ao responsável pelo piloto. Não envie o token em print, e-mail ou feedback.
 

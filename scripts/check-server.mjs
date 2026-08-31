@@ -19,7 +19,7 @@ try {
     `Backend: ativo em ${rawUrl}`,
     `Base: ${health.ruleStoreVersion ?? 'versão não informada'}`,
     `IA central: ${(health.aiConfigured ?? health.geminiConfigured)
-      ? health.aiProvider === 'ollama' ? 'Ollama local' : 'Gemini'
+      ? health.aiProvider === 'workers-ai' ? 'Workers AI' : 'Gemini'
       : 'não configurada'}`,
   ].join('\n'));
 

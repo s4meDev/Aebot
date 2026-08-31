@@ -253,7 +253,7 @@ export interface AnalysisRequest {
 
 export interface AiProviderResponse {
   content: string;
-  provider: 'backend' | 'gemini' | 'ollama' | 'workers-ai' | 'simulated';
+  provider: 'backend' | 'gemini' | 'workers-ai' | 'simulated';
   decision: DecisionType | null;
   evaluation: RuleEvaluationResult;
   fallbackReason?:

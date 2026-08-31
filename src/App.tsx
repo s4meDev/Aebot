@@ -89,15 +89,14 @@ export default function App() {
 
   return (
     <div className="sidepanel-shell">
-      {/* Cabeçalho da extensão */}
       <header className="app-header">
         <div className="brand-group">
-          <div className="brand-logo">
-            <span>AEGEA</span>
+          <div className="brand-logo" aria-hidden="true">
+            <span>AE</span>
           </div>
-          <div>
+          <div className="brand-copy">
             <h1 className="app-title">AEBOT</h1>
-            <p className="app-subtitle">Assistente de Análise Operacional</p>
+            <p className="app-subtitle">Inteligência para análise operacional</p>
           </div>
         </div>
 
@@ -106,12 +105,15 @@ export default function App() {
           className="config-trigger-btn"
           onClick={() => setIsConfigOpen(true)}
           title="Configurações do AEBOT"
+          aria-label="Abrir configurações"
         >
-          Config
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.25A3.25 3.25 0 1 0 12 8.75a3.25 3.25 0 0 0 0 6.5Z" />
+            <path d="M19.4 13.5a7.8 7.8 0 0 0 .05-1.5 7.8 7.8 0 0 0-.05-1.5l1.7-1.32-1.8-3.11-2 .81a8 8 0 0 0-2.6-1.5L14.4 3.25h-3.6l-.3 2.13a8 8 0 0 0-2.6 1.5l-2-.81-1.8 3.11 1.7 1.32a7.8 7.8 0 0 0-.05 1.5c0 .5.02 1 .05 1.5l-1.7 1.32 1.8 3.11 2-.81a8 8 0 0 0 2.6 1.5l.3 2.13h3.6l.3-2.13a8 8 0 0 0 2.6-1.5l2 .81 1.8-3.11-1.7-1.32Z" />
+          </svg>
         </button>
       </header>
 
-      {/* Serviço e área principal de análise */}
       <main className="main-content">
         <ServiceSelector
           services={services}
@@ -120,13 +122,14 @@ export default function App() {
         />
 
         <div
-          className={`catalog-status ${catalogStatus.warning ? 'warning' : ''}`}
+          className={`catalog-status ${catalogStatus.source} ${catalogStatus.warning ? 'warning' : ''}`}
           title={catalogStatus.warning}
         >
+          <span className="catalog-status-dot" aria-hidden="true" />
           {catalogStatus.warning ?? (
             catalogStatus.source === 'backend'
-              ? `Catálogo central${catalogStatus.version ? ` • base ${catalogStatus.version}` : ''}`
-              : 'Catálogo local embarcado'
+              ? `Base central ativa${catalogStatus.version ? ` · ${catalogStatus.version}` : ''}`
+              : 'Base embarcada de contingência'
           )}
         </div>
 
@@ -144,12 +147,11 @@ export default function App() {
         )}
       </main>
 
-      {/* Rodapé */}
       <footer className="app-footer">
-        <span>AEBOT • Análise baseada em regras</span>
+        <span>AEBOT</span>
+        <span>Decisões fundamentadas em regras</span>
       </footer>
 
-      {/* Configurações */}
       <ConfigModal
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}

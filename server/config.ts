@@ -1,7 +1,4 @@
 import { GEMINI_FALLBACK_MODEL, GEMINI_MODEL } from '../src/localConfig';
-import { normalizeOllamaBaseUrl, normalizeOllamaModel } from '../src/ai/OllamaModelClient';
-
-export type ServerAiProvider = 'auto' | 'gemini' | 'ollama';
 
 export interface AnalystAccessToken {
   analystId: string;
@@ -19,9 +16,6 @@ export interface ServerConfig {
   geminiApiKey: string;
   geminiModel: string;
   geminiFallbackModel: string;
-  aiProvider: ServerAiProvider;
-  ollamaBaseUrl: string;
-  ollamaModel: string;
   humanizeDeterministicResponses: boolean;
   bodyLimitBytes: number;
   rateLimitPerMinute: number;
@@ -113,20 +107,6 @@ export function loadServerConfig(env: NodeJS.ProcessEnv = process.env): ServerCo
     throw new Error('AEBOT_API_TOKEN deve possuir ao menos 32 caracteres em produção.');
   }
 
-  const aiProviderValue = env.AEBOT_AI_PROVIDER?.trim().toLowerCase() || 'auto';
-  if (!['auto', 'gemini', 'ollama'].includes(aiProviderValue)) {
-    throw new Error('AEBOT_AI_PROVIDER deve ser auto, gemini ou ollama.');
-  }
-  const rawOllamaUrl = env.OLLAMA_BASE_URL?.trim() || 'http://127.0.0.1:11434';
-  const ollamaBaseUrl = normalizeOllamaBaseUrl(rawOllamaUrl);
-  const rawOllamaModel = env.OLLAMA_MODEL?.trim() ?? '';
-  const ollamaModel = rawOllamaModel ? normalizeOllamaModel(rawOllamaModel) : '';
-  if (!ollamaBaseUrl) throw new Error('OLLAMA_BASE_URL deve apontar para o Ollama local.');
-  if (rawOllamaModel && !ollamaModel) throw new Error('OLLAMA_MODEL inválido.');
-  if (aiProviderValue === 'ollama' && !ollamaModel) {
-    throw new Error('OLLAMA_MODEL é obrigatório quando AEBOT_AI_PROVIDER=ollama.');
-  }
-
   return {
     host: env.AEBOT_HOST?.trim() || '127.0.0.1',
     port: positiveInteger(env.AEBOT_PORT, 8787),
@@ -138,9 +118,6 @@ export function loadServerConfig(env: NodeJS.ProcessEnv = process.env): ServerCo
     geminiApiKey: env.GEMINI_API_KEY?.trim() ?? '',
     geminiModel: env.GEMINI_MODEL?.trim() || GEMINI_MODEL,
     geminiFallbackModel: env.GEMINI_FALLBACK_MODEL?.trim() || GEMINI_FALLBACK_MODEL,
-    aiProvider: aiProviderValue as ServerAiProvider,
-    ollamaBaseUrl,
-    ollamaModel: ollamaModel || '',
     humanizeDeterministicResponses:
       env.AEBOT_HUMANIZE_DETERMINISTIC?.trim().toLowerCase() === 'true',
     bodyLimitBytes: positiveInteger(env.AEBOT_BODY_LIMIT_BYTES, 32_768),

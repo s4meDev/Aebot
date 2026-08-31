@@ -133,13 +133,27 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="config-modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <div>
             <span className="eyebrow-inline">Configuração do AEBOT</span>
-            <h3>{packagedBackendUrl ? 'Acesso do analista' : 'Conexões do assistente'}</h3>
+            <h3 id="config-modal-title">
+              {packagedBackendUrl ? 'Acesso do analista' : 'Conexões do assistente'}
+            </h3>
           </div>
-          <button className="icon-btn" onClick={onClose} title="Fechar">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onClose}
+            title="Fechar"
+            aria-label="Fechar configurações"
+          >
             ✕
           </button>
         </div>
@@ -181,13 +195,13 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
                 ? 'connection-status success'
                 : 'connection-status warning'}>
                 {connectionTest.health.aiConfigured
-                  ? connectionTest.health.aiProvider === 'ollama'
-                    ? 'Backend, token e catálogo acessíveis; IA local configurada.'
+                  ? connectionTest.health.aiProviders.length > 1
+                    ? 'API online, token e catálogo acessíveis; contingência entre provedores ativa.'
                     : connectionTest.health.aiProvider === 'workers-ai'
                       ? 'API online, token e catálogo acessíveis; Workers AI configurado.'
-                      : 'Backend, token e catálogo acessíveis; Gemini central configurado.'
+                      : 'API online, token e catálogo acessíveis; Gemini configurado.'
                   : apiKey.trim()
-                    ? 'Backend, token e catálogo ativos; Gemini será usado localmente.'
+                    ? 'Backend, token e catálogo ativos; Gemini online será usado diretamente.'
                     : 'Backend, token e catálogo ativos, mas sem IA central.'}
               </span>
             )}
@@ -228,7 +242,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
               onChange={(e) => setApiKey(e.target.value)}
             />
             <span className="help-text">
-              Usada apenas no modo local. Quando houver backend, prefira configurar GEMINI_API_KEY somente no servidor.
+              Usada apenas no desenvolvimento direto da extensão. No pacote empresarial, a chave fica somente no servidor.
             </span>
             <span className="help-text">
               Com o Gemini ativo, a pergunta, até 6 mensagens recentes e as regras relacionadas são enviadas ao Google para interpretação e humanização.

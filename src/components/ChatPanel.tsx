@@ -27,7 +27,7 @@ function createWelcomeMessage(serviceName: string, isNewCase = false): AiMessage
     role: 'assistant',
     content: isNewCase
       ? `Novo caso iniciado para ${serviceName}. O contexto anterior foi descartado. Descreva os fatos observados.`
-      : `Olá! Como posso ajudar na auditoria do ${serviceName}?`,
+      : `Estou pronto para analisar ${serviceName}. Descreva a dúvida ou os fatos mostrados na OS.`,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
   };
 }
@@ -130,7 +130,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       if (isBackendConfigured && response.fallbackReason === 'backend_error') {
         setBackendConnection({
           state: 'offline',
-          message: 'O backend não respondeu; o modo local foi utilizado.',
+          message: 'O backend não respondeu; somente a base embarcada está disponível.',
         });
       } else if (isBackendConfigured) {
         const backendUrl = resolveBackendUrl(
@@ -200,20 +200,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
     if (backendConnection.state === 'online') {
       if (backendConnection.health.aiConfigured) {
-        const isOllama = backendConnection.health.aiProvider === 'ollama';
-        const isWorkersAi = backendConnection.health.aiProvider === 'workers-ai';
+        const providers = backendConnection.health.aiProviders;
+        const hasFallback = providers.length > 1;
+        const primaryLabel = backendConnection.health.aiProvider === 'workers-ai'
+          ? 'Workers AI'
+          : 'Gemini';
         return {
-          label: isOllama
-            ? 'Backend + IA local'
-            : isWorkersAi
-              ? 'Backend + Workers AI'
-              : 'Backend + Gemini',
+          label: `Online • ${primaryLabel}`,
           className: 'api-mode',
-          title: isOllama
-            ? `Backend conectado, modelo Ollama local configurado e base ${backendConnection.health.ruleStoreVersion}`
-            : isWorkersAi
-              ? `API online conectada, Workers AI configurado e base ${backendConnection.health.ruleStoreVersion}`
-              : `Backend conectado, Gemini central configurado e base ${backendConnection.health.ruleStoreVersion}`,
+          title: `Backend conectado com ${primaryLabel}${hasFallback ? ' e contingência online' : ''}; base ${backendConnection.health.ruleStoreVersion}`,
         };
       }
       return isGeminiKeyConfigured
@@ -223,37 +218,40 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             title: 'Backend conectado; como o servidor está sem Gemini, este Chrome usa a chave local',
           }
         : {
-            label: 'Backend sem IA',
+            label: 'Online · regras',
             className: 'sim-mode',
             title: 'Backend conectado, mas nenhum interpretador semântico está configurado',
           };
     }
     if (backendConnection.state === 'offline') {
       return {
-        label: 'Local • backend off',
+        label: 'Offline · regras',
         className: isGeminiKeyConfigured ? 'api-mode' : 'sim-mode',
-        title: `${backendConnection.message} As análises usarão o modo local.`,
+        title: `${backendConnection.message} Somente as regras embarcadas ficam disponíveis.`,
       };
     }
     return isGeminiKeyConfigured
       ? {
-          label: 'Gemini local',
+          label: 'Gemini direto',
           className: 'api-mode',
-          title: 'Interpretação Gemini local ativa; decisões validadas pelo motor de regras',
+          title: 'Gemini online configurado diretamente neste Chrome; decisões validadas pelo motor de regras',
         }
       : {
-          label: 'Motor local',
+          label: 'Regras embarcadas',
           className: 'sim-mode',
           title: 'Somente matching determinístico, sem interpretação semântica',
         };
   })();
 
   return (
-    <section className="card chat-shell">
+    <section className="card chat-shell" aria-label="Conversa com o AEBOT">
       <div className="chat-hero">
         <div className="chat-hero-title">
-          <span className="assistant-mark" aria-hidden="true">A</span>
-          <h3>Assistente de Análise</h3>
+          <span className="assistant-mark" aria-hidden="true">AE</span>
+          <div>
+            <h3>Analista Sênior</h3>
+            <span className="chat-hero-subtitle">Apoio baseado na regra cadastrada</span>
+          </div>
         </div>
         <div className="chat-actions">
           <button
@@ -262,7 +260,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             onClick={() => setIsFeedbackOpen(true)}
             title="Enviar uma sugestão ou informar um problema"
           >
-            Feedback
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.75h14v10.5H9l-4 3v-13.5Z" /></svg>
+            <span>Feedback</span>
           </button>
           <button
             type="button"
@@ -271,9 +270,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             onClick={startNewCase}
             title="Descartar o contexto atual e iniciar outra Ordem de Serviço"
           >
-            ↻ Novo caso
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v5h-5" /><path d="M18.3 12A7 7 0 1 0 19 15" /></svg>
+            <span>Novo caso</span>
           </button>
           <span className={`engine-pill ${engineStatus.className}`} title={engineStatus.title}>
+            <span className="engine-dot" aria-hidden="true" />
             {engineStatus.label}
           </span>
         </div>
@@ -282,6 +283,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       {/* Perguntas sugeridas */}
       {service.suggestedQuestions && service.suggestedQuestions.length > 0 && (
         <div className="prompt-suggestions">
+          <span className="prompt-label">Perguntas rápidas</span>
           <div className="prompt-row">
             {service.suggestedQuestions.map((question, idx) => (
               <button
@@ -298,7 +300,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {/* Conversa */}
-      <div className="message-list">
+      <div className="message-list" aria-live="polite">
         {messages.map((message) => (
           <div key={message.id} className={`message-wrapper ${message.role}`}>
             <div className="bubble-header">
@@ -331,26 +333,32 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Campo de envio */}
       <div className="input-box-container">
-        <textarea
-          className="chat-textarea"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              void handleSend();
-            }
-          }}
-          placeholder="Descreva a dúvida ou os fatos da OS..."
-          rows={2}
-        />
+        <div className="composer-field">
+          <textarea
+            className="chat-textarea"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.slice(0, 4_000))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                void handleSend();
+              }
+            }}
+            placeholder="Descreva a dúvida ou os fatos da OS..."
+            rows={2}
+            maxLength={4_000}
+          />
+          <span className="composer-hint">Enter envia · Shift + Enter quebra a linha</span>
+        </div>
         <button
           type="button"
           className="send-btn"
           disabled={!draft.trim() || isThinking}
           onClick={() => void handleSend()}
+          aria-label="Enviar mensagem"
+          title="Enviar mensagem"
         >
-          Enviar
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4.5 14-2.7-5.1L5 12Z" /><path d="m11.8 13.9 2.8-2.8" /></svg>
         </button>
       </div>
 

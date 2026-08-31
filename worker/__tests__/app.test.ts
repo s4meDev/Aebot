@@ -46,10 +46,26 @@ describe('Cloudflare Worker do AEBOT', () => {
       runtime: 'cloudflare-worker',
       aiConfigured: true,
       aiProvider: 'workers-ai',
+      aiProviders: ['workers-ai'],
       accessConfigured: true,
       feedbackConfigured: false,
     });
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it('prioriza Gemini e mantém Workers AI como contingência online', async () => {
+    const app = createWorkerApp({ logger: { info: vi.fn(), error: vi.fn() } });
+    const response = await app.fetch(
+      request('/health'),
+      await environment({ AI: { run: vi.fn() }, GEMINI_API_KEY: 'chave-de-teste' })
+    );
+    const body = await response.json() as Record<string, unknown>;
+
+    expect(body).toMatchObject({
+      aiConfigured: true,
+      aiProvider: 'gemini',
+      aiProviders: ['gemini', 'workers-ai'],
+    });
   });
 
   it('aceita somente origem exata e token cujo hash foi provisionado', async () => {

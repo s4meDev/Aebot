@@ -24,7 +24,7 @@
 - Procedimentos que orientam o trabalho, mas não definem uma conclusão oficial, devem ser cadastrados sem `severity`; relatos sobre eles permanecem com `decision: null` até existir regra classificatória explícita.
 - Quando o backend estiver configurado, ele é a fonte preferencial do catálogo. O fallback embarcado só pode decidir se conhece o serviço e possui a mesma versão central conhecida da base.
 - Regras escritas ou informadas pelos responsáveis do produto são válidas por si mesmas e podem definir conclusão oficial. Documento formal e `sourceReferences` são metadados opcionais, nunca pré-requisitos para cadastrar ou aplicar uma regra.
-- Para escala gratuita, priorize respostas determinísticas, chaves de cache sem texto bruto, retenção limitada em memória e IA local opcional. Cotas de provedores externos nunca devem ser descritas como ilimitadas.
+- Para escala gratuita, priorize respostas determinísticas, chaves de cache sem texto bruto e retenção limitada em memória. A IA de suporte é online: Gemini como principal e Workers AI como contingência; cotas nunca devem ser descritas como ilimitadas.
 - Em instalações com vários analistas, prefira tokens individuais e registre somente a identidade operacional e metadados técnicos, nunca o conteúdo das conversas.
 - O pacote empresarial deve conter uma única origem HTTPS no manifest; a extensão deriva dela o backend, desativa Gemini direto no Chrome e exige somente o token individual na instalação.
 - Métricas operacionais podem contar cache, chamadas e resultados técnicos, mas nunca armazenar texto de perguntas, histórico, respostas ou tokens.

@@ -1,6 +1,6 @@
 {
   "name": "field-service-assistant",
-  "version": "2.13.0",
+  "version": "2.14.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -22,11 +22,11 @@
     "server:local": "npm run build:server && node server-dist/index.js",
     "server:start": "node server-dist/index.js",
     "server:check": "node --env-file-if-exists=.env.local scripts/check-server.mjs",
-    "ai:check": "node scripts/check-local-ai.mjs",
     "tokens:generate": "node scripts/generate-access-tokens.mjs",
     "admin:token:generate": "node scripts/generate-admin-token.mjs",
     "extension:identity:generate": "node scripts/generate-extension-identity.mjs",
     "cloudflare:secrets:configure": "node scripts/configure-cloudflare-secrets.mjs",
+    "cloudflare:ai:configure": "node --env-file-if-exists=.env.local scripts/configure-online-ai-secret.mjs",
     "deployment:check": "node scripts/verify-production-deployment.mjs",
     "pilot:check": "node scripts/validate-pilot-readiness.mjs",
     "rules:audit": "node scripts/audit-rules.mjs",

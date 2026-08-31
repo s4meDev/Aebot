@@ -1,9 +1,5 @@
 import { GeminiModelClient } from '../src/ai/GeminiProvider';
-import { OllamaModelClient } from '../src/ai/OllamaModelClient';
-import {
-  FallbackStructuredModelClient,
-  type StructuredModelClient,
-} from '../src/ai/StructuredModelClient';
+import type { StructuredModelClient } from '../src/ai/StructuredModelClient';
 import {
   AebotAnalysisService as SharedAnalysisService,
   type AnalysisService,
@@ -21,14 +17,7 @@ function createModelClient(config: ServerConfig): StructuredModelClient | null {
         config.geminiFallbackModel
       )
     : null;
-  const ollama = config.ollamaModel
-    ? new OllamaModelClient(config.ollamaBaseUrl, config.ollamaModel)
-    : null;
-
-  if (config.aiProvider === 'gemini') return gemini;
-  if (config.aiProvider === 'ollama') return ollama;
-  if (ollama && gemini) return new FallbackStructuredModelClient(ollama, gemini);
-  return ollama ?? gemini;
+  return gemini;
 }
 
 /** Adaptador de configuração para o servidor Node local/de contingência. */

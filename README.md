@@ -45,7 +45,7 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - teste de capacidade para 3.000 avaliações;
 - feedback persistente em Cloudflare D1;
 - painel administrativo protegido por credencial separada;
-- Workers AI, Gemini e Ollama disponíveis como integrações substituíveis;
+- Gemini 2.5 Flash-Lite e Workers AI disponíveis como integrações online substituíveis;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
 - 77 regras e orientações baseadas nas diretrizes do produto e nos materiais recebidos;
 - cadeia de evidências do original, do adicional executado e do adicional posterior tratada de forma explícita;

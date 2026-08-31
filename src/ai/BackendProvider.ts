@@ -184,7 +184,7 @@ export class BackendProvider implements AiProvider {
         if (localResponse.provider === 'gemini') {
           return {
             ...localResponse,
-            content: `${localResponse.content}\n\nObservação técnica:\nO backend está ativo, mas a interpretação de IA foi feita localmente neste Chrome.`,
+            content: `${localResponse.content}\n\nObservação técnica:\nO backend está ativo, mas a interpretação online foi feita diretamente por este Chrome.`,
           };
         }
       }
@@ -203,7 +203,7 @@ export class BackendProvider implements AiProvider {
       );
       return {
         ...fallback,
-        content: `${fallback.content}\n\nObservação técnica:\nO backend central não respondeu; esta análise usou o modo local.`,
+        content: `${fallback.content}\n\nObservação técnica:\nO backend central não respondeu; esta análise usou apenas a base embarcada de contingência.`,
         fallbackReason: 'backend_error',
       };
     } finally {

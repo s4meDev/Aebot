@@ -136,7 +136,7 @@ describe('BackendProvider', () => {
     );
 
     expect(result.decision).toBe('Reprovado');
-    expect(result.content).toContain('modo local');
+    expect(result.content).toContain('base embarcada de contingência');
     expect(local.generateResponse).toHaveBeenCalledOnce();
   });
 
@@ -161,7 +161,7 @@ describe('BackendProvider', () => {
     );
 
     expect(result.provider).toBe('gemini');
-    expect(result.content).toContain('interpretação de IA foi feita localmente');
+    expect(result.content).toContain('interpretação online foi feita diretamente');
     expect(local.generateResponse).toHaveBeenCalledOnce();
   });
 

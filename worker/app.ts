@@ -38,6 +38,7 @@ export interface WorkerEnvironment {
   AEBOT_TOKEN_HASHES?: string;
   AEBOT_ADMIN_TOKEN_HASH?: string;
   AEBOT_WORKERS_AI_MODEL?: string;
+  AEBOT_AI_PROVIDER_ORDER?: string;
   AEBOT_HUMANIZE_DETERMINISTIC?: string;
   AEBOT_BODY_LIMIT_BYTES?: string;
   GEMINI_API_KEY?: string;
@@ -60,6 +61,7 @@ interface WorkerDependencies {
 
 const DEFAULT_BODY_LIMIT = 32_768;
 const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const DEFAULT_GEMINI_FALLBACK_MODEL = 'gemini-2.5-flash';
 
 function positiveInteger(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
@@ -88,10 +90,15 @@ function createModelClient(env: WorkerEnvironment): StructuredModelClient | null
     ? new GeminiModelClient(
         geminiKey,
         env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL,
-        env.GEMINI_FALLBACK_MODEL?.trim() || DEFAULT_GEMINI_MODEL
+        env.GEMINI_FALLBACK_MODEL?.trim() || DEFAULT_GEMINI_FALLBACK_MODEL
       )
     : null;
-  if (workersAi && gemini) return new FallbackStructuredModelClient(workersAi, gemini);
+  if (workersAi && gemini) {
+    const requestedOrder = env.AEBOT_AI_PROVIDER_ORDER?.trim().toLowerCase();
+    return requestedOrder === 'workers-ai,gemini'
+      ? new FallbackStructuredModelClient(workersAi, gemini)
+      : new FallbackStructuredModelClient(gemini, workersAi);
+  }
   return workersAi ?? gemini;
 }
 
@@ -376,6 +383,7 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
             ruleStoreVersion: status.ruleStoreVersion,
             aiConfigured: status.aiConfigured,
             aiProvider: status.aiProvider,
+            aiProviders: status.aiProviders,
             geminiConfigured: status.geminiConfigured,
             accessConfigured: tokenHashes(env).size > 0,
             feedbackConfigured: Boolean(env.FEEDBACK_DB),

@@ -6,6 +6,10 @@ import {
 } from '../WorkersAiModelClient';
 
 describe('WorkersAiModelClient', () => {
+  it('usa um modelo online de raciocínio como contingência padrão', () => {
+    expect(DEFAULT_WORKERS_AI_MODEL).toBe('@cf/openai/gpt-oss-20b');
+  });
+
   it('converte o contrato estruturado para mensagens do Workers AI', async () => {
     const run = vi.fn().mockResolvedValue({ response: '{"mappings":[]}' });
     const client = new WorkersAiModelClient({ run } as WorkersAiBinding);

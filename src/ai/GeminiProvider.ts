@@ -59,7 +59,7 @@ export interface GeminiProviderConfiguration {
   getApiKey?: () => string;
   getModel?: () => string;
   getFallbackModel?: () => string;
-  /** Permite ao backend usar um modelo local sem alterar o motor determinístico. */
+  /** Permite ao backend injetar um ou mais provedores online sem alterar o motor. */
   getModelClient?: () => StructuredModelClient | null;
   humanizeDeterministicResponses?: boolean;
 }
@@ -103,11 +103,14 @@ async function requestGemini(
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
           {
             method: 'POST',
             signal: controller.signal,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey,
+            },
             body: JSON.stringify({
               contents,
               systemInstruction: { parts: [{ text: systemInstruction }] },
@@ -143,18 +146,16 @@ async function requestGemini(
         return typeof text === 'string'
           ? { status: 'ok', provider: 'gemini', text }
           : { status: 'api_error', provider: 'gemini' };
-      } catch (error) {
+      } catch {
         if (attempt === 0 && !controller.signal.aborted) {
           await wait(retryDelay());
           continue;
         }
-        console.warn('Erro ao chamar API do Gemini:', error);
         return { status: 'api_error', provider: 'gemini' };
       }
     }
     return { status: 'api_error', provider: 'gemini' };
-  } catch (error) {
-    console.warn('Erro ao chamar API do Gemini:', error);
+  } catch {
     return { status: 'api_error', provider: 'gemini' };
   } finally {
     globalThis.clearTimeout(timeoutId);
@@ -163,12 +164,12 @@ async function requestGemini(
 
 export function normalizeGeminiModel(value: string): string {
   const candidate = value.trim();
-  if (candidate === 'gemini-2.5-flash') return GEMINI_MODEL;
   return /^[a-z0-9][a-z0-9._-]{1,79}$/i.test(candidate) ? candidate : GEMINI_MODEL;
 }
 
 export class GeminiModelClient implements StructuredModelClient {
   readonly provider = 'gemini' as const;
+  readonly providerChain = ['gemini'] as const;
   readonly cacheKey: string;
 
   constructor(

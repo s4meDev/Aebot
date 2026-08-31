@@ -11,11 +11,8 @@ describe('configuração do backend', () => {
     expect(config.rateLimitPerMinute).toBe(240);
     expect(config.trustProxy).toBe(false);
     expect(config.humanizeDeterministicResponses).toBe(false);
-    expect(config.geminiModel).toBe('gemini-flash-latest');
-    expect(config.geminiFallbackModel).toBe('gemini-flash-lite-latest');
-    expect(config.aiProvider).toBe('auto');
-    expect(config.ollamaBaseUrl).toBe('http://127.0.0.1:11434');
-    expect(config.ollamaModel).toBe('');
+    expect(config.geminiModel).toBe('gemini-2.5-flash-lite');
+    expect(config.geminiFallbackModel).toBe('gemini-2.5-flash');
     expect(isOriginAllowed('chrome-extension://abc', config)).toBe(true);
     expect(isOriginAllowed('https://site-invalido.example', config)).toBe(false);
   });
@@ -57,21 +54,15 @@ describe('configuração do backend', () => {
     })).toThrow(/32 caracteres/);
   });
 
-  it('valida a configuração opcional do Ollama local', () => {
+  it('configura somente modelos Gemini online no backend Node', () => {
     const config = loadServerConfig({
-      AEBOT_AI_PROVIDER: 'ollama',
-      OLLAMA_BASE_URL: 'http://localhost:11434',
-      OLLAMA_MODEL: 'qwen3:4b',
+      GEMINI_API_KEY: 'chave-de-teste',
+      GEMINI_MODEL: 'gemini-2.5-flash-lite',
+      GEMINI_FALLBACK_MODEL: 'gemini-2.5-flash',
     });
-    expect(config.aiProvider).toBe('ollama');
-    expect(config.ollamaModel).toBe('qwen3:4b');
-
-    expect(() => loadServerConfig({
-      AEBOT_AI_PROVIDER: 'ollama',
-    })).toThrow(/OLLAMA_MODEL/);
-    expect(() => loadServerConfig({
-      OLLAMA_BASE_URL: 'https://servidor-externo.example',
-    })).toThrow(/OLLAMA_BASE_URL/);
+    expect(config.geminiApiKey).toBe('chave-de-teste');
+    expect(config.geminiModel).toBe('gemini-2.5-flash-lite');
+    expect(config.geminiFallbackModel).toBe('gemini-2.5-flash');
   });
 
   it('aceita tokens individuais fortes e rejeita duplicação em produção', () => {

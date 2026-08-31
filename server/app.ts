@@ -207,6 +207,7 @@ export function createAebotServer(dependencies: ServerDependencies): Server {
           ruleStoreVersion: status.ruleStoreVersion,
           aiConfigured: status.aiConfigured,
           aiProvider: status.aiProvider,
+          aiProviders: status.aiProviders,
           geminiConfigured: status.geminiConfigured,
           accessConfigured: Boolean(config.apiToken || config.analystTokens.length),
           feedbackConfigured: false,

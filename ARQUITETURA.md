@@ -1,5 +1,11 @@
 # Arquitetura do AEBOT
 
+## Estratégia de IA online
+
+O motor de regras sempre avalia primeiro. Se ainda faltar ligação semântica entre a frase do analista e os conceitos cadastrados, o backend tenta `gemini-2.5-flash-lite`; diante de falha técnica ou limite, usa `@cf/openai/gpt-oss-20b` no Workers AI. Os modelos só devolvem mapeamentos para regras existentes e nunca escolhem a conclusão oficial.
+
+Essa ordem é configurável no Worker por `AEBOT_AI_PROVIDER_ORDER`. O padrão de produção é `gemini,workers-ai`. O projeto não depende de modelo executado na máquina do analista.
+
 Este arquivo é o mapa de manutenção do projeto. A ordem abaixo acompanha o caminho percorrido por uma pergunta, da extensão até a resposta e o feedback.
 
 ## 1. Visão geral
@@ -80,7 +86,7 @@ Se nenhuma regra classificatória realmente aplicável for encontrada, `decision
 
 - `src/ai/StructuredModelClient.ts` define o contrato que qualquer modelo deve cumprir.
 - `src/ai/WorkersAiModelClient.ts` integra o modelo disponível no Cloudflare Worker.
-- `src/ai/OllamaModelClient.ts` integra um modelo local opcional.
+- `src/ai/WorkersAiModelClient.ts` integra a contingência online do Cloudflare Workers AI.
 - `src/ai/GeminiProvider.ts` mantém o nome histórico, mas hoje coordena o motor e qualquer cliente estruturado configurado.
 - `src/ai/PromptBuilder.ts` entrega ao modelo a avaliação já calculada e proíbe alteração da decisão.
 
@@ -190,7 +196,7 @@ Regras que evitam acoplamento:
 - `PromptBuilder.ts`: prompts restritos ao resultado e às regras recuperadas.
 - `StructuredModelClient.ts`: interface comum para modelos.
 - `WorkersAiModelClient.ts`: adaptador do Workers AI.
-- `OllamaModelClient.ts`: adaptador do Ollama local.
+- `WorkersAiModelClient.ts`: adaptador do modelo online executado no Cloudflare.
 - `__tests__`: contratos, falhas e garantias dos providers.
 
 #### `src/api`
@@ -233,7 +239,7 @@ Regras que evitam acoplamento:
 - `validate-production-extension.mjs`: garante que o build de produção só acesse a API oficial.
 - `validate-server.mjs`: confere o bundle Node.
 - `check-server.mjs`: teste rápido da API Node em execução.
-- `check-local-ai.mjs`: verifica a IA local opcional.
+- A saúde dos provedores online é verificada pelo backend e pelos diagnósticos de implantação.
 - `setup-local-server.mjs`: prepara a configuração local sem versionar segredo.
 - `configure-production-extension.mjs`: aplica URL e identidade estável no `dist`.
 - `configure-cloudflare-secrets.mjs`: envia hashes e configurações privadas ao Cloudflare sem imprimi-los.
@@ -268,7 +274,7 @@ Os testes ficam perto da parte que protegem:
 - `src/ai/__tests__/BackendClient.test.ts`: requisições, respostas e falhas HTTP.
 - `src/ai/__tests__/BackendProvider.test.ts`: backend preferencial e regras do fallback.
 - `src/ai/__tests__/GeminiProvider.test.ts`: decisão imutável, histórico e humanização.
-- `src/ai/__tests__/OllamaModelClient.test.ts`: contrato do modelo local.
+- `src/ai/__tests__/WorkersAiModelClient.test.ts`: contrato do modelo de contingência online.
 - `src/ai/__tests__/WorkersAiModelClient.test.ts`: contrato do modelo Cloudflare.
 - `src/api/__tests__/FeedbackClient.test.ts`: envio e erros do feedback.
 - `src/api/__tests__/feedbackContracts.test.ts`: validação e limpeza dos campos de feedback.

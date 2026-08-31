@@ -46,6 +46,12 @@ const analystHeaders = { Authorization: `Bearer ${analystToken}`, Origin: extens
 
 const health = await (await request('/health')).json();
 assert(health.status === 'ok', 'Health check incompatível.');
+assert(
+  health.aiProvider === 'gemini' &&
+    Array.isArray(health.aiProviders) &&
+    health.aiProviders.join(',') === 'gemini,workers-ai',
+  'A ordem de contingência Gemini -> Workers AI não está ativa.'
+);
 assert(health.accessConfigured === true, 'Tokens dos analistas não estão ativos.');
 assert(health.feedbackConfigured === true, 'D1 de feedback não está ativo.');
 assert(health.adminConfigured === true, 'Acesso administrativo não está ativo.');
