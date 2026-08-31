@@ -20,15 +20,20 @@ export const ServiceDetails: React.FC<ServiceDetailsProps> = ({ service, service
     ));
 
   return (
-    <div className="card service-details-card">
-      <div className="service-header">
-        <div>
+    <details className="service-details-card">
+      <summary className="service-details-summary">
+        <span className="service-details-label">Conhecimento do serviço</span>
+        <span className="service-details-meta">{service.insights.length} diretrizes</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4" /></svg>
+      </summary>
+
+      <div className="service-details-body">
+        <div className="service-header">
           <span className="eyebrow-inline">{service.category}</span>
           <h2 className="service-title">{service.name}</h2>
         </div>
-      </div>
 
-      <p className="service-summary">{service.summary}</p>
+        <p className="service-summary">{service.summary}</p>
 
       {service.analysisStatus === 'rules_pending' && (
         <div className="service-pending-notice">
@@ -89,6 +94,7 @@ export const ServiceDetails: React.FC<ServiceDetailsProps> = ({ service, service
           ))}
         </ul>
       </details>
-    </div>
+      </div>
+    </details>
   );
 };

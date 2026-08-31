@@ -92,11 +92,12 @@ export default function App() {
       <header className="app-header">
         <div className="brand-group">
           <div className="brand-logo" aria-hidden="true">
-            <span>AE</span>
+            <span className="brand-stroke primary" />
+            <span className="brand-stroke secondary" />
           </div>
           <div className="brand-copy">
             <h1 className="app-title">AEBOT</h1>
-            <p className="app-subtitle">Inteligência para análise operacional</p>
+            <p className="app-subtitle">Análise operacional</p>
           </div>
         </div>
 
@@ -115,23 +116,25 @@ export default function App() {
       </header>
 
       <main className="main-content">
-        <ServiceSelector
-          services={services}
-          selectedServiceId={selectedServiceId}
-          onSelect={setSelectedServiceId}
-        />
+        <section className="workspace-context" aria-label="Contexto da análise">
+          <ServiceSelector
+            services={services}
+            selectedServiceId={selectedServiceId}
+            onSelect={setSelectedServiceId}
+          />
 
-        <div
-          className={`catalog-status ${catalogStatus.source} ${catalogStatus.warning ? 'warning' : ''}`}
-          title={catalogStatus.warning}
-        >
-          <span className="catalog-status-dot" aria-hidden="true" />
-          {catalogStatus.warning ?? (
-            catalogStatus.source === 'backend'
-              ? `Base central ativa${catalogStatus.version ? ` · ${catalogStatus.version}` : ''}`
-              : 'Base embarcada de contingência'
-          )}
-        </div>
+          <div
+            className={`catalog-status ${catalogStatus.source} ${catalogStatus.warning ? 'warning' : ''}`}
+            title={catalogStatus.warning}
+          >
+            <span className="catalog-status-dot" aria-hidden="true" />
+            {catalogStatus.warning ?? (
+              catalogStatus.source === 'backend'
+                ? `Base sincronizada${catalogStatus.version ? ` · ${catalogStatus.version}` : ''}`
+                : 'Base de contingência'
+            )}
+          </div>
+        </section>
 
         {selectedService ? (
           <>
@@ -148,8 +151,8 @@ export default function App() {
       </main>
 
       <footer className="app-footer">
-        <span>AEBOT</span>
         <span>Decisões fundamentadas em regras</span>
+        <span aria-hidden="true">●</span>
       </footer>
 
       <ConfigModal

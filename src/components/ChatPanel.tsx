@@ -44,7 +44,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [backendConnection, setBackendConnection] = useState<BackendUiState>({
     state: 'not_configured',
   });
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
 
   const isGeminiKeyConfigured = !getPackagedBackendUrl() && Boolean(
     storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, '').trim()
@@ -80,7 +80,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   }, [service.id, service.name]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const messageList = messageListRef.current;
+    if (!messageList) return;
+    messageList.scrollTo({ top: messageList.scrollHeight, behavior: 'smooth' });
   }, [messages, isThinking]);
 
   const startNewCase = () => {
@@ -247,10 +249,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     <section className="card chat-shell" aria-label="Conversa com o AEBOT">
       <div className="chat-hero">
         <div className="chat-hero-title">
-          <span className="assistant-mark" aria-hidden="true">AE</span>
+          <span className="assistant-mark" aria-hidden="true">
+            <span />
+          </span>
           <div>
             <h3>Analista Sênior</h3>
-            <span className="chat-hero-subtitle">Apoio baseado na regra cadastrada</span>
+            <span className="chat-hero-subtitle">
+              <span className={`engine-dot ${engineStatus.className}`} aria-hidden="true" />
+              {engineStatus.label}
+            </span>
           </div>
         </div>
         <div className="chat-actions">
@@ -259,9 +266,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             className="new-case-btn"
             onClick={() => setIsFeedbackOpen(true)}
             title="Enviar uma sugestão ou informar um problema"
+            aria-label="Enviar feedback"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.75h14v10.5H9l-4 3v-13.5Z" /></svg>
-            <span>Feedback</span>
           </button>
           <button
             type="button"
@@ -269,21 +276,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             disabled={isThinking}
             onClick={startNewCase}
             title="Descartar o contexto atual e iniciar outra Ordem de Serviço"
+            aria-label="Iniciar novo caso"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7v5h-5" /><path d="M18.3 12A7 7 0 1 0 19 15" /></svg>
-            <span>Novo caso</span>
           </button>
-          <span className={`engine-pill ${engineStatus.className}`} title={engineStatus.title}>
-            <span className="engine-dot" aria-hidden="true" />
-            {engineStatus.label}
-          </span>
+          <span className="visually-hidden" title={engineStatus.title}>{engineStatus.title}</span>
         </div>
       </div>
 
       {/* Perguntas sugeridas */}
       {service.suggestedQuestions && service.suggestedQuestions.length > 0 && (
         <div className="prompt-suggestions">
-          <span className="prompt-label">Perguntas rápidas</span>
+          <span className="prompt-label">Comece por aqui</span>
           <div className="prompt-row">
             {service.suggestedQuestions.map((question, idx) => (
               <button
@@ -300,7 +304,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
       )}
 
       {/* Conversa */}
-      <div className="message-list" aria-live="polite">
+      <div ref={messageListRef} className="message-list" aria-live="polite">
         {messages.map((message) => (
           <div key={message.id} className={`message-wrapper ${message.role}`}>
             <div className="bubble-header">
@@ -328,7 +332,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Campo de envio */}
