@@ -72,8 +72,10 @@ for (const rule of store.rules) {
     ...(rule.conditionKeywords ?? []),
     ...(rule.equivalentExpressions ?? []),
     ...(rule.matchPolicy?.allOf ?? []),
-    ...(rule.matchPolicy?.minimumGroups?.groups?.flatMap((group) => group.expressions) ?? []),
   ];
+  // Grupos mínimos contêm fatos reutilizáveis, como "equipe interna" e
+  // "sem aferição". A conclusão nasce da combinação entre grupos, portanto
+  // repetir um fato isolado em regras mutuamente exclusivas não é conflito.
   for (const expression of expressions) {
     const normalized = normalize(expression);
     if (!normalized) continue;

@@ -920,6 +920,102 @@ describe('RuleEngine — ranking e serviço', () => {
     expect(result.requiresHumanValidation).toBe(true);
   });
 
+  it('pede o tipo da equipe quando a falta de aferição não permite escolher a ação', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'A repavimentação ficou sem aferição da vala.',
+      'repavimentacao-calcada'
+    );
+
+    expect(result.outcome).toBe('advisory');
+    expect(result.decision).toBeNull();
+    expect(result.primaryRule?.id).toBe('RULE-PAV-AFERICAO-CONTEXTO-01');
+    expect(result.advisory?.missingInformation).toEqual([
+      'A equipe que executou o serviço é interna ou terceirizada?',
+    ]);
+  });
+
+  it('gera Não Conforme e retrabalho quando a equipe interna não afere a vala', () => {
+    for (const serviceId of [
+      'reaterro-valas-asfalto',
+      'repavimentacao-asfalto-ate-1m2',
+      'repavimentacao-bloco-paralelo',
+    ]) {
+      const result = ruleEngine.evaluatePrompt(
+        'A equipe interna executou o serviço, mas não mostrou a aferição da vala.',
+        serviceId
+      );
+
+      expect(result.decision).toBe('Não Conforme');
+      expect(result.primaryRule?.id).toBe('RULE-PAV-AFERICAO-INTERNA-01');
+      expect(result.primaryRule?.guidance).toContain('Retrabalho');
+    }
+  });
+
+  it('reprova reaterro ou repavimentação sem aferição feita por terceirizada', () => {
+    for (const serviceId of [
+      'reaterro-valas-terra',
+      'repavimentacao-concreto',
+      'repavimentacao-ceramica',
+    ]) {
+      const result = ruleEngine.evaluatePrompt(
+        'A equipe terceirizada fez o serviço sem aferição da vala.',
+        serviceId
+      );
+
+      expect(result.decision).toBe('Reprovado');
+      expect(result.primaryRule?.id).toBe('RULE-PAV-AFERICAO-TERCEIRA-01');
+    }
+  });
+
+  it('manda o retrabalho interno do Adicional Executado para o Posterior', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'A equipe interna colocou a Repavimentação Calçada no Adicional Executado, mas não aferiu a vala.',
+      'reparo-cavalete'
+    );
+
+    expect(result.decision).toBe('Não Conforme');
+    expect(result.primaryRule?.id).toBe('RULE-PAV-AFERICAO-ADICIONAL-INTERNA-01');
+    expect(result.primaryRule?.guidance).toContain('Adicional Posterior');
+    expect(result.primaryRule?.guidance).toContain('Retrabalho');
+  });
+
+  it('remove o adicional executado da terceira e relança no Posterior', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'A terceirizada lançou o Reaterro no Adicional Executado sem mostrar a aferição da vala.',
+      'reparo-rede-agua-asfalto'
+    );
+
+    expect(result.decision).toBe('Não Conforme');
+    expect(result.primaryRule?.id).toBe('RULE-PAV-AFERICAO-ADICIONAL-TERCEIRA-01');
+    expect(result.primaryRule?.guidance).toContain('remova');
+    expect(result.primaryRule?.guidance).toContain('Adicional Posterior');
+  });
+
+  it('pede o tipo da equipe no Adicional Executado antes de decidir', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'A Repavimentação está no Adicional Executado, mas não tem aferição da vala.',
+      'reparo-ramal-agua-calcada'
+    );
+
+    expect(result.outcome).toBe('advisory');
+    expect(result.decision).toBeNull();
+    expect(result.primaryRule?.id).toBe('RULE-PAV-AFERICAO-ADICIONAL-CONTEXTO-01');
+    expect(result.advisory?.missingInformation).toEqual([
+      'A equipe que executou o adicional é interna ou terceirizada?',
+    ]);
+  });
+
+  it('não trata aferição comprovada como ausência', () => {
+    const result = ruleEngine.evaluatePrompt(
+      'A aferição da vala foi apresentada pela equipe terceirizada com comprimento e largura.',
+      'repavimentacao-calcada'
+    );
+
+    expect(result.decision).toBeNull();
+    expect(result.matchedRules.some((rule) => rule.id.includes('AFERICAO-TERCEIRA')))
+      .toBe(false);
+  });
+
   it('diferencia troca exclusiva do registro de reparo do cavalete', () => {
     const onlyRegister = ruleEngine.evaluatePrompt(
       'Qual serviço usar quando foi trocado apenas o registro?',

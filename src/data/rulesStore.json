@@ -1,5 +1,5 @@
 {
-  "version": "2.12.0",
+  "version": "2.13.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -314,9 +314,9 @@
       "id": "repavimentacao-bloco-paralelo",
       "name": "Repavimentação - Bloco/Paralelo",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou adicional posterior.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Recomposição de pavimento em bloco, paralelepípedo ou revestimento equivalente após intervenção.",
+      "insights": ["As fotos devem mostrar necessidade, preparo, execução, aferição da vala e acabamento final compatível."],
+      "analysisStatus": "active"
     },
     {
       "id": "repavimentacao-calcada",
@@ -330,9 +330,9 @@
       "id": "repavimentacao-ceramica",
       "name": "Repavimentação - Cerâmica",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou adicional/desdobro.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Recomposição de revestimento cerâmico após intervenção.",
+      "insights": ["As fotos devem mostrar necessidade, preparo, execução, aferição da vala e acabamento final compatível."],
+      "analysisStatus": "active"
     },
     {
       "id": "repavimentacao-concreto",
@@ -346,9 +346,9 @@
       "id": "repavimentacao-muro-alvenaria",
       "name": "Repavimentação - Muro/Alvenaria",
       "category": "Parametrização Operacional",
-      "summary": "Serviço disponível no sistema como serviço original ou adicional/desdobro.",
-      "insights": ["Regras de análise e parametrização própria ainda não foram fornecidas."],
-      "analysisStatus": "rules_pending"
+      "summary": "Recomposição de muro ou alvenaria afetado por uma intervenção.",
+      "insights": ["As fotos devem mostrar necessidade, preparo, execução, aferição da intervenção quando houver vala e acabamento final compatível."],
+      "analysisStatus": "active"
     },
     {
       "id": "retirada-entulho",
@@ -2164,12 +2164,12 @@
     {
       "id": "RULE-PAV-INFO-01",
       "serviceId": "repavimentacao-calcada",
-      "applicableServiceIds": ["repavimentacao-concreto"],
-      "title": "Evidências da repavimentação de calçada ou concreto",
-      "description": "A repavimentação deve mostrar necessidade, preparo, execução, medições e acabamento final compatível com o local.",
+      "applicableServiceIds": ["repavimentacao-concreto","repavimentacao-bloco-paralelo","repavimentacao-ceramica","repavimentacao-muro-alvenaria"],
+      "title": "Evidências da repavimentação não asfáltica",
+      "description": "A repavimentação de calçada, concreto, bloco, cerâmica ou alvenaria deve mostrar necessidade, preparo, execução, medições e acabamento final compatível com o local.",
       "priority": 3,
       "category": "Repavimentação",
-      "topicKeywords": ["repavimentação de calçada","repavimentação de concreto","fotos da repavimentação","medição do pavimento"],
+      "topicKeywords": ["repavimentação de calçada","repavimentação de concreto","repavimentação de bloco","repavimentação de cerâmica","repavimentação de alvenaria","fotos da repavimentação","medição do pavimento"],
       "relatedEvidence": ["fachada","local antes","preparo da base","execução","comprimento","largura","acabamento final","limpeza"],
       "conditionKeywords": ["quais fotos comprovam a repavimentação da calçada","padrão fotográfico da repavimentação de concreto","como evidenciar a repavimentação"],
       "equivalentExpressions": ["o que precisa mostrar refazendo a calçada","como provar que recompôs o concreto"],
@@ -2198,7 +2198,7 @@
     {
       "id": "RULE-PAV-01",
       "serviceId": "repavimentacao-asfalto-ate-1m2",
-      "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2","repavimentacao-calcada","repavimentacao-concreto"],
+      "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2","repavimentacao-calcada","repavimentacao-concreto","repavimentacao-bloco-paralelo","repavimentacao-ceramica","repavimentacao-muro-alvenaria"],
       "title": "Medição da repavimentação fora do formato aceito",
       "description": "Os procedimentos determinam que medições fora do formato visual aceito sejam registradas como não conformidade.",
       "severity": "Não Conforme",
@@ -2221,6 +2221,170 @@
       "message": "A medição da repavimentação está fora do formato aceito e deve ser registrada como Não Conforme.",
       "guidance": "Corrija ou registre a metragem no formato exigido, mantendo o vínculo com o trecho efetivamente executado.",
       "sourceReferences": ["IT - Procedimento de Repavimentação de Calçada.docx","IT - Repavimentação de Asfalto.docx","IT - Repavimentação de Concreto.docx"]
+    },
+    {
+      "id": "RULE-PAV-AFERICAO-CONTEXTO-01",
+      "serviceId": "reaterro-valas-asfalto",
+      "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra","repavimentacao-asfalto-acima-1m2","repavimentacao-asfalto-ate-1m2","repavimentacao-bloco-paralelo","repavimentacao-calcada","repavimentacao-ceramica","repavimentacao-concreto","repavimentacao-muro-alvenaria"],
+      "title": "Tipo de equipe necessário quando falta aferição da vala",
+      "description": "A ação para falta de aferição em uma OS original de reaterro ou repavimentação depende de a equipe executora ser interna ou terceirizada.",
+      "priority": 1,
+      "category": "Aferição da vala",
+      "topicKeywords": ["falta de aferição da vala","vala sem aferição","medição da vala ausente","tipo de equipe"],
+      "relatedEvidence": ["aferição da vala","comprimento da vala","largura da vala","medição da vala"],
+      "conditionKeywords": ["falta aferição da vala","faltou aferição da vala","sem aferição da vala","não mostrou a aferição da vala","não aferiram a vala","vala sem medição"],
+      "equivalentExpressions": ["não mediram a vala","não mostrou comprimento e largura da vala","não tem foto aferindo a vala","faltou medir a vala"],
+      "exceptions": ["equipe interna","equipe própria","funcionário da empresa","equipe terceirizada","equipe terceira","empreiteira","contratada","adicional executado","desdobro executado"],
+      "examples": ["A OS de repavimentação está sem aferição da vala. O que faço?"],
+      "message": "A falta de aferição foi identificada, mas a ação muda conforme o vínculo da equipe executora.",
+      "guidance": "Informe o tipo de equipe antes de concluir: equipe interna gera Não Conforme com retrabalho; equipe terceirizada gera Reprovação.",
+      "missingInformation": ["A equipe que executou o serviço é interna ou terceirizada?"],
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 31/08/2026"]
+    },
+    {
+      "id": "RULE-PAV-AFERICAO-INTERNA-01",
+      "serviceId": "reaterro-valas-asfalto",
+      "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra","repavimentacao-asfalto-acima-1m2","repavimentacao-asfalto-ate-1m2","repavimentacao-bloco-paralelo","repavimentacao-calcada","repavimentacao-ceramica","repavimentacao-concreto","repavimentacao-muro-alvenaria"],
+      "title": "Falta de aferição em serviço original executado por equipe interna",
+      "description": "Quando uma equipe interna executa Reaterro ou Repavimentação sem comprovar a aferição da vala, a OS recebe Não Conforme e deve gerar retrabalho.",
+      "severity": "Não Conforme",
+      "priority": 1,
+      "category": "Aferição da vala",
+      "topicKeywords": ["falta de aferição da vala","retrabalho de repavimentação","retrabalho de reaterro"],
+      "relatedEvidence": ["aferição da vala","medição da vala","comprimento e largura"],
+      "conditionKeywords": ["equipe interna sem aferição da vala","equipe própria não mostrou a aferição da vala","equipe interna não mediu a vala","equipe da empresa sem medição da vala"],
+      "equivalentExpressions": ["a própria equipe fez mas não aferiu a vala","foi equipe interna e faltou medir a vala","interno sem foto da aferição"],
+      "exceptions": ["equipe terceirizada","equipe terceira","empreiteira","contratada","adicional executado","desdobro executado","aferição apresentada","aferição da vala foi apresentada","aferição foi apresentada","aferição comprovada","medição comprovada"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "equipe interna", "expressions": ["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio"]},
+            {"label": "aferição ausente", "expressions": ["sem aferição","sem mostrar a aferição","falta aferição","faltou aferição","não mostrou a aferição","não aferiu","não aferiram","não mediu a vala","faltou medir a vala","vala sem medição"]}
+          ]
+        }
+      },
+      "examples": ["A equipe interna fez a repavimentação, mas não mostrou a aferição da vala."],
+      "message": "A equipe interna não comprovou a aferição da vala; o serviço precisa de retrabalho.",
+      "guidance": "Registre a OS como Não Conforme e gere o Retrabalho do mesmo Reaterro ou da mesma Repavimentação para execução com aferição comprovada.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 31/08/2026"]
+    },
+    {
+      "id": "RULE-PAV-AFERICAO-TERCEIRA-01",
+      "serviceId": "reaterro-valas-asfalto",
+      "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra","repavimentacao-asfalto-acima-1m2","repavimentacao-asfalto-ate-1m2","repavimentacao-bloco-paralelo","repavimentacao-calcada","repavimentacao-ceramica","repavimentacao-concreto","repavimentacao-muro-alvenaria"],
+      "title": "Falta de aferição em serviço original executado por equipe terceirizada",
+      "description": "Quando uma equipe terceirizada executa Reaterro ou Repavimentação sem comprovar a aferição da vala, a OS deve ser reprovada.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Aferição da vala",
+      "topicKeywords": ["falta de aferição da vala","reprovação por falta de aferição","equipe terceirizada"],
+      "relatedEvidence": ["aferição da vala","medição da vala","comprimento e largura"],
+      "conditionKeywords": ["equipe terceirizada sem aferição da vala","equipe terceira não mostrou a aferição da vala","empreiteira não mediu a vala","contratada sem medição da vala"],
+      "equivalentExpressions": ["terceirizada fez mas não aferiu a vala","foi equipe terceira e faltou medir a vala","empreiteira sem foto da aferição"],
+      "exceptions": ["equipe interna","equipe própria","funcionário da empresa","adicional executado","desdobro executado","aferição apresentada","aferição da vala foi apresentada","aferição foi apresentada","aferição comprovada","medição comprovada"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {"label": "equipe terceirizada", "expressions": ["equipe terceirizada","equipe terceira","terceirizada","empreiteira","contratada"]},
+            {"label": "aferição ausente", "expressions": ["sem aferição","sem mostrar a aferição","falta aferição","faltou aferição","não mostrou a aferição","não aferiu","não aferiram","não mediu a vala","faltou medir a vala","vala sem medição"]}
+          ]
+        }
+      },
+      "examples": ["A terceirizada fez o reaterro sem mostrar a aferição da vala."],
+      "message": "A equipe terceirizada não comprovou a aferição da vala; a OS deve ser reprovada.",
+      "guidance": "Reprove a Ordem de Serviço e registre a ausência da aferição obrigatória da vala.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 31/08/2026"]
+    },
+    {
+      "id": "RULE-PAV-AFERICAO-ADICIONAL-CONTEXTO-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Tipo de equipe necessário para corrigir adicional executado sem aferição",
+      "description": "Quando Reaterro ou Repavimentação aparece no Adicional Executado sem aferição da vala, a correção depende de a equipe ser interna ou terceirizada.",
+      "priority": 1,
+      "category": "Aferição de adicional executado",
+      "topicKeywords": ["adicional executado sem aferição","desdobro executado sem medição","repavimentação executada sem aferição","reaterro executado sem aferição"],
+      "relatedEvidence": ["adicional executado","desdobro executado","aferição da vala","reaterro","repavimentação"],
+      "conditionKeywords": ["adicional executado de repavimentação sem aferição","adicional executado de reaterro sem aferição","desdobro executado sem medir a vala"],
+      "equivalentExpressions": ["colocaram repavimentação no executado mas não aferiram a vala","reaterro no executado sem foto da medição"],
+      "exceptions": ["equipe interna","equipe própria","equipe terceirizada","equipe terceira","terceirizada","empreiteira","contratada"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 3,
+          "groups": [
+            {"label": "serviço de pavimento", "expressions": ["reaterro","repavimentação","repavimentacao"]},
+            {"label": "adicional executado", "expressions": ["adicional executado","desdobro executado","no executado"]},
+            {"label": "aferição ausente", "expressions": ["sem aferição","sem mostrar a aferição","falta aferição","faltou aferição","não mostrou a aferição","não aferiu","não aferiram","não mediu a vala","faltou medir a vala","vala sem medição"]}
+          ]
+        }
+      },
+      "examples": ["A repavimentação está no Adicional Executado, mas não tem aferição da vala."],
+      "message": "O adicional executado está sem aferição; falta saber o tipo de equipe para aplicar a correção correta.",
+      "guidance": "Informe o tipo de equipe antes de concluir. A ação é diferente para equipe interna e terceirizada.",
+      "missingInformation": ["A equipe que executou o adicional é interna ou terceirizada?"],
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 31/08/2026"]
+    },
+    {
+      "id": "RULE-PAV-AFERICAO-ADICIONAL-INTERNA-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Adicional executado sem aferição por equipe interna",
+      "description": "Quando uma equipe interna lança Reaterro ou Repavimentação no Adicional Executado sem comprovar a aferição da vala, deve ser gerado o retrabalho correspondente no Adicional Posterior.",
+      "severity": "Não Conforme",
+      "priority": 1,
+      "category": "Aferição de adicional executado",
+      "topicKeywords": ["retrabalho no adicional posterior","adicional executado sem aferição","equipe interna"],
+      "relatedEvidence": ["adicional executado","desdobro executado","aferição da vala","reaterro","repavimentação"],
+      "conditionKeywords": ["equipe interna lançou repavimentação no adicional executado sem aferição","reaterro executado pela equipe interna sem medir a vala"],
+      "equivalentExpressions": ["interno fez o desdobro mas não aferiu a vala","equipe própria colocou no executado sem medição"],
+      "exceptions": ["equipe terceirizada","equipe terceira","empreiteira","contratada","aferição apresentada","aferição da vala foi apresentada","aferição foi apresentada","aferição comprovada","medição comprovada"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 4,
+          "groups": [
+            {"label": "serviço de pavimento", "expressions": ["reaterro","repavimentação","repavimentacao"]},
+            {"label": "adicional executado", "expressions": ["adicional executado","desdobro executado","no executado"]},
+            {"label": "equipe interna", "expressions": ["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio"]},
+            {"label": "aferição ausente", "expressions": ["sem aferição","sem mostrar a aferição","falta aferição","faltou aferição","não mostrou a aferição","não aferiu","não aferiram","não mediu a vala","faltou medir a vala","vala sem medição"]}
+          ]
+        }
+      },
+      "examples": ["A equipe interna colocou a Repavimentação no Adicional Executado, mas não aferiu a vala."],
+      "message": "O adicional executado pela equipe interna ficou sem aferição e precisa de retrabalho posterior.",
+      "guidance": "Registre Não Conforme e gere no Adicional Posterior o Retrabalho do mesmo Reaterro ou da mesma Repavimentação, exigindo a aferição da vala no retorno.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 31/08/2026"]
+    },
+    {
+      "id": "RULE-PAV-AFERICAO-ADICIONAL-TERCEIRA-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Adicional executado sem aferição por equipe terceirizada",
+      "description": "Quando uma equipe terceirizada lança Reaterro ou Repavimentação no Adicional Executado sem comprovar a aferição da vala, o serviço deve ser retirado do Executado e lançado no Posterior.",
+      "severity": "Não Conforme",
+      "priority": 1,
+      "category": "Aferição de adicional executado",
+      "topicKeywords": ["retirar do adicional executado","jogar no posterior","adicional executado sem aferição","equipe terceirizada"],
+      "relatedEvidence": ["adicional executado","desdobro executado","adicional posterior","aferição da vala","reaterro","repavimentação"],
+      "conditionKeywords": ["equipe terceirizada lançou repavimentação no adicional executado sem aferição","reaterro executado pela terceirizada sem medir a vala"],
+      "equivalentExpressions": ["terceirizada colocou no executado mas não aferiu a vala","empreiteira lançou o desdobro sem medição"],
+      "exceptions": ["equipe interna","equipe própria","funcionário da empresa","aferição apresentada","aferição da vala foi apresentada","aferição foi apresentada","aferição comprovada","medição comprovada"],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 4,
+          "groups": [
+            {"label": "serviço de pavimento", "expressions": ["reaterro","repavimentação","repavimentacao"]},
+            {"label": "adicional executado", "expressions": ["adicional executado","desdobro executado","no executado"]},
+            {"label": "equipe terceirizada", "expressions": ["equipe terceirizada","equipe terceira","terceirizada","empreiteira","contratada"]},
+            {"label": "aferição ausente", "expressions": ["sem aferição","sem mostrar a aferição","falta aferição","faltou aferição","não mostrou a aferição","não aferiu","não aferiram","não mediu a vala","faltou medir a vala","vala sem medição"]}
+          ]
+        }
+      },
+      "examples": ["A terceirizada lançou o Reaterro no Adicional Executado sem mostrar a aferição da vala."],
+      "message": "O adicional executado pela equipe terceirizada não possui aferição e precisa ser transferido para execução posterior.",
+      "guidance": "Registre Não Conforme, remova o Reaterro ou a Repavimentação do Adicional Executado e lance o mesmo serviço no Adicional Posterior para execução futura com aferição.",
+      "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 31/08/2026"]
     }
   ]
 }

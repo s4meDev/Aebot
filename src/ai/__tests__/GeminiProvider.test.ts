@@ -553,6 +553,30 @@ describe('GeminiProvider', () => {
     expect(completed.content).toContain('desdobre o pavimento como Concreto');
   });
 
+  it('pede o vínculo da equipe e usa a resposta curta para decidir a aferição', async () => {
+    const provider = new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    });
+    const service = {
+      id: 'repavimentacao-calcada',
+      name: 'Repavimentação - Calçada',
+    };
+    const question = 'A repavimentação ficou sem aferição da vala.';
+    const first = await provider.generateResponse('', question, service, []);
+    const history: AiMessage[] = [
+      { id: 'afericao-user', role: 'user', content: question, timestamp: '10:00' },
+      { id: 'afericao-assistant', role: 'assistant', content: first.content, timestamp: '10:01' },
+    ];
+    const completed = await provider.generateResponse('', 'É terceirizada', service, history);
+
+    expect(first.decision).toBeNull();
+    expect(first.evaluation.outcome).toBe('advisory');
+    expect(first.content).toContain('A equipe que executou o serviço é interna ou terceirizada');
+    expect(completed.evaluation.contextApplied).toBe(true);
+    expect(completed.decision).toBe('Reprovado');
+    expect(completed.evaluation.primaryRule?.id).toBe('RULE-PAV-AFERICAO-TERCEIRA-01');
+  });
+
   it('humaniza a metragem de rede sem alterar a Não Conformidade', async () => {
     const response = await new GeminiProvider(ruleEngine, {
       humanizeDeterministicResponses: false,

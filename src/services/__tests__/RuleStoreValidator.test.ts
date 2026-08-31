@@ -21,7 +21,15 @@ describe('RuleStoreValidator', () => {
     expect(store.rules.some((rule) => rule.missingInformation?.length)).toBe(true);
     expect(store.services).toHaveLength(36);
     expect(store.services.filter((service) => service.analysisStatus === 'rules_pending'))
-      .toHaveLength(11);
+      .toHaveLength(8);
+    for (const serviceId of [
+      'repavimentacao-bloco-paralelo',
+      'repavimentacao-ceramica',
+      'repavimentacao-muro-alvenaria',
+    ]) {
+      expect(store.services.find((service) => service.id === serviceId)?.analysisStatus)
+        .toBe('active');
+    }
     expect(store.rules.some((rule) => rule.applicableServiceIds?.length)).toBe(true);
     const repair = store.services.find((service) => service.id === 'reparo-cavalete');
     expect(repair?.parameterization?.serviceExchange).toHaveLength(10);

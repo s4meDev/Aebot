@@ -263,6 +263,88 @@ assert(
   'Metragem de rede sem comprovação não foi classificada corretamente.'
 );
 
+const missingSurveyTeam = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'repavimentacao-calcada',
+    prompt: 'A repavimentação ficou sem aferição da vala.',
+    history: [],
+  }),
+})).json();
+assert(
+  missingSurveyTeam.result?.decision === null &&
+    missingSurveyTeam.result?.evaluation?.outcome === 'advisory' &&
+    missingSurveyTeam.result?.evaluation?.advisory?.missingInformation?.some(
+      (item) => item.includes('interna ou terceirizada')
+    ),
+  'Devolutiva para tipo de equipe na falta de aferição divergiu.'
+);
+
+const outsourcedSurveyFailure = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'repavimentacao-calcada',
+    prompt: 'É terceirizada',
+    history: [
+      {
+        id: 'deployment-survey-user',
+        role: 'user',
+        content: 'A repavimentação ficou sem aferição da vala.',
+        timestamp: '09:20',
+      },
+      {
+        id: 'deployment-survey-assistant',
+        role: 'assistant',
+        content: missingSurveyTeam.result.content,
+        timestamp: '09:21',
+      },
+    ],
+  }),
+})).json();
+assert(
+  outsourcedSurveyFailure.result?.decision === 'Reprovado' &&
+    outsourcedSurveyFailure.result?.evaluation?.contextApplied === true &&
+    outsourcedSurveyFailure.result?.evaluation?.primaryRule?.id ===
+      'RULE-PAV-AFERICAO-TERCEIRA-01',
+  'Falta de aferição da equipe terceirizada não gerou Reprovação.'
+);
+
+const internalSurveyFailure = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reaterro-valas-asfalto',
+    prompt: 'A equipe interna não mostrou a aferição da vala.',
+    history: [],
+  }),
+})).json();
+assert(
+  internalSurveyFailure.result?.decision === 'Não Conforme' &&
+    internalSurveyFailure.result?.evaluation?.primaryRule?.id ===
+      'RULE-PAV-AFERICAO-INTERNA-01' &&
+    internalSurveyFailure.result?.content?.includes('Retrabalho'),
+  'Falta de aferição da equipe interna não gerou Retrabalho.'
+);
+
+const outsourcedExecutedAdditional = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'reparo-rede-agua-asfalto',
+    prompt: 'A terceirizada lançou o Reaterro no Adicional Executado sem mostrar a aferição da vala.',
+    history: [],
+  }),
+})).json();
+assert(
+  outsourcedExecutedAdditional.result?.decision === 'Não Conforme' &&
+    outsourcedExecutedAdditional.result?.evaluation?.primaryRule?.id ===
+      'RULE-PAV-AFERICAO-ADICIONAL-TERCEIRA-01' &&
+    outsourcedExecutedAdditional.result?.content?.includes('Adicional Posterior'),
+  'Correção do adicional terceirizado sem aferição divergiu.'
+);
+
 const contextualAnalysis = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },

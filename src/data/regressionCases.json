@@ -908,5 +908,70 @@
     "insufficiencyReason": "missing_information",
     "decision": null,
     "minimumMatches": 1
+  },
+  {
+    "name": "falta de aferição sem tipo de equipe pede informação",
+    "serviceId": "repavimentacao-calcada",
+    "query": "A repavimentação ficou sem aferição da vala.",
+    "intent": "relato_afirmativo",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
+  },
+  {
+    "name": "repavimentação interna sem aferição gera retrabalho não conforme",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "A equipe interna não mostrou a aferição da vala.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "reaterro terceirizado sem aferição reprova",
+    "serviceId": "reaterro-valas-terra",
+    "query": "A terceirizada fez o reaterro sem aferição da vala.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Reprovado",
+    "minimumMatches": 1
+  },
+  {
+    "name": "bloco paralelo usa a regra geral de aferição",
+    "serviceId": "repavimentacao-bloco-paralelo",
+    "query": "A equipe interna não mediu a vala.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "adicional executado interno sem aferição gera retrabalho posterior",
+    "serviceId": "reparo-cavalete",
+    "query": "A equipe interna lançou a Repavimentação no Adicional Executado sem aferição da vala.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "adicional executado terceirizado sem aferição vai para posterior",
+    "serviceId": "reparo-rede-agua-asfalto",
+    "query": "A terceirizada lançou o Reaterro no Adicional Executado sem aferição da vala.",
+    "intent": "relato_afirmativo",
+    "outcome": "decision",
+    "decision": "Não Conforme",
+    "minimumMatches": 1
+  },
+  {
+    "name": "adicional executado sem vínculo da equipe pede informação",
+    "serviceId": "reparo-ramal-agua-calcada",
+    "query": "A Repavimentação está no Adicional Executado sem aferição da vala.",
+    "intent": "relato_afirmativo",
+    "outcome": "advisory",
+    "insufficiencyReason": "missing_information",
+    "decision": null,
+    "minimumMatches": 1
   }
 ]

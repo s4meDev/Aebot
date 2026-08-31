@@ -22,6 +22,7 @@ Essa exigência geral orienta a análise, mas não cria automaticamente uma conc
 - Operação: verificação de falta de água.
 - Repavimentação: reaterro de valas, calçada, asfalto e concreto.
 - Fluxograma regional de asfalto: em Reparo de Ramal ou Rede, Baixada 1, Baixada 2 e Lagos usam Reaterro como desdobro de pavimento; Norte, Centro-Sul e Comunidades usam Concreto; Leste usa Repavimentação de Asfalto ou de Concreto. Lançamento diferente deve ser trocado e pontuado como Não Conforme por desdobro indevido.
+- Aferição ausente em Reaterro ou Repavimentação: equipe interna recebe Não Conforme e gera Retrabalho; equipe terceirizada recebe Reprovado. Em Adicional Executado, a equipe interna gera o Retrabalho no Posterior, enquanto a terceirizada tem o item removido do Executado e relançado no Posterior.
 
 ## Limites importantes
 
