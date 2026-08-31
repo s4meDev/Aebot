@@ -56,9 +56,9 @@ Provider de IA substituível e opcional
 
 O Cloudflare Worker é o destino principal do MVP online. O backend Node permanece para desenvolvimento e contingência. Ambos reutilizam o mesmo motor e a mesma base.
 
-Os modelos de suporte também são online. O Gemini 3.5 Flash atende primeiro às interpretações semânticas, o Gemini 3.5 Flash-Lite é a segunda opção do mesmo provedor e o Workers AI atua como contingência. O motor determinístico responde sem consumir IA sempre que o texto já encontra regra suficiente.
+Os modelos de suporte também são online. O Gemini 3.5 Flash-Lite atende primeiro às interpretações semânticas por oferecer baixa latência; o Gemini 3.5 Flash é a segunda opção do mesmo provedor e o Workers AI atua como contingência. O motor determinístico responde sem consumir IA sempre que o texto já encontra regra suficiente.
 
-A IA usa seu conhecimento linguístico para associar linguagem livre, informal, sinônimos e respostas curtas ao catálogo completo do serviço; nunca escolhe ou altera a conclusão determinística.
+A IA usa seu conhecimento linguístico para associar linguagem livre, informal, sinônimos, frases incompletas e respostas curtas ao catálogo do serviço. Em dúvidas e casos ambíguos, ela conversa primeiro, responde em até quatro frases e faz somente uma pergunta útil por vez; nunca escolhe ou altera uma conclusão sem apoio do motor.
 
 Cada serviço possui parametrização própria e pode aparecer como serviço original de uma OS. As relações de Troca de Serviço, Adicional Executado e Adicional Posterior (também chamado de desdobro) apontam para os mesmos serviços do catálogo, sem criar cópias. Um serviço cadastrado sem regras permanece com `decision: null` até que suas regras próprias sejam fornecidas.
 

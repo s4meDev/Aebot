@@ -27,6 +27,20 @@ describe('SemanticInterpreter', () => {
     )).toEqual({ mappings: [], canonicalPrompt: null });
   });
 
+  it('preserva uma resposta curta mesmo quando ainda não há regra segura', () => {
+    const result = parseSemanticInterpretation(JSON.stringify({
+      mappings: [],
+      conversation: {
+        answer: 'Entendi a dúvida, mas preciso confirmar um detalhe.',
+        question: 'A equipe era interna ou terceirizada?',
+      },
+    }), 'deu problema no piso', rules);
+
+    expect(result?.mappings).toEqual([]);
+    expect(result?.conversation?.answer).toContain('preciso confirmar');
+    expect(result?.conversation?.question).toBe('A equipe era interna ou terceirizada?');
+  });
+
   it('aterra linguagem livre em uma expressão cadastrada', () => {
     const result = parseSemanticInterpretation(
       response(),
@@ -89,7 +103,7 @@ describe('SemanticInterpreter', () => {
     )).toBeNull();
   });
 
-  it('aceita citação de uma palavra somente em resposta estruturada a esclarecimento', () => {
+  it('aceita uma resposta curta quando o modelo a relaciona ao contexto', () => {
     const internalRule = ruleEngine
       .getRulesForService('repavimentacao-calcada')
       .find((rule) => rule.id === 'RULE-PAV-AFERICAO-INTERNA-01')!;
@@ -102,7 +116,11 @@ describe('SemanticInterpreter', () => {
       }],
     });
 
-    expect(parseSemanticInterpretation(raw, 'interna', [internalRule])).toBeNull();
+    expect(parseSemanticInterpretation(
+      raw,
+      'interna',
+      [internalRule]
+    )?.canonicalPrompt).toBe('equipe interna sem aferição da vala');
     expect(parseSemanticInterpretation(
       raw,
       'interna',
@@ -149,13 +167,33 @@ describe('SemanticInterpreter', () => {
     expect(informational?.canonicalPrompt).toBe('qual e a regra de sem foto durante');
   });
 
-  it('não converte evidência presente em cenário irregular', () => {
+  it('corrige stance contraditório quando o trecho afirma ausência', () => {
     const result = parseSemanticInterpretation(
       response({ stance: 'negated_or_present' }),
       'Não apareceu o momento do torque.',
       rules
     );
 
-    expect(result?.canonicalPrompt).toBeNull();
+    expect(result?.canonicalPrompt).toBe('sem foto durante');
+    expect(result?.mappings[0].stance).toBe('asserted');
+  });
+
+  it('rejeita ausência associada a uma regra de formato incorreto', () => {
+    const formatRule = ruleEngine
+      .getRulesForService('repavimentacao-calcada')
+      .find((rule) => rule.id === 'RULE-PAV-01')!;
+    const result = parseSemanticInterpretation(JSON.stringify({
+      mappings: [{
+        ruleId: formatRule.id,
+        sourceQuote: 'sem as medidas',
+        stance: 'asserted',
+      }],
+      conversation: {
+        answer: 'A medição está em formato incorreto.',
+        question: '',
+      },
+    }), 'O piso ficou sem as medidas.', [formatRule]);
+
+    expect(result).toBeNull();
   });
 });

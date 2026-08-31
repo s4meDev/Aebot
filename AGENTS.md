@@ -50,4 +50,6 @@
 - Regras que dependem de contexto ausente podem cadastrar `missingInformation` com perguntas objetivas. Só pergunte superintendência, tipo de equipe ou frente quando isso mudar diretamente a regra aplicável; uma resposta curta após a devolutiva continua o mesmo caso.
 - A manutenção da base deve continuar acessível por `rulesStore.json`, schema do VS Code, guia prático e corpus de regressão; campos desconhecidos devem falhar na validação em vez de serem ignorados.
 - Conhecimento geral do modelo pode interpretar linguagem, sinônimos, paráfrases e respostas curtas; nunca pode criar uma regra de negócio ou uma conclusão fora do catálogo do serviço selecionado.
+- O fluxo conversacional é AI-first para resultados informativos, orientativos ou ambíguos: o modelo recebe o histórico recente e responde em até quatro frases, podendo fazer uma única pergunta útil. Casos já conclusivos podem usar a resposta determinística curta para preservar latência e cota.
+- Uma resposta natural validada pelo backend nunca deve ser descartada em favor de um template burocrático; o formatador fixo é apenas contingência técnica.
 - Perguntas objetivas pendentes devem viajar como estado tipado (`pendingInformation`). Nunca dependa apenas de procurar frases na resposta renderizada para continuar o caso.

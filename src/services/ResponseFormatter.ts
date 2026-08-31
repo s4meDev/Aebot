@@ -10,12 +10,49 @@ function defaultGuidance(evaluation: RuleEvaluationResult): string {
 export interface ResponseNarrative {
   justification?: string;
   guidance?: string;
+  /** Resposta pronta em tom conversacional, já validada pelo backend. */
+  answer?: string;
+  /** No máximo uma pergunta que realmente ajude a continuar o caso. */
+  followUpQuestion?: string;
+}
+
+function ruleBasis(evaluation: RuleEvaluationResult): string {
+  return evaluation.matchedRules
+    .slice(0, 3)
+    .map((rule) => `${rule.id} — ${rule.title}`)
+    .join('; ');
+}
+
+function containsDecision(answer: string, decision: string): boolean {
+  const normalizedAnswer = answer.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const normalizedDecision = decision.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return normalizedAnswer.includes(normalizedDecision);
+}
+
+function conversationalResponse(
+  evaluation: RuleEvaluationResult,
+  narrative: ResponseNarrative
+): string | null {
+  if (!narrative.answer) return null;
+  let answer = narrative.answer.trim();
+  if (evaluation.decision && !containsDecision(answer, evaluation.decision)) {
+    answer = `Minha recomendação é ${evaluation.decision}. ${answer}`;
+  }
+
+  const parts = [answer];
+  if (narrative.followUpQuestion) parts.push(narrative.followUpQuestion.trim());
+  const basis = ruleBasis(evaluation);
+  if (evaluation.decision && basis) parts.push(`Base: ${basis}.`);
+  return parts.join('\n\n');
 }
 
 export function formatEvaluationResponse(
   evaluation: RuleEvaluationResult,
   narrative: ResponseNarrative = {}
 ): string {
+  const conversational = conversationalResponse(evaluation, narrative);
+  if (conversational) return conversational;
+
   if (evaluation.outcome === 'informational') {
     let rules = evaluation.contextApplied
       ? 'Contexto atualizado do caso'
@@ -37,20 +74,18 @@ export function formatEvaluationResponse(
     }
     const guidance = narrative.guidance ?? defaultInformationalGuidance;
     const explanation = narrative.justification ?? evaluation.reasoningSummary;
-    return `Sobre essa dúvida:\n${explanation}\n\nRegras consultadas:\n${rules}\n\nOrientação ao analista:\n${guidance}`;
+    return `${explanation}\n\n${guidance}\n\nBase: ${rules}.`;
   }
 
   if (evaluation.outcome === 'advisory' && evaluation.advisory) {
-    const basis = evaluation.advisory.basisRuleIds.length
-      ? evaluation.matchedRules
-          .filter((rule) => evaluation.advisory?.basisRuleIds.includes(rule.id))
-          .map((rule) => `${rule.id} — ${rule.title}`)
-          .join('\n')
-      : `Cadastro de ${evaluation.serviceContext?.name ?? evaluation.serviceId}`;
+    const basisRule = evaluation.matchedRules.find(
+      (rule) => evaluation.advisory?.basisRuleIds.includes(rule.id)
+    ) ?? evaluation.primaryRule;
+    const basis = basisRule?.id ?? `cadastro de ${evaluation.serviceContext?.name ?? evaluation.serviceId}`;
     const summary = narrative.justification ?? evaluation.advisory.summary;
     const guidance = narrative.guidance ?? evaluation.advisory.guidance;
-    const missing = evaluation.advisory.missingInformation.join(' ');
-    return `Direcionamento ao analista:\n${summary}\n\nOrientação prática:\n${guidance}\n\nBase consultada:\n${basis}\n\nPara concluir a classificação:\n${missing}`;
+    const missing = evaluation.advisory.missingInformation[0];
+    return `${summary}${missing ? `\n\n${missing}` : `\n\n${guidance}`}\n\nBase: ${basis}.`;
   }
 
   if (!evaluation.decision || !evaluation.hasSufficientEvidence) {
@@ -80,14 +115,12 @@ export function formatEvaluationResponse(
       : evaluation.insufficiencyReason === 'backend_unavailable'
         ? 'Restabeleça o backend central ou peça suporte. Esta análise não usará uma base local possivelmente desatualizada.'
         : serviceFallbackGuidance;
-    return `Não foi possível recomendar uma conclusão com segurança.\n\nMotivo:\n${reason}\n\nOrientação ao analista:\n${guidance}`;
+    return `Ainda não dá para concluir este caso. ${reason}\n\n${guidance}`;
   }
 
-  const rules = evaluation.matchedRules
-    .map((rule) => `${rule.id} — ${rule.title}`)
-    .join('\n');
+  const rules = ruleBasis(evaluation);
   const guidance = narrative.guidance ?? evaluation.primaryRule?.guidance ?? defaultGuidance(evaluation);
   const justification = narrative.justification ?? evaluation.reasoningSummary;
 
-  return `Decisão recomendada:\n${evaluation.decision}\n\nJustificativa:\n${justification}\n\nRegras utilizadas:\n${rules}\n\nOrientação ao analista:\n${guidance}`;
+  return `Minha recomendação é ${evaluation.decision}. ${justification}\n\n${guidance}\n\nBase: ${rules}.`;
 }

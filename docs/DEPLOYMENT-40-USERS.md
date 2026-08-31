@@ -17,13 +17,13 @@ Extensão MV3 (40 instalações)
 Cloudflare Worker
   -> AnalysisService compartilhado
   -> RuleEngine + rulesStore.json
-  -> Gemini 3.5 Flash como interpretação principal
-  -> Gemini 3.5 Flash-Lite como contingência do mesmo provedor
+  -> Gemini 3.5 Flash-Lite como interpretação principal de baixa latência
+  -> Gemini 3.5 Flash como contingência do mesmo provedor
   -> Workers AI com gpt-oss-20b como contingência
   -> D1 para feedback escrito pelos analistas
 ```
 
-A decisão oficial nunca é delegada ao modelo. Perguntas resolvidas pelo motor não consomem IA. Se a IA estiver sem cota, o AEBOT continua aplicando regras determinísticas e informa quando uma frase livre não pôde ser interpretada com segurança.
+A decisão oficial nunca é delegada ao modelo. Casos já conclusivos podem responder sem consumir IA; dúvidas, orientações e relatos ambíguos usam a camada conversacional para compreender a linguagem e perguntar o que faltar. Se a IA estiver sem cota, o AEBOT continua aplicando regras determinísticas com uma resposta curta de contingência.
 
 ## Pré-requisitos de produção
 

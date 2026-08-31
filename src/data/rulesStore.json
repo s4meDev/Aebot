@@ -1,5 +1,5 @@
 {
-  "version": "2.13.0",
+  "version": "2.14.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -2207,16 +2207,15 @@
       "category": "Medição",
       "topicKeywords": ["medição da repavimentação","formato da medição","metragem fora do padrão"],
       "relatedEvidence": ["medição","medição do comprimento","medição da largura","área repavimentada"],
-      "positiveSignals": ["sem","falta","não mostrou","fora do padrão","formato inválido","não aceito"],
+      "positiveSignals": ["fora do padrão","formato inválido","não aceito"],
       "negativeSignals": ["medição correta","comprimento e largura visíveis","formato aceito"],
       "conditionKeywords": [
         "medição fora do padrão",
         "medição em formato não aceito",
         "medição foi apresentada em formato não aceito",
-        "formato de medição inválido",
-        "não mostrou comprimento e largura da repavimentação"
+        "formato de medição inválido"
       ],
-      "equivalentExpressions": ["mediram de um jeito que não é aceito","a metragem não segue o modelo exigido","não dá para confirmar comprimento e largura"],
+      "equivalentExpressions": ["mediram de um jeito que não é aceito","a metragem não segue o modelo exigido"],
       "examples": ["A medição foi apresentada em formato não aceito pelo procedimento."],
       "message": "A medição da repavimentação está fora do formato aceito e deve ser registrada como Não Conforme.",
       "guidance": "Corrija ou registre a metragem no formato exigido, mantendo o vínculo com o trecho efetivamente executado.",

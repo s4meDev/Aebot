@@ -46,7 +46,8 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - feedback persistente em Cloudflare D1;
 - painel administrativo protegido por credencial separada;
 - Gemini 3.5 Flash, Gemini 3.5 Flash-Lite e Workers AI como integrações online substituíveis;
-- interpretação semântica do catálogo completo do serviço, inclusive para linguagem informal e respostas curtas de esclarecimento;
+- interpretação semântica das regras pertinentes do serviço, inclusive para linguagem informal e respostas curtas de esclarecimento;
+- conversa AI-first para dúvidas e casos ambíguos, com resposta direta de até quatro frases e uma única pergunta quando faltar contexto;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
 - 77 regras e orientações baseadas nas diretrizes do produto e nos materiais recebidos;
 - cadeia de evidências do original, do adicional executado e do adicional posterior tratada de forma explícita;

@@ -45,8 +45,8 @@
   "vars": {
     "AEBOT_WORKERS_AI_MODEL": "@cf/openai/gpt-oss-20b",
     "AEBOT_AI_PROVIDER_ORDER": "gemini,workers-ai",
-    "GEMINI_MODEL": "gemini-3.5-flash",
-    "GEMINI_FALLBACK_MODEL": "gemini-3.5-flash-lite",
+    "GEMINI_MODEL": "gemini-3.5-flash-lite",
+    "GEMINI_FALLBACK_MODEL": "gemini-3.5-flash",
     "AEBOT_BODY_LIMIT_BYTES": "32768",
     "AEBOT_HUMANIZE_DETERMINISTIC": "false"
   }

@@ -46,7 +46,11 @@ const packageData = readJson(path.join(projectRoot, 'package.json'));
 const sourceManifest = readJson(path.join(projectRoot, 'manifest.json'));
 const ruleStore = readJson(path.join(projectRoot, 'src', 'data', 'rulesStore.json'));
 if (packageData.version !== sourceManifest.version) fail('package e manifest possuem versões diferentes');
-if (packageData.version !== ruleStore.version) fail('aplicação e base de regras possuem versões diferentes');
+// A aplicação e a base têm ciclos próprios. Exigir versões iguais faria uma
+// atualização apenas das regras bloquear um pacote tecnicamente válido.
+if (typeof ruleStore.version !== 'string' || !/^\d+\.\d+\.\d+$/.test(ruleStore.version)) {
+  fail('versão da base de regras inválida');
+}
 
 const tokens = readJson(latestFile('analyst-tokens-', '.json'));
 const hashes = readJson(latestFile('worker-token-hashes-', '.json'));
@@ -99,7 +103,9 @@ for (const requiredFile of ['index.html', 'background.js']) {
   if (!fs.existsSync(path.join(distDirectory, requiredFile))) fail(`${requiredFile} ausente no pacote`);
 }
 
-console.log(`Piloto AEBOT ${packageData.version} pronto para 40 analistas.`);
+console.log(
+  `Piloto AEBOT ${packageData.version} com base ${ruleStore.version} pronto para 40 analistas.`
+);
 console.log(`Pacote: ${distDirectory}`);
 console.log(`API: ${apiOrigin}`);
 console.log('Credenciais, hashes e identidade estável conferidos sem exibir valores privados.');

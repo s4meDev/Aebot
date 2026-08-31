@@ -20,6 +20,17 @@ describe('SemanticRuleRetriever', () => {
     expect(result.truncated).toBe(true);
   });
 
+  it('prioriza ausência de medição sem confundir com formato incorreto', () => {
+    const pavementRules = ruleEngine.getRulesForService('repavimentacao-calcada');
+    const result = selectSemanticRuleCandidates(
+      'o piso ficou sem as medidas, como fica isso?',
+      pavementRules
+    );
+
+    expect(result.rules.map((rule) => rule.id)).toContain('RULE-PAV-AFERICAO-CONTEXTO-01');
+    expect(result.rules.map((rule) => rule.id)).not.toContain('RULE-PAV-01');
+  });
+
   it('mantém o catálogo completo quando cabe no limite', () => {
     const result = selectSemanticRuleCandidates('frase imprevisível', rules, rules.length);
     expect(result.strategy).toBe('complete');
@@ -28,14 +39,14 @@ describe('SemanticRuleRetriever', () => {
   });
 
   it('não corta o catálogo real quando a frase usa vocabulário imprevisível', () => {
-    const result = selectSemanticRuleCandidates('frase informal sem palavras cadastradas', rules);
+    const result = selectSemanticRuleCandidates('xpto zuluquim', rules);
 
     expect(result.strategy).toBe('complete');
     expect(result.rules).toEqual(rules);
     expect(result.truncated).toBe(false);
   });
 
-  it('limita deterministicamente um catálogo grande sem correspondência', () => {
+  it('mantém o catálogo inteiro quando não existe nenhuma pista lexical', () => {
     const manyRules: DataRule[] = Array.from({ length: 30 }, (_, index) => ({
       ...rules[0],
       id: `generic-${String(index).padStart(2, '0')}`,
@@ -45,13 +56,27 @@ describe('SemanticRuleRetriever', () => {
       topicKeywords: [],
       relatedEvidence: [],
     }));
-    const result = selectSemanticRuleCandidates('vocabulário sem relação', manyRules, 8);
+    const result = selectSemanticRuleCandidates('xpto zuluquim', manyRules, 8);
+
+    expect(result.rules).toEqual(manyRules);
+    expect(result.strategy).toBe('complete');
+    expect(result.truncated).toBe(false);
+  });
+
+  it('reduz ruído quando há pistas lexicais suficientes', () => {
+    const manyRules: DataRule[] = Array.from({ length: 30 }, (_, index) => ({
+      ...rules[0],
+      id: `generic-${String(index).padStart(2, '0')}`,
+      title: `Assunto ${index}`,
+      description: `Descrição específica ${index}`,
+      conditionKeywords: [`condição específica ${index}`],
+      topicKeywords: [],
+      relatedEvidence: [],
+    }));
+    const result = selectSemanticRuleCandidates('assunto específico 2', manyRules, 8);
 
     expect(result.rules).toHaveLength(8);
-    expect(result.strategy).toBe('limited');
+    expect(result.strategy).toBe('ranked');
     expect(result.truncated).toBe(true);
-    expect(result.rules.map((rule) => rule.id)).toEqual(
-      manyRules.slice(0, 8).map((rule) => rule.id)
-    );
   });
 });

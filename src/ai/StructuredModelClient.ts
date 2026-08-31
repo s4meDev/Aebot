@@ -14,6 +14,11 @@ export interface StructuredModelResult {
 export interface StructuredModelRequestOptions {
   /** Schema JSON usado pelos provedores que oferecem saída estruturada nativa. */
   responseSchema?: Record<string, unknown>;
+  /**
+   * Permite rejeitar JSON semanticamente inválido antes de encerrar a cadeia.
+   * Assim, uma resposta HTTP válida mas fora do contrato tenta o próximo modelo.
+   */
+  validateText?: (text: string) => boolean;
 }
 
 /** Transporte de modelo que apenas produz JSON; nunca calcula a decisão da OS. */
@@ -59,7 +64,13 @@ export class FallbackStructuredModelClient implements StructuredModelClient {
       maxOutputTokens,
       options
     );
-    if (primaryResult.status === 'ok') return primaryResult;
+    if (
+      primaryResult.status === 'ok' &&
+      primaryResult.text &&
+      (!options?.validateText || options.validateText(primaryResult.text))
+    ) {
+      return primaryResult;
+    }
     return this.fallback.request(contents, systemInstruction, maxOutputTokens, options);
   }
 }

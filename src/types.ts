@@ -196,6 +196,8 @@ export interface RuleEvaluationResult {
   reasoningSummary: string;
   requiresHumanValidation: boolean;
   advisory?: GroundedAdvisory;
+  /** Pergunta curta feita pela camada de conversa para completar o caso. */
+  followUpQuestion?: string;
   /** A linguagem livre foi aterrada em expressões cadastradas antes da avaliação. */
   semanticInterpretationApplied?: boolean;
   semanticMappings?: SemanticRuleMapping[];

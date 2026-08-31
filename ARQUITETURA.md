@@ -2,7 +2,7 @@
 
 ## Estratégia de IA online
 
-O motor de regras sempre avalia primeiro. Se ainda faltar ligação semântica, ou se o analista estiver respondendo a uma informação pedida, o backend tenta `gemini-3.5-flash`, depois `gemini-3.5-flash-lite` e, diante de falha técnica ou limite, usa `@cf/openai/gpt-oss-20b` no Workers AI. O catálogo completo do serviço selecionado é apresentado ao interpretador. Os modelos usam conhecimento linguístico amplo, mas só podem devolver mapeamentos para regras existentes e nunca escolhem a conclusão oficial.
+O motor calcula uma avaliação técnica inicial, mas resultados informativos, orientativos ou ambíguos passam pela camada conversacional AI-first. O backend tenta `gemini-3.5-flash-lite`, depois `gemini-3.5-flash` e, diante de falha técnica ou limite, usa `@cf/openai/gpt-oss-20b` no Workers AI. O catálogo do serviço e o histórico recente são apresentados ao modelo, que devolve simultaneamente os mapeamentos permitidos e uma resposta curta. O backend recalcula e valida a conclusão antes de liberar esse texto.
 
 Informações pendentes são transportadas em `pendingInformation`; o backend não depende de reconhecer frases que ele mesmo escreveu. Assim, respostas curtas como “interna”, “terceirizada” ou o nome de uma superintendência continuam o caso correto sem transformar a pergunta pendente em fato da OS.
 
@@ -69,7 +69,8 @@ O fallback embarcado só pode decidir quando conhece o serviço e comprova que a
 - `src/services/ConversationContextResolver.ts` junta mensagens somente quando há continuação ou correção explícita. Um novo caso limpa o contexto.
 - `src/services/TextNormalizer.ts` remove diferenças de acento, caixa, pontuação e espaços sem usar substring ingênua.
 - `src/services/QueryIntentClassifier.ts` separa relato afirmativo, hipótese, pergunta informativa e intenção insuficiente.
-- `src/services/SemanticInterpreter.ts` permite que um modelo associe linguagem livre somente a expressões cadastradas.
+- `src/services/SemanticInterpreter.ts` permite que o modelo associe linguagem livre somente a IDs cadastrados; a expressão técnica é escolhida pelo backend.
+- `src/services/SemanticPolarity.ts` impede confundir ausência, evidência presente e formato incorreto.
 - `src/services/ServiceParameterization.ts` consulta Troca, Adicional Executado e Adicional Posterior diretamente das relações cadastradas.
 
 ### 2.5 Recuperação e decisão
@@ -92,7 +93,7 @@ Se nenhuma regra classificatória realmente aplicável for encontrada, `decision
 - `src/ai/GeminiProvider.ts` mantém o nome histórico, mas hoje coordena o motor e qualquer cliente estruturado configurado.
 - `src/ai/PromptBuilder.ts` entrega ao modelo a avaliação já calculada e proíbe alteração da decisão.
 
-O modelo serve para conectar linguagem informal e humanizar. A decisão recebida do motor é imutável.
+O modelo compreende linguagem informal, referências ao histórico e frases incompletas, responde em até quatro frases e faz no máximo uma pergunta por vez. A decisão recebida do motor é imutável; se o texto do modelo contrariá-la, ele é descartado e entra o formatador curto de contingência.
 
 ### 2.7 Resposta e feedback
 
@@ -181,6 +182,7 @@ Regras que evitam acoplamento:
 - `GroundedAdvisory.ts`: orientação segura para correspondências parciais.
 - `SemanticRuleRetriever.ts`: combinação segura de candidatos semânticos.
 - `SemanticInterpreter.ts`: valida a interpretação limitada produzida pela IA.
+- `SemanticPolarity.ts`: valida a polaridade linguística antes de aplicar a regra.
 - `ConflictResolver.ts`: escolhe a regra principal sem descartar as demais.
 - `RuleEngine.ts`: coordena o resultado determinístico tipado.
 - `ResponseFormatter.ts`: formata respostas sem depender de IA.

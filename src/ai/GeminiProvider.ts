@@ -41,18 +41,17 @@ const SEMANTIC_CACHE_LIMIT = 1_000;
 const RETRYABLE_HTTP_STATUS = new Set([429, 500, 502, 503, 504]);
 const SEMANTIC_RESPONSE_SCHEMA: Record<string, unknown> = {
   type: 'object',
-  required: ['mappings'],
+  required: ['mappings', 'conversation'],
   properties: {
     mappings: {
       type: 'array',
       maxItems: 6,
       items: {
         type: 'object',
-        required: ['ruleId', 'sourceQuote', 'canonicalExpression', 'stance'],
+        required: ['ruleId', 'sourceQuote', 'stance'],
         properties: {
           ruleId: { type: 'string' },
           sourceQuote: { type: 'string' },
-          canonicalExpression: { type: 'string' },
           stance: {
             type: 'string',
             enum: ['asserted', 'hypothetical', 'informational', 'negated_or_present'],
@@ -60,14 +59,22 @@ const SEMANTIC_RESPONSE_SCHEMA: Record<string, unknown> = {
         },
       },
     },
+    conversation: {
+      type: 'object',
+      required: ['answer', 'question'],
+      properties: {
+        answer: { type: 'string' },
+        question: { type: 'string' },
+      },
+    },
   },
 };
 const NARRATIVE_RESPONSE_SCHEMA: Record<string, unknown> = {
   type: 'object',
-  required: ['justification', 'guidance'],
+  required: ['answer', 'question'],
   properties: {
-    justification: { type: 'string' },
-    guidance: { type: 'string' },
+    answer: { type: 'string' },
+    question: { type: 'string' },
   },
 };
 
@@ -230,7 +237,11 @@ export class GeminiModelClient implements StructuredModelClient {
       maxOutputTokens,
       options
     );
-    if (primaryResponse.status === 'ok' || this.fallbackModel === this.primaryModel) {
+    const primaryIsValid =
+      primaryResponse.status === 'ok' &&
+      primaryResponse.text &&
+      (!options?.validateText || options.validateText(primaryResponse.text));
+    if (primaryIsValid || this.fallbackModel === this.primaryModel) {
       return primaryResponse;
     }
     return requestGemini(
@@ -282,13 +293,37 @@ function parseNarrative(text: string, evaluation: RuleEvaluationResult): Respons
   const clean = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   try {
     const parsed = JSON.parse(clean) as Record<string, unknown>;
-    if (typeof parsed.justification !== 'string' || typeof parsed.guidance !== 'string') return null;
-    if (parsed.justification.length > 500 || parsed.guidance.length > 300) return null;
+    const answer = typeof parsed.answer === 'string'
+      ? parsed.answer.trim()
+      : typeof parsed.justification === 'string'
+        ? parsed.justification.trim()
+        : '';
+    const question = typeof parsed.question === 'string'
+      ? parsed.question.trim()
+      : '';
+    const legacyGuidance = typeof parsed.guidance === 'string'
+      ? parsed.guidance.trim()
+      : '';
+    if (!answer || answer.length > 600 || question.length > 220 || legacyGuidance.length > 300) {
+      return null;
+    }
+    const questionMarks = (answer.match(/\?/g)?.length ?? 0) +
+      (question.match(/\?/g)?.length ?? 0);
+    if (answer.split(/\r?\n/).length > 6 || questionMarks > 1) return null;
 
-    const combined = `${parsed.justification} ${parsed.guidance}`;
+    const combined = `${answer} ${question} ${legacyGuidance}`;
     const decisions = mentionsDecision(combined);
-    const allowedDecisions = evaluation.outcome === 'informational'
-      ? new Set(evaluation.matchedRules.flatMap((rule) => rule.severity ? [rule.severity] : []))
+    const matchedDecisions = evaluation.matchedRules.flatMap(
+      (rule) => rule.severity ? [rule.severity] : []
+    );
+    const advisoryDecisions = evaluation.outcome === 'advisory' && question
+      ? mentionsDecision(
+          `${evaluation.advisory?.summary ?? ''} ${evaluation.advisory?.guidance ?? ''}`
+        )
+      : [];
+    const allowedDecisions = evaluation.outcome === 'informational' ||
+      (evaluation.outcome === 'advisory' && Boolean(question))
+      ? new Set([...matchedDecisions, ...advisoryDecisions])
       : new Set(evaluation.decision ? [evaluation.decision] : []);
     if (decisions.some((decision) => !allowedDecisions.has(decision))) return null;
 
@@ -296,10 +331,32 @@ function parseNarrative(text: string, evaluation: RuleEvaluationResult): Respons
     const knownRuleIds = new Set(evaluation.matchedRules.map((rule) => rule.id.toUpperCase()));
     if (mentionedRuleIds.some((id) => !knownRuleIds.has(id.toUpperCase()))) return null;
 
-    return { justification: parsed.justification.trim(), guidance: parsed.guidance.trim() };
+    return parsed.answer !== undefined
+      ? { answer, followUpQuestion: question || undefined }
+      : { justification: answer, guidance: legacyGuidance };
   } catch {
     return null;
   }
+}
+
+function parseSemanticNarrative(
+  interpretation: SemanticInterpretation,
+  evaluation: RuleEvaluationResult
+): ResponseNarrative | null {
+  if (!interpretation.conversation) return null;
+  return parseNarrative(JSON.stringify({
+    answer: interpretation.conversation.answer,
+    question: interpretation.conversation.question ?? '',
+  }), evaluation);
+}
+
+function applyFollowUpQuestion(
+  evaluation: RuleEvaluationResult,
+  narrative: ResponseNarrative | null
+): RuleEvaluationResult {
+  return narrative?.followUpQuestion
+    ? { ...evaluation, followUpQuestion: narrative.followUpQuestion }
+    : evaluation;
 }
 
 function applyConversationContext(
@@ -406,6 +463,8 @@ export class GeminiProvider implements AiProvider {
   private requestSemanticInterpretation(
     cacheKey: string,
     query: string,
+    currentPrompt: string,
+    history: AiMessage[],
     service: DataService,
     rules: DataRule[],
     modelClient: StructuredModelClient,
@@ -428,10 +487,18 @@ export class GeminiProvider implements AiProvider {
       );
       this.metrics.modelRequests += 1;
       const response = await modelClient.request(
-        [{ role: 'user', parts: [{ text: semanticPrompt }] }],
-        'Extraia somente mapeamentos semânticos aterrados no catálogo fornecido. Nunca decida a conclusão da análise.',
-        1024,
-        { responseSchema: SEMANTIC_RESPONSE_SCHEMA }
+        buildGeminiContents(history, currentPrompt, semanticPrompt),
+        'Converse como um Analista Sênior: compreenda livremente a linguagem, seja breve e use somente o catálogo fornecido para regras e conclusões oficiais.',
+        1536,
+        {
+          responseSchema: SEMANTIC_RESPONSE_SCHEMA,
+          validateText: (text) => parseSemanticInterpretation(
+            text,
+            query,
+            selection.rules,
+            { allowSingleTokenQuote: clarificationApplied }
+          ) !== null,
+        }
       );
       if (response.status !== 'ok' || !response.text) {
         return {
@@ -491,24 +558,26 @@ export class GeminiProvider implements AiProvider {
       ? undefined
       : 'no_api_key';
 
-    // A IA liga linguagem livre às expressões cadastradas. Ela também completa
-    // respostas de esclarecimento; a conclusão continua sendo recalculada pelo motor.
+    // A IA interpreta a linguagem e já produz uma resposta curta. O motor apenas
+    // valida a regra e a conclusão oficial antes de liberar o texto ao analista.
     if (modelClient) {
-      if (
-        (rawBaseEvaluation.outcome === 'insufficient' ||
-          (rawBaseEvaluation.outcome === 'advisory' &&
-            (contextualQuery.clarificationApplied === true ||
-              !hasGroundedRuleMatch(rawBaseEvaluation)))) &&
-        !rawBaseEvaluation.errorCode
-      ) {
+      const needsSemanticInterpretation =
+        rawBaseEvaluation.outcome !== 'decision' &&
+        !rawBaseEvaluation.errorCode;
+
+      if (needsSemanticInterpretation) {
         const serviceRecord = this.engine.getServices().find((item) => item.id === service.id);
         const serviceRules = this.engine.getRulesForService(service.id);
         if (serviceRecord) {
+          const recentConversation = history.slice(-6).map((message) =>
+            `${message.role}:${message.contextQuery ?? message.content}:${(message.pendingInformation ?? []).join('|')}`
+          ).join('\n');
           const cacheKey = await buildPrivateCacheKey([
             service.id,
             rawBaseEvaluation.ruleStoreVersion,
             modelClient.cacheKey,
             rawBaseEvaluation.normalizedQuery,
+            recentConversation,
           ]);
           const cachedInterpretation = this.getCachedInterpretation(cacheKey);
           let interpretation = cachedInterpretation?.interpretation;
@@ -518,6 +587,8 @@ export class GeminiProvider implements AiProvider {
             const semanticAttempt = await this.requestSemanticInterpretation(
               cacheKey,
               contextualQuery.query,
+              prompt,
+              history,
               serviceRecord,
               serviceRules,
               modelClient,
@@ -536,20 +607,29 @@ export class GeminiProvider implements AiProvider {
             const semanticBase = interpretation.canonicalPrompt
               ? this.engine.evaluatePrompt(interpretation.canonicalPrompt, service.id)
               : rawBaseEvaluation;
-            if (semanticBase.outcome !== 'insufficient' || !interpretation.canonicalPrompt) {
+            const usableSemanticEvaluation =
+              semanticBase.outcome !== 'insufficient' || !interpretation.canonicalPrompt;
+            if (usableSemanticEvaluation) {
               evaluation = applySemanticMetadata(
                 applyConversationContext(semanticBase, contextualQuery),
                 rawBaseEvaluation.normalizedQuery,
                 interpretation.mappings
               );
-              return {
-                provider: semanticProvider,
-                content: formatEvaluationResponse(evaluation),
-                decision: evaluation.decision,
-                evaluation,
-              };
             }
-            fallbackReason = 'invalid_response';
+
+            const narrative = parseSemanticNarrative(interpretation, evaluation);
+            evaluation = applyFollowUpQuestion(evaluation, narrative);
+            return {
+              provider: semanticProvider,
+              content: formatEvaluationResponse(evaluation, narrative ?? undefined),
+              decision: evaluation.decision,
+              evaluation,
+              fallbackReason: narrative
+                ? undefined
+                : interpretation.conversation || !usableSemanticEvaluation
+                  ? 'invalid_response'
+                  : undefined,
+            };
           }
         }
       } else if (
@@ -561,7 +641,7 @@ export class GeminiProvider implements AiProvider {
         const narrativeResponse = await modelClient.request(
           buildGeminiContents(history, prompt, augmentedPrompt),
           context,
-          1024,
+          768,
           { responseSchema: NARRATIVE_RESPONSE_SCHEMA }
         );
         if (narrativeResponse.status === 'ok') {
@@ -569,6 +649,7 @@ export class GeminiProvider implements AiProvider {
             ? parseNarrative(narrativeResponse.text, evaluation)
             : null;
           if (narrative) {
+            evaluation = applyFollowUpQuestion(evaluation, narrative);
             return {
               provider: narrativeResponse.provider,
               content: formatEvaluationResponse(evaluation, narrative),
@@ -587,13 +668,21 @@ export class GeminiProvider implements AiProvider {
 
     if (
       modelClient &&
-      rawBaseEvaluation.outcome === 'insufficient' &&
+      rawBaseEvaluation.outcome !== 'decision' &&
       !hasGroundedRuleMatch(rawBaseEvaluation) &&
       !rawBaseEvaluation.errorCode &&
       !evaluation.semanticInterpretationApplied
     ) {
       evaluation = {
         ...evaluation,
+        outcome: 'insufficient',
+        decision: null,
+        hasSufficientEvidence: false,
+        matchedRules: [],
+        primaryRule: null,
+        conflicts: [],
+        confidence: 'insuficiente',
+        advisory: undefined,
         insufficiencyReason: 'semantic_unavailable',
         reasoningSummary: fallbackReason === 'rate_limited'
           ? 'O matching local não encontrou correspondência suficiente e o limite temporário do provedor de IA foi atingido.'

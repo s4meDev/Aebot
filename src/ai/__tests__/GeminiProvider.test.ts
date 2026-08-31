@@ -43,17 +43,18 @@ describe('GeminiProvider', () => {
     expect(instruction).toContain(guidanceRule.sourceReferences?.[0]);
   });
 
-  it('não fornece conclusões oficiais ao extrator semântico', () => {
+  it('fornece o catálogo completo para interpretação sem liberar regras externas', () => {
     const prompt = buildSemanticInterpretationPrompt(
       'frase livre',
       selectedService,
       ruleEngine.getRulesForService(selectedService.id)
     );
 
-    expect(prompt).not.toContain('"severity"');
+    expect(prompt).toContain('"officialDecision"');
     expect(prompt).not.toContain('"priority"');
-    expect(prompt).not.toContain('"guidance"');
-    expect(prompt).toContain('paráfrases, sinônimos e descrições informais');
+    expect(prompt).toContain('"guidance"');
+    expect(prompt).toContain('sinônimos, frases incompletas');
+    expect(prompt).toContain('única fonte para uma conclusão oficial');
     expect(prompt).toContain('mencionar uma evidência ou ação sem afirmar');
   });
 
@@ -84,7 +85,7 @@ describe('GeminiProvider', () => {
     expect(response.provider).toBe('simulated');
     expect(response.fallbackReason).toBe('no_api_key');
     expect(response.decision).toBeNull();
-    expect(response.content).toContain('Não foi possível recomendar uma conclusão');
+    expect(response.content).toContain('Ainda não dá para concluir');
   });
 
   it('explica orientação documental sem inventar classificação', async () => {
@@ -98,7 +99,7 @@ describe('GeminiProvider', () => {
     expect(response.decision).toBeNull();
     expect(response.evaluation.outcome).toBe('advisory');
     expect(response.content).toContain('horizontal');
-    expect(response.content).toContain('Para concluir a classificação');
+    expect(response.content).toContain('Informe quais evidências');
   });
 
   it('modo simulado responde pergunta informativa sem recomendar decisão', async () => {
@@ -112,7 +113,7 @@ describe('GeminiProvider', () => {
     expect(response.provider).toBe('simulated');
     expect(response.decision).toBeNull();
     expect(response.evaluation.outcome).toBe('informational');
-    expect(response.content).toContain('Sobre essa dúvida');
+    expect(response.content).toContain('A regra');
     expect(response.content).toContain(response.evaluation.primaryRule?.id);
     expect(response.content).not.toContain('Decisão recomendada');
     expect(response.content).not.toContain('Não foi possível recomendar');
@@ -269,7 +270,7 @@ describe('GeminiProvider', () => {
   });
 
   it('rejeita identificador de modelo inseguro e usa o padrão', () => {
-    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-3.5-flash');
+    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-3.5-flash-lite');
     expect(normalizeGeminiModel('gemini-2.5-flash')).toBe('gemini-2.5-flash');
     expect(normalizeGeminiModel('gemini-modelo_seguro.1')).toBe('gemini-modelo_seguro.1');
   });
@@ -426,6 +427,51 @@ describe('GeminiProvider', () => {
     expect(response.decision).toBe('Não Conforme');
   });
 
+  it('usa o modelo reserva quando o principal responde fora do contrato semântico', async () => {
+    const query = 'Não apareceu o momento em que deram torque na virola.';
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: '{"resposta":"sem mapeamento"}' }] } }],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: JSON.stringify({
+            mappings: [{
+              ruleId: duringRule.id,
+              sourceQuote: 'Não apareceu o momento em que deram torque na virola',
+              stance: 'asserted',
+            }],
+            conversation: {
+              answer: 'A execução durante não foi evidenciada.',
+              question: '',
+            },
+          }) }] } }],
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new GeminiProvider(ruleEngine, {
+      getApiKey: () => 'test-key',
+      getModel: () => 'gemini-3.5-flash-lite',
+      getFallbackModel: () => 'gemini-3.5-flash',
+    });
+
+    const response = await provider.generateResponse(
+      '',
+      query,
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/gemini-3.5-flash:');
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBe('Não Conforme');
+    expect(response.content).toContain('execução durante');
+  });
+
   it('poupa a cota quando o backend já possui uma avaliação determinística', async () => {
     const fetchMock = vi.fn();
     const provider = new GeminiProvider(ruleEngine, {
@@ -469,7 +515,23 @@ describe('GeminiProvider', () => {
       getApiKey: () => 'test-key',
       humanizeDeterministicResponses: false,
     });
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: JSON.stringify({
+          mappings: [{
+            ruleId: 'RULE-GERAL-EVID-02',
+            sourceQuote: 'desdobro executado ficou sem foto durante',
+            canonicalExpression: 'desdobro executado sem foto durante',
+            stance: 'asserted',
+          }],
+          conversation: {
+            answer: 'O adicional executado precisa ter evidência própria da execução.',
+            question: 'As fotos antes e depois desse adicional foram apresentadas?',
+          },
+        }) }] } }],
+      }),
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     const response = await provider.generateResponse(
@@ -478,10 +540,10 @@ describe('GeminiProvider', () => {
       { id: 'reparo-rede-agua-asfalto', name: 'Reparo de Rede de Água - Asfalto' }
     );
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(response.decision).toBeNull();
     expect(response.evaluation.insufficiencyReason).toBe('missing_information');
-    expect(response.content).toContain('Atenção crítica');
+    expect(response.content).toContain('evidência própria da execução');
     expect(response.content).not.toContain('interpretação semântica não pôde');
   });
 
@@ -578,7 +640,13 @@ describe('GeminiProvider', () => {
     const first = await provider.generateResponse('', question, service, []);
     const history: AiMessage[] = [
       { id: 'regional-user', role: 'user', content: question, timestamp: '10:00' },
-      { id: 'regional-assistant', role: 'assistant', content: first.content, timestamp: '10:01' },
+      {
+        id: 'regional-assistant',
+        role: 'assistant',
+        content: first.content,
+        pendingInformation: first.evaluation.advisory?.missingInformation,
+        timestamp: '10:01',
+      },
     ];
     const completed = await provider.generateResponse('', 'Norte', service, history);
 
@@ -605,7 +673,13 @@ describe('GeminiProvider', () => {
     const first = await provider.generateResponse('', question, service, []);
     const history: AiMessage[] = [
       { id: 'afericao-user', role: 'user', content: question, timestamp: '10:00' },
-      { id: 'afericao-assistant', role: 'assistant', content: first.content, timestamp: '10:01' },
+      {
+        id: 'afericao-assistant',
+        role: 'assistant',
+        content: first.content,
+        pendingInformation: first.evaluation.advisory?.missingInformation,
+        timestamp: '10:01',
+      },
     ];
     const completed = await provider.generateResponse('', 'É terceirizada', service, history);
 
@@ -651,6 +725,10 @@ describe('GeminiProvider', () => {
             canonicalExpression: 'equipe interna sem aferição da vala',
             stance: 'asserted',
           }],
+          conversation: {
+            answer: 'Sendo equipe interna, a falta de aferição gera retrabalho e Não Conforme.',
+            question: '',
+          },
         }),
       }),
     };
@@ -664,6 +742,44 @@ describe('GeminiProvider', () => {
     expect(completed.decision).toBe('Não Conforme');
     expect(completed.evaluation.primaryRule?.id).toBe('RULE-PAV-AFERICAO-INTERNA-01');
     expect(completed.content).not.toContain('interna ou terceirizada?');
+    expect(completed.content).toContain('Sendo equipe interna');
+    expect(completed.content).not.toContain('Não foi possível recomendar');
+  });
+
+  it('responde naturalmente e faz uma única pergunta quando o relato ainda é ambíguo', async () => {
+    const modelClient = {
+      provider: 'gemini' as const,
+      providerChain: ['gemini'] as const,
+      cacheKey: 'gemini:test-conversation',
+      request: vi.fn().mockResolvedValue({
+        status: 'ok' as const,
+        provider: 'gemini' as const,
+        text: JSON.stringify({
+          mappings: [],
+          conversation: {
+            answer: 'Entendi que houve um problema na repavimentação, mas ainda falta um dado para orientar corretamente.',
+            question: 'A equipe era interna ou terceirizada?',
+          },
+        }),
+      }),
+    };
+    const response = await new GeminiProvider(ruleEngine, {
+      getModelClient: () => modelClient,
+    }).generateResponse(
+      '',
+      'deu ruim no piso e não mediram direito',
+      { id: 'repavimentacao-calcada', name: 'Repavimentação - Calçada' },
+      []
+    );
+
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBeNull();
+    expect(response.content).toContain('Entendi que houve um problema');
+    expect(response.content).toContain('A equipe era interna ou terceirizada?');
+    expect(response.content).not.toContain('Ainda não dá para concluir');
+    expect(response.evaluation.followUpQuestion).toBe(
+      'A equipe era interna ou terceirizada?'
+    );
   });
 
   it('humaniza a metragem de rede sem alterar a Não Conformidade', async () => {
@@ -890,8 +1006,16 @@ describe('GeminiProvider', () => {
       ok: true,
       json: async () => ({
         candidates: [{ content: { parts: [{ text: JSON.stringify({
-          justification: 'A regra prevê Reprovado somente se a falta da foto final for confirmada.',
-          guidance: 'Confirme a evidência na Ordem de Serviço antes de classificar.',
+          mappings: [{
+            ruleId: 'RULE-RC-01',
+            sourceQuote: 'regra da foto depois',
+            canonicalExpression: 'sem foto depois',
+            stance: 'informational',
+          }],
+          conversation: {
+            answer: 'A regra prevê Reprovado somente se a falta da foto final for confirmada.',
+            question: '',
+          },
         }) }] } }],
       }),
     }));
@@ -905,7 +1029,7 @@ describe('GeminiProvider', () => {
     expect(response.provider).toBe('gemini');
     expect(response.decision).toBeNull();
     expect(response.evaluation.outcome).toBe('informational');
-    expect(response.content).toContain('Sobre essa dúvida');
+    expect(response.content).toContain('A regra prevê Reprovado');
     expect(response.content).not.toContain('Decisão recomendada');
   });
 
@@ -915,8 +1039,15 @@ describe('GeminiProvider', () => {
       ok: true,
       json: async () => ({
         candidates: [{ content: { parts: [{ text: JSON.stringify({
-          justification: 'O hidrômetro avariado torna a OS Conforme.',
-          guidance: 'Aprove a ordem.',
+          mappings: [{
+            ruleId: 'RULE-RC-INFO-06',
+            sourceQuote: 'hidrômetro quebrado',
+            stance: 'informational',
+          }],
+          conversation: {
+            answer: 'O hidrômetro avariado torna a OS Conforme.',
+            question: '',
+          },
         }) }] } }],
       }),
     }));
@@ -927,7 +1058,7 @@ describe('GeminiProvider', () => {
       { id: selectedService.id, name: selectedService.name }
     );
 
-    expect(response.provider).toBe('simulated');
+    expect(response.provider).toBe('gemini');
     expect(response.fallbackReason).toBe('invalid_response');
     expect(response.evaluation.outcome).toBe('informational');
     expect(response.decision).toBeNull();

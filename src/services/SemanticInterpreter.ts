@@ -4,6 +4,7 @@ import type {
   SemanticRuleMapping,
 } from '../types';
 import { normalizeText } from './TextNormalizer';
+import { detectSemanticPolarity } from './SemanticPolarity';
 
 const ALLOWED_STANCES = new Set<SemanticMappingStance>([
   'asserted',
@@ -16,6 +17,10 @@ const MAX_MAPPINGS = 6;
 export interface SemanticInterpretation {
   mappings: SemanticRuleMapping[];
   canonicalPrompt: string | null;
+  conversation?: {
+    answer: string;
+    question?: string;
+  };
 }
 
 export interface SemanticInterpretationOptions {
@@ -41,6 +46,13 @@ function resolveAllowedExpression(rule: DataRule, proposed: string): string | nu
   return allowed.find(
     (expression) => normalizeText(expression).value === normalizedProposed
   ) ?? null;
+}
+
+function canonicalExpressionForRule(rule: DataRule, proposed: unknown): string | null {
+  if (typeof proposed === 'string' && proposed.trim()) {
+    return resolveAllowedExpression(rule, proposed);
+  }
+  return rule.conditionKeywords[0] ?? rule.equivalentExpressions?.[0] ?? null;
 }
 
 interface TokenSpan {
@@ -102,6 +114,17 @@ function buildCanonicalPrompt(mappings: SemanticRuleMapping[]): string | null {
   return statement;
 }
 
+function parseConversation(value: unknown): SemanticInterpretation['conversation'] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const source = value as Record<string, unknown>;
+  if (typeof source.answer !== 'string') return undefined;
+  const answer = source.answer.trim();
+  const question = typeof source.question === 'string' ? source.question.trim() : '';
+  if (!answer || answer.length > 600 || question.length > 220) return undefined;
+  if (answer.split(/\r?\n/).length > 6) return undefined;
+  return { answer, question: question || undefined };
+}
+
 /**
  * Aceita somente IDs, expressões cadastradas e citações realmente presentes
  * na pergunta. Qualquer saída livre ou inventada pelo modelo é descartada.
@@ -115,7 +138,10 @@ export function parseSemanticInterpretation(
   try {
     const parsed = JSON.parse(cleanJson(text)) as Record<string, unknown>;
     if (!Array.isArray(parsed.mappings) || parsed.mappings.length > MAX_MAPPINGS) return null;
-    if (parsed.mappings.length === 0) return { mappings: [], canonicalPrompt: null };
+    const conversation = parseConversation(parsed.conversation);
+    if (parsed.mappings.length === 0) {
+      return { mappings: [], canonicalPrompt: null, conversation };
+    }
 
     const rulesById = new Map(serviceRules.map((rule) => [rule.id, rule]));
     const mappings: SemanticRuleMapping[] = [];
@@ -126,7 +152,6 @@ export function parseSemanticInterpretation(
       if (
         typeof source.ruleId !== 'string' ||
         typeof source.sourceQuote !== 'string' ||
-        typeof source.canonicalExpression !== 'string' ||
         typeof source.stance !== 'string' ||
         !ALLOWED_STANCES.has(source.stance as SemanticMappingStance)
       ) {
@@ -135,25 +160,45 @@ export function parseSemanticInterpretation(
 
       const rule = rulesById.get(source.ruleId);
       if (!rule) continue;
-      const canonicalExpression = resolveAllowedExpression(rule, source.canonicalExpression);
+      const canonicalExpression = canonicalExpressionForRule(rule, source.canonicalExpression);
       if (!canonicalExpression) continue;
       const proposedQuote = source.sourceQuote.trim();
       const quote = resolveLiteralQuote(originalQuery, proposedQuote);
       const quoteTokenCount = quote ? normalizeText(quote).tokens.length : 0;
+      const originalTokenCount = normalizeText(originalQuery).tokens.length;
       if (
         !quote ||
         (quoteTokenCount < 2 &&
           !options.allowSingleTokenQuote &&
+          originalTokenCount > 3 &&
           source.stance !== 'informational')
       ) {
         continue;
+      }
+
+      const sourcePolarity = detectSemanticPolarity(quote);
+      const rulePolarity = detectSemanticPolarity([
+        rule.title,
+        rule.description,
+        canonicalExpression,
+      ].join(' '));
+      // Uma frase de ausência não pode sustentar uma regra sobre formato ou
+      // valor incorreto. Essa validação é linguística e vale para todo serviço.
+      if (sourcePolarity === 'absence' && rulePolarity !== 'absence') continue;
+
+      let stance = source.stance as SemanticMappingStance;
+      if (stance !== 'hypothetical' && stance !== 'informational') {
+        if (sourcePolarity === 'absence') stance = 'asserted';
+        if (sourcePolarity === 'present' && rulePolarity === 'absence') {
+          stance = 'negated_or_present';
+        }
       }
 
       mappings.push({
         ruleId: rule.id,
         sourceQuote: quote,
         canonicalExpression,
-        stance: source.stance as SemanticMappingStance,
+        stance,
       });
     }
 
@@ -171,7 +216,7 @@ export function parseSemanticInterpretation(
     );
     if (hasActionableMapping && !canonicalPrompt) return null;
 
-    return { mappings: uniqueMappings, canonicalPrompt };
+    return { mappings: uniqueMappings, canonicalPrompt, conversation };
   } catch {
     return null;
   }

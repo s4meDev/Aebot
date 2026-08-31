@@ -123,9 +123,11 @@ const unsupportedPavingBranch = await (await request('/v1/analyze', {
 })).json();
 assert(
   unsupportedPavingBranch.result?.decision === null &&
-    unsupportedPavingBranch.result?.evaluation?.outcome === 'advisory' &&
+    ['advisory', 'informational'].includes(
+      unsupportedPavingBranch.result?.evaluation?.outcome
+    ) &&
     unsupportedPavingBranch.result?.evaluation?.primaryRule?.id === 'RULE-PARAM-ESCAVACAO-01' &&
-    unsupportedPavingBranch.result?.content?.includes('retire o desdobro'),
+    /retir/i.test(unsupportedPavingBranch.result?.content ?? ''),
   'Orientação para retirar desdobro sem evidência de vala divergiu.'
 );
 
@@ -209,6 +211,7 @@ const completedRegionalContext = await (await request('/v1/analyze', {
         id: 'deployment-regional-assistant',
         role: 'assistant',
         content: missingRegionalContext.result.content,
+        pendingInformation: missingRegionalContext.result.evaluation.advisory.missingInformation,
         timestamp: '09:11',
       },
     ],
@@ -304,6 +307,7 @@ const outsourcedSurveyFailure = await (await request('/v1/analyze', {
         id: 'deployment-survey-assistant',
         role: 'assistant',
         content: missingSurveyTeam.result.content,
+        pendingInformation: missingSurveyTeam.result.evaluation.advisory.missingInformation,
         timestamp: '09:21',
       },
     ],
@@ -317,24 +321,43 @@ assert(
   'Falta de aferição da equipe terceirizada não gerou Reprovação.'
 );
 
+const informalMissingSurvey = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'repavimentacao-calcada',
+    prompt: 'o piso ficou sem as medidas, como fica isso?',
+    history: [],
+  }),
+})).json();
+assert(
+  informalMissingSurvey.result?.decision === null &&
+    informalMissingSurvey.result?.evaluation?.semanticInterpretationApplied === true &&
+    informalMissingSurvey.result?.evaluation?.primaryRule?.id ===
+      'RULE-PAV-AFERICAO-CONTEXTO-01',
+  'Linguagem informal de aferição ausente não pediu o tipo de equipe.'
+);
+
 const internalSurveyFollowUp = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },
   body: JSON.stringify({
     serviceId: 'repavimentacao-calcada',
-    prompt: 'interna',
+    prompt: 'foi o pessoal da própria empresa',
     history: [
       {
         id: 'deployment-internal-survey-user',
         role: 'user',
-        content: 'A repavimentação ficou sem aferição da vala.',
+        content: 'o piso ficou sem as medidas, como fica isso?',
         timestamp: '09:22',
       },
       {
         id: 'deployment-internal-survey-assistant',
         role: 'assistant',
-        content: missingSurveyTeam.result.content,
-        pendingInformation: missingSurveyTeam.result.evaluation.advisory.missingInformation,
+        content: informalMissingSurvey.result.content,
+        pendingInformation: informalMissingSurvey.result.evaluation.followUpQuestion
+          ? [informalMissingSurvey.result.evaluation.followUpQuestion]
+          : informalMissingSurvey.result.evaluation.advisory.missingInformation,
         timestamp: '09:23',
       },
     ],
@@ -345,7 +368,7 @@ assert(
     internalSurveyFollowUp.result?.evaluation?.contextApplied === true &&
     internalSurveyFollowUp.result?.evaluation?.primaryRule?.id ===
       'RULE-PAV-AFERICAO-INTERNA-01',
-  'Resposta curta "interna" não completou a falta de aferição.'
+  'Resposta informal de equipe interna não completou a falta de aferição.'
 );
 
 const informalSurveyFailure = await (await request('/v1/analyze', {

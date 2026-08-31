@@ -162,7 +162,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             content: response.content,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             decision: response.decision ?? undefined,
-            pendingInformation: response.evaluation.advisory?.missingInformation,
+            pendingInformation: response.evaluation.advisory?.missingInformation ??
+              (response.evaluation.followUpQuestion
+                ? [response.evaluation.followUpQuestion]
+                : undefined),
           },
         ];
       });
@@ -329,7 +332,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 <span>.</span>
                 <span>.</span>
               </span>
-              <span>Consultando regras do serviço</span>
+              <span>Analisando o caso</span>
             </div>
           </div>
         )}

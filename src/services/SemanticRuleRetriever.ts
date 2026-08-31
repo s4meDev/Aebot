@@ -1,13 +1,15 @@
 import type { DataRule } from '../types';
 import { normalizeText } from './TextNormalizer';
+import { detectSemanticPolarity, type SemanticPolarity } from './SemanticPolarity';
 
-// O maior serviço atual tem menos de 50 regras. Manter o catálogo inteiro evita
-// perder a regra certa justamente quando o analista usa um sinônimo imprevisível.
-const DEFAULT_CANDIDATE_LIMIT = 64;
+// Quando existe alguma pista lexical, um catálogo curto reduz ruído e latência.
+// Sem pista alguma, o catálogo completo continua disponível para o modelo.
+const DEFAULT_CANDIDATE_LIMIT = 12;
 const STOP_WORDS = new Set([
   'a', 'o', 'as', 'os', 'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'na', 'no',
   'nas', 'nos', 'um', 'uma', 'para', 'pra', 'por', 'que', 'qual', 'como', 'foi',
   'esta', 'esse', 'essa', 'isso', 'servico', 'regra',
+  'nao', 'sem', 'falta', 'faltou', 'faltam', 'faltaram', 'ausente',
 ]);
 
 export interface SemanticRuleSelection {
@@ -18,9 +20,12 @@ export interface SemanticRuleSelection {
 }
 
 function meaningfulTokens(text: string): Set<string> {
-  return new Set(
-    normalizeText(text).tokens.filter((token) => token.length > 1 && !STOP_WORDS.has(token))
+  const tokens = normalizeText(text).tokens.filter(
+    (token) => token.length > 1 && !STOP_WORDS.has(token)
   );
+  return new Set(tokens.flatMap((token) =>
+    token.length >= 5 ? [token, `~${token.slice(0, 4)}`] : [token]
+  ));
 }
 
 function overlapScore(queryTokens: Set<string>, values: string[] | undefined, weight: number): number {
@@ -33,8 +38,12 @@ function overlapScore(queryTokens: Set<string>, values: string[] | undefined, we
   return score;
 }
 
-function scoreRule(queryTokens: Set<string>, rule: DataRule): number {
-  return (
+function scoreRule(
+  queryTokens: Set<string>,
+  queryPolarity: SemanticPolarity,
+  rule: DataRule
+): number {
+  const lexicalScore = (
     overlapScore(queryTokens, [rule.title], 5) +
     overlapScore(queryTokens, [rule.description], 3) +
     overlapScore(queryTokens, rule.topicKeywords, 6) +
@@ -44,6 +53,16 @@ function scoreRule(queryTokens: Set<string>, rule: DataRule): number {
     overlapScore(queryTokens, rule.examples, 2) +
     overlapScore(queryTokens, rule.category ? [rule.category] : undefined, 1)
   );
+  const rulePolarity = detectSemanticPolarity([
+    rule.title,
+    rule.description,
+    ...rule.conditionKeywords,
+    ...(rule.equivalentExpressions ?? []),
+  ].join(' '));
+  if (queryPolarity === 'absence') {
+    return rulePolarity === 'absence' ? lexicalScore + 8 : Number.NEGATIVE_INFINITY;
+  }
+  return lexicalScore;
 }
 
 /**
@@ -61,14 +80,16 @@ export function selectSemanticRuleCandidates(
   }
 
   const queryTokens = meaningfulTokens(query);
+  const queryPolarity = detectSemanticPolarity(query);
   const ranked = rules
-    .map((rule) => ({ rule, score: scoreRule(queryTokens, rule) }))
+    .map((rule) => ({ rule, score: scoreRule(queryTokens, queryPolarity, rule) }))
     .filter((candidate) => candidate.score > 0)
     .sort((left, right) => right.score - left.score || left.rule.id.localeCompare(right.rule.id));
 
-  const selected = (ranked.length ? ranked : rules.map((rule) => ({ rule, score: 0 })))
-    .slice(0, safeLimit)
-    .map((candidate) => candidate.rule);
+  if (!ranked.length) {
+    return { rules, strategy: 'complete', totalRules: rules.length, truncated: false };
+  }
+  const selected = ranked.slice(0, safeLimit).map((candidate) => candidate.rule);
   return {
     rules: selected,
     strategy: ranked.length ? 'ranked' : 'limited',
