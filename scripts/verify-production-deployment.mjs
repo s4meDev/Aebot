@@ -317,6 +317,52 @@ assert(
   'Falta de aferição da equipe terceirizada não gerou Reprovação.'
 );
 
+const internalSurveyFollowUp = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'repavimentacao-calcada',
+    prompt: 'interna',
+    history: [
+      {
+        id: 'deployment-internal-survey-user',
+        role: 'user',
+        content: 'A repavimentação ficou sem aferição da vala.',
+        timestamp: '09:22',
+      },
+      {
+        id: 'deployment-internal-survey-assistant',
+        role: 'assistant',
+        content: missingSurveyTeam.result.content,
+        pendingInformation: missingSurveyTeam.result.evaluation.advisory.missingInformation,
+        timestamp: '09:23',
+      },
+    ],
+  }),
+})).json();
+assert(
+  internalSurveyFollowUp.result?.decision === 'Não Conforme' &&
+    internalSurveyFollowUp.result?.evaluation?.contextApplied === true &&
+    internalSurveyFollowUp.result?.evaluation?.primaryRule?.id ===
+      'RULE-PAV-AFERICAO-INTERNA-01',
+  'Resposta curta "interna" não completou a falta de aferição.'
+);
+
+const informalSurveyFailure = await (await request('/v1/analyze', {
+  method: 'POST',
+  headers: { ...analystHeaders, 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    serviceId: 'repavimentacao-calcada',
+    prompt: 'A empreiteira refez o piso, mas não apareceu o comprimento e a largura da abertura.',
+    history: [],
+  }),
+})).json();
+assert(
+  informalSurveyFailure.result?.decision === 'Reprovado' &&
+    informalSurveyFailure.result?.evaluation?.semanticInterpretationApplied === true,
+  'Interpretação semântica informal da aferição terceirizada não foi aplicada.'
+);
+
 const internalSurveyFailure = await (await request('/v1/analyze', {
   method: 'POST',
   headers: { ...analystHeaders, 'Content-Type': 'application/json' },

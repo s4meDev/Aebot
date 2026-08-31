@@ -1,7 +1,9 @@
 import type { DataRule } from '../types';
 import { normalizeText } from './TextNormalizer';
 
-const DEFAULT_CANDIDATE_LIMIT = 24;
+// O maior serviço atual tem menos de 50 regras. Manter o catálogo inteiro evita
+// perder a regra certa justamente quando o analista usa um sinônimo imprevisível.
+const DEFAULT_CANDIDATE_LIMIT = 64;
 const STOP_WORDS = new Set([
   'a', 'o', 'as', 'os', 'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'na', 'no',
   'nas', 'nos', 'um', 'uma', 'para', 'pra', 'por', 'que', 'qual', 'como', 'foi',

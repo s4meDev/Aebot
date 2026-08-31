@@ -11,6 +11,11 @@ export interface StructuredModelResult {
   text?: string;
 }
 
+export interface StructuredModelRequestOptions {
+  /** Schema JSON usado pelos provedores que oferecem saída estruturada nativa. */
+  responseSchema?: Record<string, unknown>;
+}
+
 /** Transporte de modelo que apenas produz JSON; nunca calcula a decisão da OS. */
 export interface StructuredModelClient {
   readonly provider: StructuredModelProvider;
@@ -21,7 +26,8 @@ export interface StructuredModelClient {
   request(
     contents: StructuredModelContent[],
     systemInstruction: string,
-    maxOutputTokens: number
+    maxOutputTokens: number,
+    options?: StructuredModelRequestOptions
   ): Promise<StructuredModelResult>;
 }
 
@@ -44,14 +50,16 @@ export class FallbackStructuredModelClient implements StructuredModelClient {
   async request(
     contents: StructuredModelContent[],
     systemInstruction: string,
-    maxOutputTokens: number
+    maxOutputTokens: number,
+    options?: StructuredModelRequestOptions
   ): Promise<StructuredModelResult> {
     const primaryResult = await this.primary.request(
       contents,
       systemInstruction,
-      maxOutputTokens
+      maxOutputTokens,
+      options
     );
     if (primaryResult.status === 'ok') return primaryResult;
-    return this.fallback.request(contents, systemInstruction, maxOutputTokens);
+    return this.fallback.request(contents, systemInstruction, maxOutputTokens, options);
   }
 }

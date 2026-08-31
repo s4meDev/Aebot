@@ -2,7 +2,9 @@
 
 ## Estratégia de IA online
 
-O motor de regras sempre avalia primeiro. Se ainda faltar ligação semântica entre a frase do analista e os conceitos cadastrados, o backend tenta `gemini-2.5-flash-lite`; diante de falha técnica ou limite, usa `@cf/openai/gpt-oss-20b` no Workers AI. Os modelos só devolvem mapeamentos para regras existentes e nunca escolhem a conclusão oficial.
+O motor de regras sempre avalia primeiro. Se ainda faltar ligação semântica, ou se o analista estiver respondendo a uma informação pedida, o backend tenta `gemini-3.5-flash`, depois `gemini-3.5-flash-lite` e, diante de falha técnica ou limite, usa `@cf/openai/gpt-oss-20b` no Workers AI. O catálogo completo do serviço selecionado é apresentado ao interpretador. Os modelos usam conhecimento linguístico amplo, mas só podem devolver mapeamentos para regras existentes e nunca escolhem a conclusão oficial.
+
+Informações pendentes são transportadas em `pendingInformation`; o backend não depende de reconhecer frases que ele mesmo escreveu. Assim, respostas curtas como “interna”, “terceirizada” ou o nome de uma superintendência continuam o caso correto sem transformar a pergunta pendente em fato da OS.
 
 Essa ordem é configurável no Worker por `AEBOT_AI_PROVIDER_ORDER`. O padrão de produção é `gemini,workers-ai`. O projeto não depende de modelo executado na máquina do analista.
 

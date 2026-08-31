@@ -17,7 +17,8 @@ Extensão MV3 (40 instalações)
 Cloudflare Worker
   -> AnalysisService compartilhado
   -> RuleEngine + rulesStore.json
-  -> Gemini 2.5 Flash-Lite como interpretação principal
+  -> Gemini 3.5 Flash como interpretação principal
+  -> Gemini 3.5 Flash-Lite como contingência do mesmo provedor
   -> Workers AI com gpt-oss-20b como contingência
   -> D1 para feedback escrito pelos analistas
 ```

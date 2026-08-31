@@ -245,7 +245,7 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
               Usada apenas no desenvolvimento direto da extensão. No pacote empresarial, a chave fica somente no servidor.
             </span>
             <span className="help-text">
-              Com o Gemini ativo, a pergunta, até 6 mensagens recentes e as regras relacionadas são enviadas ao Google para interpretação e humanização.
+              Com o Gemini ativo, a pergunta, até 6 mensagens recentes e o catálogo do serviço selecionado são enviados ao Google para interpretação e humanização.
             </span>
           </label>}
 

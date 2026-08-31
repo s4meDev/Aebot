@@ -240,6 +240,8 @@ export interface AiMessage {
   content: string;
   /** Consulta contextual acumulada, usada apenas pelo motor determinístico. */
   contextQuery?: string;
+  /** Dados que a última avaliação pediu para completar o caso. */
+  pendingInformation?: string[];
   timestamp: string;
   decision?: DecisionType;
 }

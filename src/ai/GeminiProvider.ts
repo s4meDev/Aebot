@@ -32,22 +32,54 @@ import type {
   StructuredModelClient,
   StructuredModelContent,
   StructuredModelProvider,
+  StructuredModelRequestOptions,
   StructuredModelResult,
 } from './StructuredModelClient';
 
 const GEMINI_TIMEOUT_MS = 20_000;
 const SEMANTIC_CACHE_LIMIT = 1_000;
 const RETRYABLE_HTTP_STATUS = new Set([429, 500, 502, 503, 504]);
+const SEMANTIC_RESPONSE_SCHEMA: Record<string, unknown> = {
+  type: 'object',
+  required: ['mappings'],
+  properties: {
+    mappings: {
+      type: 'array',
+      maxItems: 6,
+      items: {
+        type: 'object',
+        required: ['ruleId', 'sourceQuote', 'canonicalExpression', 'stance'],
+        properties: {
+          ruleId: { type: 'string' },
+          sourceQuote: { type: 'string' },
+          canonicalExpression: { type: 'string' },
+          stance: {
+            type: 'string',
+            enum: ['asserted', 'hypothetical', 'informational', 'negated_or_present'],
+          },
+        },
+      },
+    },
+  },
+};
+const NARRATIVE_RESPONSE_SCHEMA: Record<string, unknown> = {
+  type: 'object',
+  required: ['justification', 'guidance'],
+  properties: {
+    justification: { type: 'string' },
+    guidance: { type: 'string' },
+  },
+};
 
 export function getGeminiThinkingConfig(
   model: string
-): { thinkingLevel: 'MINIMAL' } | { thinkingBudget: 0 } | undefined {
+): { thinkingLevel: 'LOW' } | { thinkingBudget: 0 } | undefined {
   if (
     model === 'gemini-flash-latest' ||
     model === 'gemini-flash-lite-latest' ||
     /^gemini-(?:[3-9]|[1-9]\d).*flash/i.test(model)
   ) {
-    return { thinkingLevel: 'MINIMAL' };
+    return { thinkingLevel: 'LOW' };
   }
   if (/^gemini-2\.5-flash(?:[-.]|$)/i.test(model)) {
     return { thinkingBudget: 0 };
@@ -94,7 +126,8 @@ async function requestGemini(
   model: string,
   contents: StructuredModelContent[],
   systemInstruction: string,
-  maxOutputTokens: number
+  maxOutputTokens: number,
+  options?: StructuredModelRequestOptions
 ): Promise<StructuredModelResult> {
   const controller = new AbortController();
   const timeoutId = globalThis.setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
@@ -115,11 +148,14 @@ async function requestGemini(
               contents,
               systemInstruction: { parts: [{ text: systemInstruction }] },
               generationConfig: {
-                temperature: 0,
-                topK: 8,
-                topP: 0.8,
                 maxOutputTokens,
                 responseMimeType: 'application/json',
+                ...(options?.responseSchema
+                  ? { responseSchema: options.responseSchema }
+                  : {}),
+                ...(!/^gemini-(?:3|[4-9]|[1-9]\d)/i.test(model)
+                  ? { temperature: 0, topK: 8, topP: 0.8 }
+                  : {}),
                 ...(thinkingConfig ? { thinkingConfig } : {}),
               },
             }),
@@ -183,16 +219,18 @@ export class GeminiModelClient implements StructuredModelClient {
   async request(
     contents: StructuredModelContent[],
     systemInstruction: string,
-    maxOutputTokens: number
+    maxOutputTokens: number,
+    options?: StructuredModelRequestOptions
   ): Promise<StructuredModelResult> {
     const primaryResponse = await requestGemini(
       this.apiKey,
       this.primaryModel,
       contents,
       systemInstruction,
-      maxOutputTokens
+      maxOutputTokens,
+      options
     );
-    if (primaryResponse.status !== 'rate_limited' || this.fallbackModel === this.primaryModel) {
+    if (primaryResponse.status === 'ok' || this.fallbackModel === this.primaryModel) {
       return primaryResponse;
     }
     return requestGemini(
@@ -200,7 +238,8 @@ export class GeminiModelClient implements StructuredModelClient {
       this.fallbackModel,
       contents,
       systemInstruction,
-      maxOutputTokens
+      maxOutputTokens,
+      options
     );
   }
 }
@@ -369,7 +408,9 @@ export class GeminiProvider implements AiProvider {
     query: string,
     service: DataService,
     rules: DataRule[],
-    modelClient: StructuredModelClient
+    modelClient: StructuredModelClient,
+    clarificationApplied: boolean,
+    clarificationQuestions: string[] = []
   ): Promise<SemanticAttempt> {
     const pending = this.semanticInFlight.get(cacheKey);
     if (pending) {
@@ -379,12 +420,18 @@ export class GeminiProvider implements AiProvider {
 
     const request = (async (): Promise<SemanticAttempt> => {
       const selection = selectSemanticRuleCandidates(query, rules);
-      const semanticPrompt = buildSemanticInterpretationPrompt(query, service, selection.rules);
+      const semanticPrompt = buildSemanticInterpretationPrompt(
+        query,
+        service,
+        selection.rules,
+        { clarificationApplied, clarificationQuestions }
+      );
       this.metrics.modelRequests += 1;
       const response = await modelClient.request(
         [{ role: 'user', parts: [{ text: semanticPrompt }] }],
         'Extraia somente mapeamentos semânticos aterrados no catálogo fornecido. Nunca decida a conclusão da análise.',
-        1024
+        1024,
+        { responseSchema: SEMANTIC_RESPONSE_SCHEMA }
       );
       if (response.status !== 'ok' || !response.text) {
         return {
@@ -395,7 +442,8 @@ export class GeminiProvider implements AiProvider {
       const interpretation = parseSemanticInterpretation(
         response.text,
         query,
-        selection.rules
+        selection.rules,
+        { allowSingleTokenQuote: clarificationApplied }
       ) ?? undefined;
       return {
         interpretation,
@@ -443,14 +491,15 @@ export class GeminiProvider implements AiProvider {
       ? undefined
       : 'no_api_key';
 
-    // A IA só entra para ligar uma frase desconhecida às expressões cadastradas
-    // ou para deixar a explicação mais natural. Ela nunca troca a decisão.
+    // A IA liga linguagem livre às expressões cadastradas. Ela também completa
+    // respostas de esclarecimento; a conclusão continua sendo recalculada pelo motor.
     if (modelClient) {
       if (
         (rawBaseEvaluation.outcome === 'insufficient' ||
-          rawBaseEvaluation.outcome === 'advisory') &&
-        !rawBaseEvaluation.errorCode &&
-        !hasGroundedRuleMatch(rawBaseEvaluation)
+          (rawBaseEvaluation.outcome === 'advisory' &&
+            (contextualQuery.clarificationApplied === true ||
+              !hasGroundedRuleMatch(rawBaseEvaluation)))) &&
+        !rawBaseEvaluation.errorCode
       ) {
         const serviceRecord = this.engine.getServices().find((item) => item.id === service.id);
         const serviceRules = this.engine.getRulesForService(service.id);
@@ -471,7 +520,9 @@ export class GeminiProvider implements AiProvider {
               contextualQuery.query,
               serviceRecord,
               serviceRules,
-              modelClient
+              modelClient,
+              contextualQuery.clarificationApplied === true,
+              contextualQuery.clarificationQuestions
             );
             interpretation = semanticAttempt.interpretation;
             semanticProvider = semanticAttempt.provider;
@@ -510,7 +561,8 @@ export class GeminiProvider implements AiProvider {
         const narrativeResponse = await modelClient.request(
           buildGeminiContents(history, prompt, augmentedPrompt),
           context,
-          1024
+          1024,
+          { responseSchema: NARRATIVE_RESPONSE_SCHEMA }
         );
         if (narrativeResponse.status === 'ok') {
           const narrative = narrativeResponse.text

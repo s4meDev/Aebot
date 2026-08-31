@@ -89,6 +89,28 @@ describe('SemanticInterpreter', () => {
     )).toBeNull();
   });
 
+  it('aceita citação de uma palavra somente em resposta estruturada a esclarecimento', () => {
+    const internalRule = ruleEngine
+      .getRulesForService('repavimentacao-calcada')
+      .find((rule) => rule.id === 'RULE-PAV-AFERICAO-INTERNA-01')!;
+    const raw = JSON.stringify({
+      mappings: [{
+        ruleId: internalRule.id,
+        sourceQuote: 'interna',
+        canonicalExpression: 'equipe interna sem aferição da vala',
+        stance: 'asserted',
+      }],
+    });
+
+    expect(parseSemanticInterpretation(raw, 'interna', [internalRule])).toBeNull();
+    expect(parseSemanticInterpretation(
+      raw,
+      'interna',
+      [internalRule],
+      { allowSingleTokenQuote: true }
+    )?.canonicalPrompt).toBe('equipe interna sem aferição da vala');
+  });
+
   it('descarta mapeamento inválido sem perder outro mapeamento aterrado', () => {
     const result = parseSemanticInterpretation(JSON.stringify({
       mappings: [

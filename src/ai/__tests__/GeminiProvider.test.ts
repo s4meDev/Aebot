@@ -269,20 +269,20 @@ describe('GeminiProvider', () => {
   });
 
   it('rejeita identificador de modelo inseguro e usa o padrão', () => {
-    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-2.5-flash-lite');
+    expect(normalizeGeminiModel('../../modelo?key=outra')).toBe('gemini-3.5-flash');
     expect(normalizeGeminiModel('gemini-2.5-flash')).toBe('gemini-2.5-flash');
     expect(normalizeGeminiModel('gemini-modelo_seguro.1')).toBe('gemini-modelo_seguro.1');
   });
 
   it('limita o raciocínio interno dos modelos Flash sem afetar modelos antigos', () => {
     expect(getGeminiThinkingConfig('gemini-flash-latest')).toEqual({
-      thinkingLevel: 'MINIMAL',
+      thinkingLevel: 'LOW',
     });
     expect(getGeminiThinkingConfig('gemini-flash-lite-latest')).toEqual({
-      thinkingLevel: 'MINIMAL',
+      thinkingLevel: 'LOW',
     });
     expect(getGeminiThinkingConfig('gemini-3.5-flash')).toEqual({
-      thinkingLevel: 'MINIMAL',
+      thinkingLevel: 'LOW',
     });
     expect(getGeminiThinkingConfig('gemini-2.5-flash-lite')).toEqual({
       thinkingBudget: 0,
@@ -340,7 +340,7 @@ describe('GeminiProvider', () => {
     expect(response.content).toContain('limite temporário do provedor de IA');
   });
 
-  it('usa o modelo reserva somente quando o principal atinge a cota', async () => {
+  it('usa o modelo reserva quando o principal atinge a cota', async () => {
     const query = 'Não apareceu o momento em que deram torque na virola.';
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({
@@ -386,6 +386,42 @@ describe('GeminiProvider', () => {
     expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({
       'x-goog-api-key': 'test-key',
     });
+    expect(response.provider).toBe('gemini');
+    expect(response.decision).toBe('Não Conforme');
+  });
+
+  it('usa o modelo reserva quando o principal rejeita a requisição', async () => {
+    const query = 'Não apareceu o momento em que deram torque na virola.';
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 400, headers: new Headers() })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: JSON.stringify({
+            mappings: [{
+              ruleId: duringRule.id,
+              sourceQuote: 'Não apareceu o momento em que deram torque na virola',
+              canonicalExpression: 'sem foto durante',
+              stance: 'asserted',
+            }],
+          }) }] } }],
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new GeminiProvider(ruleEngine, {
+      getApiKey: () => 'test-key',
+      getModel: () => 'gemini-3.5-flash',
+      getFallbackModel: () => 'gemini-3.5-flash-lite',
+    });
+
+    const response = await provider.generateResponse(
+      '',
+      query,
+      { id: selectedService.id, name: selectedService.name }
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/gemini-3.5-flash-lite:');
     expect(response.provider).toBe('gemini');
     expect(response.decision).toBe('Não Conforme');
   });
@@ -581,6 +617,55 @@ describe('GeminiProvider', () => {
     expect(completed.evaluation.primaryRule?.id).toBe('RULE-PAV-AFERICAO-TERCEIRA-01');
   });
 
+  it('entende "interna" como resposta curta e não repete a pergunta de aferição', async () => {
+    const service = {
+      id: 'repavimentacao-calcada',
+      name: 'Repavimentação - Calçada',
+    };
+    const question = 'A repavimentação ficou sem aferição da vala.';
+    const first = await new GeminiProvider(ruleEngine, {
+      humanizeDeterministicResponses: false,
+    }).generateResponse('', question, service, []);
+    const history: AiMessage[] = [
+      { id: 'afericao-interna-user', role: 'user', content: question, timestamp: '10:00' },
+      {
+        id: 'afericao-interna-assistant',
+        role: 'assistant',
+        content: first.content,
+        pendingInformation: first.evaluation.advisory?.missingInformation,
+        timestamp: '10:01',
+      },
+    ];
+
+    const modelClient = {
+      provider: 'gemini' as const,
+      providerChain: ['gemini'] as const,
+      cacheKey: 'gemini:test-interna',
+      request: vi.fn().mockResolvedValue({
+        status: 'ok' as const,
+        provider: 'gemini' as const,
+        text: JSON.stringify({
+          mappings: [{
+            ruleId: 'RULE-PAV-AFERICAO-INTERNA-01',
+            sourceQuote: 'interna',
+            canonicalExpression: 'equipe interna sem aferição da vala',
+            stance: 'asserted',
+          }],
+        }),
+      }),
+    };
+    const completed = await new GeminiProvider(ruleEngine, {
+      getModelClient: () => modelClient,
+      humanizeDeterministicResponses: false,
+    }).generateResponse('', 'interna', service, history);
+
+    expect(modelClient.request).toHaveBeenCalledTimes(1);
+    expect(completed.evaluation.contextApplied).toBe(true);
+    expect(completed.decision).toBe('Não Conforme');
+    expect(completed.evaluation.primaryRule?.id).toBe('RULE-PAV-AFERICAO-INTERNA-01');
+    expect(completed.content).not.toContain('interna ou terceirizada?');
+  });
+
   it('humaniza a metragem de rede sem alterar a Não Conformidade', async () => {
     const response = await new GeminiProvider(ruleEngine, {
       humanizeDeterministicResponses: false,
@@ -705,7 +790,9 @@ describe('GeminiProvider', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const request = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
-    expect(request.generationConfig.thinkingConfig).toEqual({ thinkingBudget: 0 });
+    expect(request.generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'LOW' });
+    expect(request.generationConfig).not.toHaveProperty('temperature');
+    expect(request.generationConfig.responseSchema.properties.mappings.type).toBe('array');
     expect(response.provider).toBe('gemini');
     expect(response.decision).toBe('Não Conforme');
     expect(response.evaluation.semanticInterpretationApplied).toBe(true);

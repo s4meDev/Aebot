@@ -14,6 +14,24 @@ describe('contrato POST /v1/analyze', () => {
     });
   });
 
+  it('preserva a informação pendente sem confiar no texto da resposta', () => {
+    const parsed = parseAnalyzeRequest({
+      serviceId: 'repavimentacao-calcada',
+      prompt: 'interna',
+      history: [{
+        id: 'assistant-1',
+        role: 'assistant',
+        content: 'Preciso de uma informação.',
+        pendingInformation: ['A equipe é interna ou terceirizada?'],
+        timestamp: '10:01',
+      }],
+    });
+
+    expect(parsed.history[0].pendingInformation).toEqual([
+      'A equipe é interna ou terceirizada?',
+    ]);
+  });
+
   it.each([
     [{ prompt: 'teste' }],
     [{ serviceId: '../outro', prompt: 'teste' }],

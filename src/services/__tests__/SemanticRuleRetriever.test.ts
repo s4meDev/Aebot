@@ -27,6 +27,14 @@ describe('SemanticRuleRetriever', () => {
     expect(result.truncated).toBe(false);
   });
 
+  it('não corta o catálogo real quando a frase usa vocabulário imprevisível', () => {
+    const result = selectSemanticRuleCandidates('frase informal sem palavras cadastradas', rules);
+
+    expect(result.strategy).toBe('complete');
+    expect(result.rules).toEqual(rules);
+    expect(result.truncated).toBe(false);
+  });
+
   it('limita deterministicamente um catálogo grande sem correspondência', () => {
     const manyRules: DataRule[] = Array.from({ length: 30 }, (_, index) => ({
       ...rules[0],

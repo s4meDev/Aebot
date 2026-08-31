@@ -6,6 +6,10 @@ export interface ContextualQueryResolution {
   contextApplied: boolean;
   mode?: 'continuation' | 'correction';
   sourceMessageId?: string;
+  /** A mensagem atual responde a uma pergunta objetiva da avaliação anterior. */
+  clarificationApplied?: boolean;
+  /** Perguntas pendentes ficam fora do texto avaliado para não virarem fatos. */
+  clarificationQuestions?: string[];
 }
 
 export interface NewCaseCommand {
@@ -133,19 +137,24 @@ function lastMessageIndex(history: AiMessage[], role: AiMessage['role']): number
   return -1;
 }
 
-function isAnswerToClarification(prompt: string, history: AiMessage[]): boolean {
+function clarificationMessage(prompt: string, history: AiMessage[]): AiMessage | undefined {
   const normalizedPrompt = normalizeText(prompt);
-  if (!normalizedPrompt.value || normalizedPrompt.tokens.length > 8) return false;
+  if (!normalizedPrompt.value || normalizedPrompt.tokens.length > 12) return undefined;
 
   const lastUserIndex = lastMessageIndex(history, 'user');
   const lastAssistantIndex = lastMessageIndex(history, 'assistant');
-  if (lastUserIndex < 0 || lastAssistantIndex <= lastUserIndex) return false;
+  if (lastUserIndex < 0 || lastAssistantIndex <= lastUserIndex) return undefined;
 
-  const assistantText = normalizeText(history[lastAssistantIndex].content).value;
-  return assistantText.includes('para concluir a classificacao') ||
+  const assistantMessage = history[lastAssistantIndex];
+  if (assistantMessage.pendingInformation?.length) return assistantMessage;
+
+  // Compatibilidade com conversas iniciadas antes do estado estruturado.
+  const assistantText = normalizeText(assistantMessage.content).value;
+  const legacyClarification = assistantText.includes('para concluir a classificacao') ||
     assistantText.includes('preciso saber') ||
     assistantText.includes('informe a superintendencia') ||
     assistantText.includes('o que falta confirmar');
+  return legacyClarification ? assistantMessage : undefined;
 }
 
 function expandAdditiveContinuation(previousText: string, current: string): string {
@@ -175,7 +184,8 @@ export function resolveContextualQuery(
   const previous = lastUserMessage(history);
   const normalizedCurrent = normalizeText(current).value;
   const isCorrection = Boolean(correctionPrefix(normalizedCurrent));
-  const answersClarification = isAnswerToClarification(current, history);
+  const clarification = clarificationMessage(current, history);
+  const answersClarification = Boolean(clarification);
   if (
     !current ||
     !previous ||
@@ -201,6 +211,8 @@ export function resolveContextualQuery(
     contextApplied: true,
     mode: isCorrection ? 'correction' : 'continuation',
     sourceMessageId: previous.id,
+    clarificationApplied: answersClarification || undefined,
+    clarificationQuestions: clarification?.pendingInformation,
   };
 }
 

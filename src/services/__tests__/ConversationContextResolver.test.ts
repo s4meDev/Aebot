@@ -82,6 +82,7 @@ describe('ConversationContextResolver', () => {
         id: 'clarification',
         role: 'assistant',
         content: 'Para concluir a classificação:\nInforme a superintendência da OS.',
+        pendingInformation: ['Informe a superintendência da OS.'],
         timestamp: '10:11',
       },
     ];
@@ -91,6 +92,8 @@ describe('ConversationContextResolver', () => {
       contextApplied: true,
       mode: 'continuation',
       sourceMessageId: 'regional-question',
+      clarificationApplied: true,
+      clarificationQuestions: ['Informe a superintendência da OS.'],
     });
   });
 

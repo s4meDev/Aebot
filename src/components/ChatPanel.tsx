@@ -162,6 +162,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             content: response.content,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             decision: response.decision ?? undefined,
+            pendingInformation: response.evaluation.advisory?.missingInformation,
           },
         ];
       });

@@ -84,7 +84,11 @@ ${userPrompt}`;
 export function buildSemanticInterpretationPrompt(
   userPrompt: string,
   service: DataService,
-  rules: DataRule[]
+  rules: DataRule[],
+  options: {
+    clarificationApplied?: boolean;
+    clarificationQuestions?: string[];
+  } = {}
 ): string {
   const catalog = rules.map((rule) => ({
     id: rule.id,
@@ -97,12 +101,11 @@ export function buildSemanticInterpretationPrompt(
     evidenceConcepts: rule.relatedEvidence ?? [],
     examples: rule.examples ?? [],
     attentionLevel: rule.attentionLevel ?? 'normal',
-    sourceReferences: rule.sourceReferences ?? [],
   }));
 
   return `Você é um extrator semântico, não um decisor.
 Conecte a linguagem livre do analista somente aos conceitos do catálogo do serviço "${service.name}".
-Não use conhecimento geral, não crie regras e não retorne conclusão oficial.
+Use conhecimento geral apenas para entender português, sinônimos, paráfrases e contexto. Nunca transforme esse conhecimento em regra de negócio e não retorne conclusão oficial.
 
 Para cada fato realmente relacionado:
 - ruleId deve existir no catálogo;
@@ -118,6 +121,11 @@ Para cada fato realmente relacionado:
 - hypothetical descreve uma possibilidade;
 - informational apenas pergunta sobre a regra;
 - negated_or_present informa que a falha não ocorreu ou que a evidência está presente.
+${options.clarificationApplied
+    ? `- A última parte do texto é uma resposta curta a uma pergunta objetiva do assistente. Una essa resposta aos fatos anteriores antes de escolher a expressão canônica.\n- Informação que estava pendente: ${(options.clarificationQuestions ?? []).join(' ') || 'dado solicitado na resposta anterior.'}`
+    : ''}
+
+O catálogo limita a regra aplicável, mas não limita o vocabulário usado para reconhecer o mesmo conceito.
 
 Se nenhuma regra puder ser ligada com segurança, retorne mappings vazio.
 Retorne somente JSON válido:

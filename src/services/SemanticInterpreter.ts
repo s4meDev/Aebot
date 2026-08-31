@@ -18,6 +18,11 @@ export interface SemanticInterpretation {
   canonicalPrompt: string | null;
 }
 
+export interface SemanticInterpretationOptions {
+  /** Respostas como "interna" são válidas quando completam uma pergunta pendente. */
+  allowSingleTokenQuote?: boolean;
+}
+
 function cleanJson(text: string): string {
   return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
 }
@@ -104,7 +109,8 @@ function buildCanonicalPrompt(mappings: SemanticRuleMapping[]): string | null {
 export function parseSemanticInterpretation(
   text: string,
   originalQuery: string,
-  serviceRules: DataRule[]
+  serviceRules: DataRule[],
+  options: SemanticInterpretationOptions = {}
 ): SemanticInterpretation | null {
   try {
     const parsed = JSON.parse(cleanJson(text)) as Record<string, unknown>;
@@ -133,9 +139,12 @@ export function parseSemanticInterpretation(
       if (!canonicalExpression) continue;
       const proposedQuote = source.sourceQuote.trim();
       const quote = resolveLiteralQuote(originalQuery, proposedQuote);
+      const quoteTokenCount = quote ? normalizeText(quote).tokens.length : 0;
       if (
         !quote ||
-        normalizeText(quote).tokens.length < 2
+        (quoteTokenCount < 2 &&
+          !options.allowSingleTokenQuote &&
+          source.stance !== 'informational')
       ) {
         continue;
       }

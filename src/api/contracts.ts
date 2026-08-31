@@ -38,6 +38,13 @@ export function parseAnalyzeRequest(value: unknown): AnalysisRequest {
       const contextQuery = typeof message?.contextQuery === 'string'
         ? message.contextQuery.trim()
         : undefined;
+      const pendingInformation = Array.isArray(message?.pendingInformation) &&
+        message.pendingInformation.length <= 6 &&
+        message.pendingInformation.every(
+          (item) => typeof item === 'string' && item.trim().length > 0 && item.length <= 300
+        )
+        ? message.pendingInformation.map((item) => item.trim())
+        : undefined;
       if (!message || (role !== 'user' && role !== 'assistant') || !content || content.length > 4_000) {
         issues.push(`history[${index}] inválida`);
         return;
@@ -51,6 +58,7 @@ export function parseAnalyzeRequest(value: unknown): AnalysisRequest {
         role,
         content,
         contextQuery,
+        pendingInformation,
         timestamp: typeof message.timestamp === 'string' ? message.timestamp.slice(0, 20) : '',
       });
     });

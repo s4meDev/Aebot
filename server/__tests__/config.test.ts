@@ -11,8 +11,8 @@ describe('configuração do backend', () => {
     expect(config.rateLimitPerMinute).toBe(240);
     expect(config.trustProxy).toBe(false);
     expect(config.humanizeDeterministicResponses).toBe(false);
-    expect(config.geminiModel).toBe('gemini-2.5-flash-lite');
-    expect(config.geminiFallbackModel).toBe('gemini-2.5-flash');
+    expect(config.geminiModel).toBe('gemini-3.5-flash');
+    expect(config.geminiFallbackModel).toBe('gemini-3.5-flash-lite');
     expect(isOriginAllowed('chrome-extension://abc', config)).toBe(true);
     expect(isOriginAllowed('https://site-invalido.example', config)).toBe(false);
   });
