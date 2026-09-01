@@ -87,6 +87,7 @@ Para testar deliberadamente Gemini direto ou backend local, use `npm run build:d
 
 O procedimento completo de publicação, geração de credenciais e instalação está em [Implantação para 40 analistas](docs/DEPLOYMENT-40-USERS.md).
 O material simplificado que deve acompanhar o piloto está em [Guia rápido para teste dos analistas](docs/GUIA-TESTE-ANALISTAS.md).
+As diferenças entre Gemini e Workers AI, as cotas e o roteiro para iniciar o piloto estão em [Operação do piloto e provedores de IA](docs/OPERACAO-PILOTO-E-PROVEDORES.md).
 
 ## Desenvolvimento local
 
@@ -144,6 +145,7 @@ O fluxo completo do código e a finalidade de cada arquivo estão documentados e
 - [Projeto e planejamento](PROJETO.md): requisitos do produto e evolução por sprints.
 - [Implantação para 40 analistas](docs/DEPLOYMENT-40-USERS.md): publicação, credenciais e instalação.
 - [Capacidade para 3.000 OS por dia](docs/CAPACITY-3000-OS.md): volume, limites e critérios de validação.
+- [Operação do piloto e provedores de IA](docs/OPERACAO-PILOTO-E-PROVEDORES.md): qualidade dos modelos, cotas, privacidade e início dos testes.
 - [Entrada de regras](docs/RULE-INTAKE.md): processo para cadastrar e revisar conhecimento.
 - [Como editar as regras](docs/COMO-EDITAR-REGRAS.md): guia prático com exemplos para manutenção.
 - [Base de conhecimento das ITs](docs/BASE-DE-CONHECIMENTO-ITS.md): critérios incorporados e limites de decisão.
@@ -166,6 +168,7 @@ Nunca adicione chaves em variáveis `VITE_*`, pois elas seriam incorporadas ao p
 - os acessos técnicos ainda precisam ser associados aos analistas reais durante o piloto;
 - serviços e regras novas precisam ser cadastrados e protegidos por testes de regressão;
 - cotas gratuitas de provedores de IA não são consideradas ilimitadas.
+- no Gemini gratuito, perguntas e respostas podem ser usadas pelo provedor para melhoria dos produtos; o piloto deve usar casos anonimizados até a aprovação empresarial da política de dados.
 
 ## Créditos
 

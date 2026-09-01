@@ -296,8 +296,9 @@ describe('Cloudflare Worker do AEBOT', () => {
   });
 
   it('separa o token administrativo e permite consultar feedbacks salvos', async () => {
+    const feedbackId = '123e4567-e89b-12d3-a456-426614174000';
     const fake = createFakeD1([{
-      id: 'feedback-1',
+      id: feedbackId,
       analyst_id: 'analista01',
       service_id: ruleEngine.getServices()[0]!.id,
       category: 'sugestao',
@@ -317,12 +318,23 @@ describe('Cloudflare Worker do AEBOT', () => {
     const adminResponse = await app.fetch(request('/v1/admin/feedback', {
       headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
     }), env);
+    const analystDeleteAttempt = await app.fetch(request(`/v1/admin/feedback/${feedbackId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    }), env);
+    const adminDeleteResponse = await app.fetch(request(`/v1/admin/feedback/${feedbackId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
+    }), env);
 
     expect(analystAttempt.status).toBe(401);
+    expect(analystDeleteAttempt.status).toBe(401);
     expect(adminResponse.status).toBe(200);
     await expect(adminResponse.json()).resolves.toMatchObject({
-      feedback: [expect.objectContaining({ id: 'feedback-1', analystId: 'analista01' })],
+      feedback: [expect.objectContaining({ id: feedbackId, analystId: 'analista01' })],
     });
+    expect(adminDeleteResponse.status).toBe(200);
+    expect(fake.rows).toHaveLength(0);
   });
 
   it('serve a página administrativa com CSP restritiva', async () => {

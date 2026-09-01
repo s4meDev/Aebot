@@ -668,11 +668,14 @@ export class GeminiProvider implements AiProvider {
 
     if (
       modelClient &&
-      rawBaseEvaluation.outcome !== 'decision' &&
+      rawBaseEvaluation.outcome === 'insufficient' &&
       !hasGroundedRuleMatch(rawBaseEvaluation) &&
       !rawBaseEvaluation.errorCode &&
       !evaluation.semanticInterpretationApplied
     ) {
+      // Falha do modelo só substitui uma ausência real de resposta local.
+      // Uma orientação ou explicação já fundamentada continua útil, mesmo
+      // quando Gemini e a contingência não entregam um JSON válido.
       evaluation = {
         ...evaluation,
         outcome: 'insufficient',

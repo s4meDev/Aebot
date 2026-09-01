@@ -20,6 +20,7 @@ import {
 } from '../src/services/AnalysisService';
 import { adminAssetResponse } from './adminPage';
 import {
+  deleteFeedback,
   listFeedback,
   saveFeedback,
   type D1Database,
@@ -304,7 +305,7 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
 
       if (request.method === 'OPTIONS') {
         const headers = new Headers({
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
           'Access-Control-Max-Age': '600',
           'Cache-Control': 'no-store',
@@ -321,7 +322,8 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
       }
 
       const isPublicEndpoint = path === '/' || path === '/health';
-      const isAdminEndpoint = path === '/v1/admin/feedback';
+      const adminFeedbackMatch = path.match(/^\/v1\/admin\/feedback\/([a-f0-9-]{36})$/i);
+      const isAdminEndpoint = path === '/v1/admin/feedback' || Boolean(adminFeedbackMatch);
       const adminAuthenticated = isAdminEndpoint
         ? await authorizedAdmin(request, env.AEBOT_ADMIN_TOKEN_HASH)
         : false;
@@ -503,6 +505,26 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
             requestId,
           }, requestId, origin);
           finish(200, { identity: 'admin', feedbackCount: feedback.length });
+          return response;
+        }
+
+        if (request.method === 'DELETE' && adminFeedbackMatch) {
+          if (!env.FEEDBACK_DB) {
+            const response = jsonResponse(503, {
+              error: 'feedback_unavailable',
+              requestId,
+            }, requestId, origin);
+            finish(503, { identity: 'admin' });
+            return response;
+          }
+          const feedbackId = adminFeedbackMatch[1];
+          await deleteFeedback(env.FEEDBACK_DB, feedbackId);
+          const response = jsonResponse(200, {
+            status: 'deleted',
+            feedbackId,
+            requestId,
+          }, requestId, origin);
+          finish(200, { identity: 'admin', feedbackId });
           return response;
         }
 

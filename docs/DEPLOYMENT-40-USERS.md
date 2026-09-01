@@ -158,6 +158,8 @@ Faça um piloto de um dia com 3 a 5 analistas e verifique:
 
 Só depois distribua aos 40. Cota gratuita de IA não é sinônimo de uso ilimitado; a segurança operacional vem do motor determinístico e da degradação controlada.
 
+Consulte também [Operação do piloto e provedores de IA](OPERACAO-PILOTO-E-PROVEDORES.md) para comparar os modelos, entender as cotas e aplicar a política de privacidade durante o teste.
+
 ## Atualização e revogação
 
 - Atualização com o mesmo ID preserva o token salvo no perfil do Chrome.

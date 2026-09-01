@@ -54,3 +54,5 @@
 - O fluxo conversacional é AI-first para resultados informativos, orientativos ou ambíguos: o modelo recebe o histórico recente e responde em até quatro frases, podendo fazer uma única pergunta útil. Casos já conclusivos podem usar a resposta determinística curta para preservar latência e cota.
 - Uma resposta natural validada pelo backend nunca deve ser descartada em favor de um template burocrático; o formatador fixo é apenas contingência técnica.
 - Perguntas objetivas pendentes devem viajar como estado tipado (`pendingInformation`). Nunca dependa apenas de procurar frases na resposta renderizada para continuar o caso.
+- Falha de todos os provedores online nunca deve apagar uma orientação ou explicação já fundamentada pelo motor local. Use `semantic_unavailable` somente quando o resultado local também for realmente insuficiente.
+- Diagnósticos de produção podem criar feedback técnico para validar o D1, mas devem consultar e remover automaticamente apenas o registro criado pelo próprio teste.

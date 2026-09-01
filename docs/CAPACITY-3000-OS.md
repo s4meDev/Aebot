@@ -26,7 +26,7 @@ O teste local de 3.000 casos possui limite conservador de 15 segundos no equipam
 
 ## Gargalo real: interpretação por IA
 
-O Workers AI possui alocação gratuita diária medida em neurons, não em quantidade fixa de chats. O Gemini também possui limites por projeto. Portanto, nenhum provedor externo gratuito pode ser prometido como ilimitado.
+O Workers AI possui alocação gratuita de 10.000 neurons por dia, não uma quantidade fixa de chats. O Gemini possui limites de RPM, TPM e RPD por projeto, que devem ser consultados no AI Studio porque variam por modelo e nível da conta. Portanto, nenhum provedor externo gratuito pode ser prometido como ilimitado, e criar 40 tokens do AEBOT não multiplica essas cotas.
 
 O AEBOT reduz esse risco assim:
 
@@ -36,7 +36,7 @@ O AEBOT reduz esse risco assim:
 4. respostas repetidas podem usar cache dentro da instância ativa;
 5. se a cota acabar, regras conhecidas continuam funcionando e frases ambíguas retornam sem decisão inventada.
 
-Antes de afirmar que o plano gratuito basta para todas as dúvidas, o piloto deve medir a porcentagem de perguntas que realmente chega à IA e o consumo de neurons no painel Cloudflare. Se essa parcela for alta, o melhor ajuste inicial é cadastrar equivalências recorrentes; somente depois deve ser avaliado um plano pago ou outro provedor.
+Antes de afirmar que o plano gratuito basta para todas as dúvidas, o piloto deve medir a porcentagem de perguntas que realmente chega à IA e o consumo nos painéis dos provedores. Se essa parcela for alta, refine as regras e exemplos recorrentes e avalie um orçamento controlado para o provedor principal. Trocar automaticamente para um modelo menor pode economizar cota, mas também reduzir a qualidade da interpretação.
 
 ## Critérios para liberação
 

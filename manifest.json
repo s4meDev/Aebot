@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AEBOT — Assistente de Análise",
-  "version": "2.17.0",
+  "version": "2.17.1",
   "description": "Assistente de análise de serviços de campo baseado nas regras cadastradas",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvI7FKvNncKwT2219sMKWF6JgmBITcvbBrfpgQhHW9L2wCQkGm3q35vptKNAQutqYdM0lhUbDVvshswgIyKp+m7TDtFLFShieOZuTH/Hd/LdRO+GlDrqK2HA7n+dUmUscbTmXAWDOCdHJuWGFPs0W5C1LCHmt7Kgq7o65FAS0fUjEYoSFRc1xIKuJSF/AxiquOg4pY6tl+NP2/6DZtvrT0lOZP/j967ofLldG0DtuZTgLzqGYKX99B/2Jxt+RZXKSiLG5C036zNLJiYnCJRqsRPHSy/SR6dZLzZwtqeheHz6uTxDdBX/6skBJWJyeoun1/W6Tte6m0ZrzSoHCAsQ/2wIDAQAB",
   "permissions": ["sidePanel"],

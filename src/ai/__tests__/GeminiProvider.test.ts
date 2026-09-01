@@ -848,6 +848,34 @@ describe('GeminiProvider', () => {
     expect(response.content).toContain('horizontal');
   });
 
+  it('preserva orientação local quando todos os modelos online falham', async () => {
+    const modelClient = {
+      provider: 'gemini' as const,
+      providerChain: ['gemini', 'workers-ai'] as const,
+      cacheKey: 'models:offline',
+      request: vi.fn().mockResolvedValue({
+        status: 'api_error' as const,
+        provider: 'workers-ai' as const,
+      }),
+    };
+    const response = await new GeminiProvider(ruleEngine, {
+      getModelClient: () => modelClient,
+    }).generateResponse(
+      '',
+      'O reparo de ramal está sem foto do chassi e do hidrômetro.',
+      { id: 'reparo-ramal-agua-calcada', name: 'Reparo de Ramal de Água - Calçada' }
+    );
+
+    expect(modelClient.request).toHaveBeenCalledTimes(1);
+    expect(response.provider).toBe('simulated');
+    expect(response.fallbackReason).toBe('api_error');
+    expect(response.decision).toBeNull();
+    expect(response.evaluation.outcome).toBe('advisory');
+    expect(response.evaluation.primaryRule?.id).toBe('RULE-RR-INFO-04');
+    expect(response.content).toContain('não é obrigatória');
+    expect(response.evaluation.insufficiencyReason).toBe('missing_information');
+  });
+
   it('mantém a decisão determinística quando o modelo tenta alterá-la', async () => {
     storageAdapter.set(STORAGE_KEYS.GEMINI_API_KEY, 'test-key');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({

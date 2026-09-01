@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Este teste grava o ID do feedback técnico para ele ser removido depois da validação.
+// O ID fica registrado para auditoria; o próprio teste remove o item ao concluir.
 const privateDirectory = path.resolve(process.cwd(), '.aebot-private');
 const appVersion = JSON.parse(
   fs.readFileSync(path.resolve(process.cwd(), 'manifest.json'), 'utf8')
@@ -482,6 +482,15 @@ assert(
 );
 const adminPage = await request('/admin');
 assert((await adminPage.text()).includes('Feedback dos analistas'), 'Página administrativa incompatível.');
+
+const deletedFeedback = await (await request(`/v1/admin/feedback/${feedback.feedbackId}`, {
+  method: 'DELETE',
+  headers: { Authorization: `Bearer ${adminToken}` },
+})).json();
+assert(
+  deletedFeedback.status === 'deleted' && deletedFeedback.feedbackId === feedback.feedbackId,
+  'A limpeza do feedback técnico de implantação falhou.'
+);
 
 console.log('Produção validada: saúde, CORS, autenticação, catálogo, decisão, feedback e painel administrativo.');
 console.log(`Identidade operacional usada no teste: ${analystId}.`);

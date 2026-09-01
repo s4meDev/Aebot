@@ -31,6 +31,8 @@ Se o token não for aceito, copie a mensagem de erro e informe ao responsável p
 
 O AEBOT só pode recomendar `Conforme`, `Não Conforme` ou `Reprovado` quando houver regra suficiente. Uma resposta sem decisão é intencional quando a base ainda não cobre o cenário.
 
+Durante o piloto, não escreva número da OS, endereço, nome, matrícula, telefone ou outro dado pessoal/confidencial. Descreva apenas os fatos técnicos necessários para a dúvida.
+
 ## Enviar feedback
 
 Use o botão **Feedback** quando:

@@ -96,3 +96,12 @@ export async function listFeedback(
   if (!result.success) throw new Error('feedback_read_failed');
   return result.results.map(storedFeedback);
 }
+
+export async function deleteFeedback(database: D1Database, feedbackId: string): Promise<void> {
+  // O identificador também usa bind. Esta função é exclusiva da rota administrativa.
+  const result = await database.prepare(`
+    DELETE FROM analyst_feedback
+    WHERE id = ?
+  `).bind(feedbackId).run();
+  if (!result.success) throw new Error('feedback_delete_failed');
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listFeedback, saveFeedback } from '../feedbackRepository';
+import { deleteFeedback, listFeedback, saveFeedback } from '../feedbackRepository';
 import { createFakeD1 } from './fakeD1';
 
 describe('feedbackRepository', () => {
@@ -32,5 +32,9 @@ describe('feedbackRepository', () => {
       .resolves.toEqual([expect.objectContaining({ id: 'feedback-1' })]);
     await expect(listFeedback(fake.database, { limit: 1, offset: 1 }))
       .resolves.toEqual([expect.objectContaining({ id: 'feedback-1' })]);
+
+    await deleteFeedback(fake.database, 'feedback-1');
+    await expect(listFeedback(fake.database, { limit: 100 }))
+      .resolves.toEqual([expect.objectContaining({ id: 'feedback-2' })]);
   });
 });

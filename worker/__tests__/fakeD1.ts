@@ -41,6 +41,10 @@ class FakeStatement implements D1PreparedStatement {
         created_at: String(createdAt),
         status: 'new',
       });
+    } else if (/DELETE FROM analyst_feedback/i.test(this.query)) {
+      const feedbackId = String(this.values[0]);
+      const index = this.rows.findIndex((row) => row.id === feedbackId);
+      if (index >= 0) this.rows.splice(index, 1);
     }
     return { success: true, results: [] };
   }

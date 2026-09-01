@@ -8,6 +8,8 @@ Informações pendentes são transportadas em `pendingInformation`; o backend n�
 
 Essa ordem é configurável no Worker por `AEBOT_AI_PROVIDER_ORDER`. O padrão de produção é `gemini,workers-ai`. O projeto não depende de modelo executado na máquina do analista.
 
+Os provedores não são equivalentes em qualidade. O Gemini é mantido como principal por compreender melhor o português informal observado no piloto; o `gpt-oss-20b` é uma contingência online de raciocínio, não uma promessa de resposta idêntica. Respostas inválidas tentam o próximo modelo. Se toda a cadeia falhar, uma orientação ou explicação já fundamentada pelo motor é preservada; somente uma ausência real de correspondência vira `semantic_unavailable`.
+
 Este arquivo é o mapa de manutenção do projeto. A ordem abaixo acompanha o caminho percorrido por uma pergunta, da extensão até a resposta e o feedback.
 
 ## 1. Visão geral
@@ -259,6 +261,7 @@ Regras que evitam acoplamento:
 
 - `DEPLOYMENT-40-USERS.md`: publicação e distribuição para os 40 analistas.
 - `CAPACITY-3000-OS.md`: premissas de volume, limites e teste de capacidade.
+- `OPERACAO-PILOTO-E-PROVEDORES.md`: ordem dos modelos, cotas, privacidade e roteiro operacional.
 - `RULE-INTAKE.md`: processo para cadastrar e revisar regras.
 - `COMO-EDITAR-REGRAS.md`: manutenção prática da base com exemplos seguros.
 - `BASE-DE-CONHECIMENTO-ITS.md`: critérios extraídos das ITs e seus limites classificatórios.
@@ -351,6 +354,6 @@ npm run build:server
 npm run build:worker
 ```
 
-Depois do deploy, execute `npm run deployment:check -- https://aebot-api.pedrolucasbotelho.workers.dev` e remova o feedback técnico criado pelo teste.
+Depois do deploy, execute `npm run deployment:check -- https://aebot-api.pedrolucasbotelho.workers.dev`. O diagnóstico cria, consulta e remove automaticamente seu próprio feedback técnico.
 
 Antes de entregar, confira também o diff, os imports, o manifesto gerado e a ausência de segredos fora de `.aebot-private`.
