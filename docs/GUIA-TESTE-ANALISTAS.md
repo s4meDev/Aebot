@@ -16,7 +16,7 @@ Não altere nem compartilhe o token recebido. Ele identifica somente o acesso op
 
 1. Clique em **Config**.
 2. Cole o token individual entregue pelo responsável.
-3. Clique em **Salvar Alterações**. O AEBOT valida API, token e catálogo antes de salvar.
+3. Clique em **Salvar acesso**. O AEBOT mantém o token neste Chrome e valida API, token e catálogo.
 4. Confirme que o chat mostra **Online · Gemini** ou **Online · Workers AI**.
 
 Se o token não for aceito, copie a mensagem de erro e informe ao responsável pelo piloto. Não envie o token em print, e-mail ou feedback.
@@ -45,4 +45,4 @@ Explique o comportamento esperado, mas não informe número da OS, nome, endere�
 
 ## Atualização
 
-Quando receber uma pasta `dist` nova, substitua a pasta anterior e clique em **Atualizar** no cartão do AEBOT em `chrome://extensions`. A identidade estável preserva o ID da extensão e o token salvo, desde que o perfil do Chrome e os dados da extensão não sejam apagados.
+Quando receber uma pasta `dist` nova, substitua a pasta anterior e clique em **Atualizar** no cartão do AEBOT em `chrome://extensions`. A identidade estável preserva o ID da extensão e o token salvo, desde que o perfil do Chrome e os dados da extensão não sejam apagados. Não é necessário informar URL, chave Gemini ou modelo.

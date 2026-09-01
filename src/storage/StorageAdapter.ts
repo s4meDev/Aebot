@@ -4,7 +4,7 @@ export interface StorageAdapter {
   remove(key: string): void;
 }
 
-class BrowserStorageAdapter implements StorageAdapter {
+export class BrowserStorageAdapter implements StorageAdapter {
   private readonly memory = new Map<string, string>();
 
   /**

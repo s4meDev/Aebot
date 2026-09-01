@@ -62,6 +62,10 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
       return;
     }
     if (packagedBackendUrl && normalizedBackendUrl) {
+      // Salva antes do diagnóstico para o analista não precisar colar tudo de
+      // novo se a rede estiver temporariamente indisponível.
+      storageAdapter.set(STORAGE_KEYS.BACKEND_URL, normalizedBackendUrl);
+      storageAdapter.set(STORAGE_KEYS.BACKEND_TOKEN, normalizedToken);
       setConnectionTest({ state: 'checking' });
       const access = await checkBackendAccess(normalizedBackendUrl, normalizedToken);
       if (access.state !== 'online') {
@@ -117,9 +121,20 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
       setConnectionTest({ state: 'idle' });
       return;
     }
+    const normalizedToken = backendToken.trim();
+    if (packagedBackendUrl && !normalizedToken) {
+      setTokenError('Informe o token individual entregue a este analista.');
+      return;
+    }
+    if (packagedBackendUrl) {
+      // O teste também funciona como salvamento do acesso nesta instalação.
+      storageAdapter.set(STORAGE_KEYS.BACKEND_URL, normalizedBackendUrl);
+      storageAdapter.set(STORAGE_KEYS.BACKEND_TOKEN, normalizedToken);
+    }
     setBackendError('');
+    setTokenError('');
     setConnectionTest({ state: 'checking' });
-    const access = await checkBackendAccess(normalizedBackendUrl, backendToken);
+    const access = await checkBackendAccess(normalizedBackendUrl, normalizedToken);
     if (access.state !== 'online') {
       setConnectionTest(access);
       return;
@@ -159,56 +174,34 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
         </div>
 
         <form onSubmit={handleSave} className="modal-body">
-          <label className="form-group">
-            <span className="label-text">URL do backend AEBOT</span>
-            <input
-              type="url"
-              className="input-field"
-              placeholder="http://127.0.0.1:8787"
-              value={backendUrl}
-              readOnly={Boolean(packagedBackendUrl)}
-              onChange={(e) => {
-                setBackendUrl(e.target.value);
-                setBackendError('');
-                setConnectionTest({ state: 'idle' });
-              }}
-            />
-            <span className="help-text">
-              {packagedBackendUrl
-                ? 'Endereço fixado com segurança no pacote empresarial.'
-                : 'Quando informada, a extensão usa a base e a IA centralizadas no servidor. HTTPS é obrigatório fora do computador local.'}
-            </span>
-            {backendError && <span className="help-text danger-text">{backendError}</span>}
-          </label>
-
-          <div className="connection-test-row">
-            <button
-              type="button"
-              className="secondary-btn"
-              disabled={connectionTest.state === 'checking'}
-              onClick={() => void handleTestConnection()}
-            >
-              {connectionTest.state === 'checking' ? 'Testando…' : 'Testar acesso completo'}
-            </button>
-            {connectionTest.state === 'online' && (
-              <span className={connectionTest.health.aiConfigured
-                ? 'connection-status success'
-                : 'connection-status warning'}>
-                {connectionTest.health.aiConfigured
-                  ? connectionTest.health.aiProviders.length > 1
-                    ? 'API online, token e catálogo acessíveis; contingência entre provedores ativa.'
-                    : connectionTest.health.aiProvider === 'workers-ai'
-                      ? 'API online, token e catálogo acessíveis; Workers AI configurado.'
-                      : 'API online, token e catálogo acessíveis; Gemini configurado.'
-                  : apiKey.trim()
-                    ? 'Backend, token e catálogo ativos; Gemini online será usado diretamente.'
-                    : 'Backend, token e catálogo ativos, mas sem IA central.'}
+          {packagedBackendUrl ? (
+            <div className="configured-backend-card">
+              <span className="configured-backend-dot" aria-hidden="true" />
+              <div>
+                <strong>Servidor AEBOT configurado</strong>
+                <span>A extensão já possui o endereço online correto.</span>
+              </div>
+            </div>
+          ) : (
+            <label className="form-group">
+              <span className="label-text">URL do backend AEBOT</span>
+              <input
+                type="url"
+                className="input-field"
+                placeholder="http://127.0.0.1:8787"
+                value={backendUrl}
+                onChange={(e) => {
+                  setBackendUrl(e.target.value);
+                  setBackendError('');
+                  setConnectionTest({ state: 'idle' });
+                }}
+              />
+              <span className="help-text">
+                Quando informada, a extensão usa a base e a IA centralizadas no servidor. HTTPS é obrigatório fora do computador local.
               </span>
-            )}
-            {connectionTest.state === 'offline' && (
-              <span className="connection-status error">{connectionTest.message}</span>
-            )}
-          </div>
+            </label>
+          )}
+          {backendError && <span className="help-text danger-text">{backendError}</span>}
 
           <label className="form-group">
             <span className="label-text">
@@ -229,8 +222,42 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
                 setConnectionTest({ state: 'idle' });
               }}
             />
+            {packagedBackendUrl && (
+              <span className="help-text">
+                O token fica salvo neste Chrome e continua após recarregar ou atualizar a extensão.
+              </span>
+            )}
             {tokenError && <span className="help-text danger-text">{tokenError}</span>}
           </label>
+
+          <div className="connection-test-row">
+            <button
+              type="button"
+              className="secondary-btn"
+              disabled={connectionTest.state === 'checking'}
+              onClick={() => void handleTestConnection()}
+            >
+              {connectionTest.state === 'checking' ? 'Testando…' : 'Testar acesso'}
+            </button>
+            {connectionTest.state === 'online' && (
+              <span className={connectionTest.health.aiConfigured
+                ? 'connection-status success'
+                : 'connection-status warning'}>
+                {connectionTest.health.aiConfigured
+                  ? connectionTest.health.aiProviders.length > 1
+                    ? 'Acesso online e contingência de IA ativa.'
+                    : connectionTest.health.aiProvider === 'workers-ai'
+                      ? 'Acesso online pelo Workers AI.'
+                      : 'Acesso online pelo Gemini.'
+                  : apiKey.trim()
+                    ? 'Backend online; Gemini direto ativo.'
+                    : 'Backend online, mas sem IA central.'}
+              </span>
+            )}
+            {connectionTest.state === 'offline' && (
+              <span className="connection-status error">{connectionTest.message}</span>
+            )}
+          </div>
 
           {!packagedBackendUrl && <label className="form-group">
             <span className="label-text">Chave de API do Gemini (Google AI Studio)</span>
@@ -284,7 +311,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ isOpen, onClose, onSav
               className="primary-btn"
               disabled={connectionTest.state === 'checking'}
             >
-              {connectionTest.state === 'checking' ? 'Validando…' : 'Salvar Alterações'}
+              {connectionTest.state === 'checking'
+                ? 'Validando…'
+                : packagedBackendUrl
+                  ? 'Salvar acesso'
+                  : 'Salvar alterações'}
             </button>
           </div>
         </form>

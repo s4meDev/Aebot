@@ -41,15 +41,22 @@ if (!fs.existsSync(manifestPath)) {
   throw new Error('Execute o build antes de configurar o pacote de produção.');
 }
 
-const apiOrigin = productionOrigin(process.env.AEBOT_PRODUCTION_API_URL);
-const publicKey = extensionPublicKey(process.env.AEBOT_EXTENSION_PUBLIC_KEY);
+const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+const packagedOrigin = manifest.host_permissions?.length === 1
+  ? manifest.host_permissions[0].replace(/\/\*$/, '')
+  : '';
+const apiOrigin = productionOrigin(
+  process.env.AEBOT_PRODUCTION_API_URL || packagedOrigin
+);
+const publicKey = extensionPublicKey(
+  process.env.AEBOT_EXTENSION_PUBLIC_KEY || manifest.key || ''
+);
 if (process.env.AEBOT_REQUIRE_STABLE_EXTENSION_ID === 'true' && !publicKey) {
   throw new Error(
     'AEBOT_EXTENSION_PUBLIC_KEY é obrigatória para distribuir o mesmo ID da extensão em 40 máquinas.'
   );
 }
 
-const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 manifest.host_permissions = [`${apiOrigin}/*`];
 manifest.content_security_policy = {
   extension_pages: `script-src 'self'; object-src 'self'; connect-src ${apiOrigin}`,

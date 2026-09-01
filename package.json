@@ -1,6 +1,6 @@
 {
   "name": "field-service-assistant",
-  "version": "2.16.0",
+  "version": "2.16.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:capacity": "node scripts/run-capacity-test.mjs",
     "build": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build",
+    "build:development": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build --mode development-extension",
     "build:production": "npm run build && node scripts/configure-production-extension.mjs && node scripts/validate-production-extension.mjs",
     "build:server": "tsc -p tsconfig.server.json --noEmit && vite build --config vite.server.config.ts",
     "build:worker": "tsc -p tsconfig.worker.json --noEmit && wrangler deploy --dry-run --outdir worker-dist",

@@ -35,7 +35,6 @@ function normalizeOrigin(rawValue) {
   }
 }
 
-const apiOrigin = normalizeOrigin(process.env.AEBOT_PRODUCTION_API_URL);
 const manifestPath = path.join(distDirectory, 'manifest.json');
 const packagePath = path.join(projectRoot, 'package.json');
 for (const requiredPath of [manifestPath, packagePath, path.join(distDirectory, 'index.html'), path.join(distDirectory, 'background.js')]) {
@@ -46,10 +45,18 @@ for (const requiredPath of [manifestPath, packagePath, path.join(distDirectory, 
 
 const manifest = readJson(manifestPath);
 const packageData = readJson(packagePath);
+const packagedOrigin = manifest.host_permissions?.length === 1
+  ? manifest.host_permissions[0].replace(/\/\*$/, '')
+  : '';
+const apiOrigin = normalizeOrigin(
+  process.env.AEBOT_PRODUCTION_API_URL || packagedOrigin
+);
 if (manifest.manifest_version !== 3) fail('manifest_version deve ser 3');
 if (manifest.version !== packageData.version) fail('versões do manifest e package.json divergem');
 if (process.env.AEBOT_REQUIRE_STABLE_EXTENSION_ID === 'true') {
-  const expectedKey = process.env.AEBOT_EXTENSION_PUBLIC_KEY?.replace(/\s+/g, '');
+  const expectedKey = (
+    process.env.AEBOT_EXTENSION_PUBLIC_KEY || manifest.key || ''
+  ).replace(/\s+/g, '');
   if (!expectedKey || manifest.key !== expectedKey) {
     fail('chave pública ausente; o ID não seria estável entre as 40 instalações');
   }

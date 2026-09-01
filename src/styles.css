@@ -920,6 +920,41 @@ button:disabled {
   gap: 5px;
 }
 
+.configured-backend-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.configured-backend-card > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.configured-backend-card strong {
+  color: var(--ink);
+  font-size: 0.68rem;
+}
+
+.configured-backend-card span:not(.configured-backend-dot) {
+  color: var(--ink-muted);
+  font-size: 0.6rem;
+}
+
+.configured-backend-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--success);
+}
+
 .label-text {
   color: var(--ink);
   font-size: 0.68rem;

@@ -27,6 +27,7 @@
 - Para escala gratuita, priorize respostas determinísticas, chaves de cache sem texto bruto e retenção limitada em memória. A IA de suporte é online: Gemini como principal e Workers AI como contingência; cotas nunca devem ser descritas como ilimitadas.
 - Em instalações com vários analistas, prefira tokens individuais e registre somente a identidade operacional e metadados técnicos, nunca o conteúdo das conversas.
 - O pacote empresarial deve conter uma única origem HTTPS no manifest; a extensão deriva dela o backend, desativa Gemini direto no Chrome e exige somente o token individual na instalação.
+- O build comum é empresarial por padrão e preserva a chave pública estável do manifest. Backend local ou Gemini direto exigem o perfil explícito `build:development`; nunca distribua esse perfil aos analistas.
 - Métricas operacionais podem contar cache, chamadas e resultados técnicos, mas nunca armazenar texto de perguntas, histórico, respostas ou tokens.
 - Para 40 analistas remotos, o destino principal do MVP é a API Cloudflare Worker; o backend Node permanece como ambiente local e contingência, sempre compartilhando o mesmo `AnalysisService`.
 - O Worker armazena somente hashes SHA-256 dos tokens individuais em secret. Tokens legíveis ficam com seus analistas e continuam válidos até rotação ou revogação.

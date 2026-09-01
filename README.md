@@ -76,7 +76,9 @@ Depois:
 4. Selecione a pasta `dist` deste projeto.
 5. Após gerar uma nova versão, clique em **Atualizar** no cartão do AEBOT.
 
-O pacote oficial para os analistas deve ser criado com `npm run build:production`, pois esse comando restringe a extensão à API de produção.
+O `npm run build` já gera o pacote empresarial conectado à API oficial e com identidade estável. Na primeira instalação cada analista informa somente seu token; ele permanece salvo ao recarregar ou atualizar a extensão. Apenas desinstalar a extensão ou limpar seus dados exige informar o token novamente.
+
+Para testar deliberadamente Gemini direto ou backend local, use `npm run build:development`. Esse perfil não deve ser distribuído aos analistas.
 
 ## Ambiente online
 
@@ -113,8 +115,9 @@ Em outro terminal, execute `npm run server:check`. As configurações privadas f
 | `npm run rules:audit` | Audita estrutura, lacunas e conflitos da base |
 | `npm run rules:format` | Padroniza a formatação do JSON sem alterar as regras |
 | `npm run rules:check` | Audita regras, TypeScript e testes em uma única execução |
-| `npm run build` | Gera a extensão local em `dist` |
-| `npm run build:production` | Gera e valida o pacote oficial da extensão |
+| `npm run build` | Gera a extensão empresarial online em `dist` |
+| `npm run build:production` | Gera e valida novamente o pacote empresarial |
+| `npm run build:development` | Gera o perfil local, somente para desenvolvimento |
 | `npm run build:server` | Gera a API Node em `server-dist` |
 | `npm run build:worker` | Valida o pacote do Worker sem publicar |
 | `npm run worker:deploy` | Publica o backend no Cloudflare |

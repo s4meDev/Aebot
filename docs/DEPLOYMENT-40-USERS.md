@@ -58,14 +58,13 @@ npm run extension:identity:generate
 
 O comando não substitui uma identidade existente. A chave privada, a chave pública e o ID ficam em `.aebot-private/`, fora do Git. Transfira essa pasta para um cofre corporativo seguro antes da distribuição definitiva. Uma publicação futura pela Chrome Web Store deve preservar a identidade escolhida ou exigirá atualizar a origem autorizada.
 
-O build empresarial deve exigir a identidade estável:
+O `manifest.json` versionado já contém somente a origem oficial e a chave pública de identidade. Portanto, o pacote cotidiano pode ser gerado sem variáveis manuais:
 
 ```powershell
-$env:AEBOT_PRODUCTION_API_URL='https://aebot-api.pedrolucasbotelho.workers.dev'
-$env:AEBOT_EXTENSION_PUBLIC_KEY=(Get-Content -Raw .aebot-private\extension-public-key.txt).Trim()
-$env:AEBOT_REQUIRE_STABLE_EXTENSION_ID='true'
 npm run build:production
 ```
+
+As variáveis `AEBOT_PRODUCTION_API_URL` e `AEBOT_EXTENSION_PUBLIC_KEY` continuam aceitas apenas quando uma implantação autorizada precisar substituir esses valores.
 
 Depois de carregar `dist` em um Chrome de teste, copie o ID exibido em `chrome://extensions`. Essa será a origem `chrome-extension://ID` liberada no Worker.
 
@@ -130,15 +129,17 @@ A chave fica em secret criptografado da Cloudflare, nunca no pacote da extensão
 
 ## 5. Gerar e instalar a extensão
 
-Repita o build empresarial com a URL final do Worker e a chave pública. O script deixa no manifest somente a origem HTTPS da API e remove o acesso direto ao Gemini e ao localhost.
+Execute `npm run build` ou `npm run build:production`. Ambos deixam no pacote comum somente a origem HTTPS oficial, sem acesso direto ao Gemini ou ao localhost. Use `npm run build:development` apenas para desenvolvimento local.
 
 Distribua a pasta `dist` pelo canal interno aprovado. Em cada perfil Chrome:
 
 1. carregue a extensão oficial;
 2. abra Configurações do AEBOT;
 3. informe somente o token daquele analista;
-4. use **Testar acesso completo**;
+4. use **Testar acesso** ou **Salvar acesso**;
 5. confirme catálogo, versão da base e provider online.
+
+O analista faz isso somente uma vez. Recarregar a extensão, gerar um novo build na mesma pasta ou atualizar para outra versão preserva o token porque a identidade pública permanece estável.
 
 O botão **Feedback** fica no cabeçalho do chat. Ele envia somente o texto digitado pelo analista, categoria, serviço, versão e identidade operacional. Pergunta, resposta e histórico do chat não são anexados automaticamente.
 
