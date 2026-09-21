@@ -49,7 +49,9 @@ assert(health.status === 'ok', 'Health check incompatível.');
 assert(
   health.aiProvider === 'gemini' &&
     Array.isArray(health.aiProviders) &&
-    health.aiProviders.join(',') === 'gemini,workers-ai',
+    health.aiProviders.join(',') === 'gemini,workers-ai' &&
+    Array.isArray(health.aiModels) &&
+    health.aiModels.includes('@cf/qwen/qwen3-30b-a3b-fp8'),
   'A ordem de contingência Gemini -> Workers AI não está ativa.'
 );
 assert(health.accessConfigured === true, 'Tokens dos analistas não estão ativos.');
@@ -480,6 +482,21 @@ assert(
   adminFeedback.feedback?.some((item) => item.id === feedback.feedbackId),
   'O painel administrativo não recuperou o feedback salvo.'
 );
+const adminMetrics = await (await request('/v1/admin/metrics?days=7', {
+  headers: { Authorization: `Bearer ${adminToken}` },
+})).json();
+assert(
+  adminMetrics.metrics?.totals?.analyses > 0 &&
+    adminMetrics.quotas?.gemini?.remainingQuotaAvailableHere === false &&
+    adminMetrics.quotas?.workersAi?.freeDailyNeurons === 10_000 &&
+    adminMetrics.configuredModels?.includes('@cf/qwen/qwen3-30b-a3b-fp8'),
+  'Métricas administrativas ou cadeia de contingência incompatíveis.'
+);
+assert(
+  !JSON.stringify(adminMetrics).includes('sem foto depois') &&
+    !JSON.stringify(adminMetrics).includes(analystToken),
+  'A telemetria expôs conteúdo ou credencial que deveria permanecer privado.'
+);
 const adminPage = await request('/admin');
 assert((await adminPage.text()).includes('Feedback dos analistas'), 'Página administrativa incompatível.');
 
@@ -492,6 +509,6 @@ assert(
   'A limpeza do feedback técnico de implantação falhou.'
 );
 
-console.log('Produção validada: saúde, CORS, autenticação, catálogo, decisão, feedback e painel administrativo.');
+console.log('Produção validada: saúde, CORS, autenticação, catálogo, decisão, métricas, feedback e painel administrativo.');
 console.log(`Identidade operacional usada no teste: ${analystId}.`);
 console.log('Nenhum token ou conteúdo de conversa foi exibido.');

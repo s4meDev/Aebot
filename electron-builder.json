@@ -1,0 +1,12 @@
+{
+  "appId": "br.com.aebot.desktop",
+  "productName": "AEBOT",
+  "directories": { "output": "desktop-release" },
+  "files": ["desktop-dist/**/*", "package.json"],
+  "extraMetadata": { "main": "desktop-dist/main.cjs" },
+  "extraResources": [{ "from": "desktop-resources", "to": "local-ai", "filter": ["runtime/**/*", "models/*.gguf", "assets-lock.json", "licenses/**/*"] }],
+  "asar": true,
+  "npmRebuild": false,
+  "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "signAndEditExecutable": false },
+  "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "artifactName": "AEBOT-${version}-Setup.exe" }
+}

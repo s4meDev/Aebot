@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { submitFeedback, type FeedbackSubmitResult } from '../api/FeedbackClient';
 import type { FeedbackCategory } from '../api/feedbackContracts';
+import { desktopBridge } from '../desktop/contracts';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export function FeedbackModal({
           <div>
             <h3 id="feedback-title">Enviar feedback</h3>
             <span className="help-text">Serviço: {serviceName}</span>
+            {desktopBridge() && <span className="help-text">Salvo neste computador. Compartilhe com a gestão usando Exportar relatório nas configurações.</span>}
           </div>
           <button
             type="button"

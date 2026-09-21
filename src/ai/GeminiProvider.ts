@@ -21,6 +21,7 @@ import { STORAGE_KEYS } from '../constants/storageKeys';
 import {
   buildEvaluationPrompt,
   buildSemanticInterpretationPrompt,
+  buildLocalInterpretationPrompt,
 } from './PromptBuilder';
 import { resolveContextualQuery } from '../services/ConversationContextResolver';
 import {
@@ -107,6 +108,7 @@ interface SemanticAttempt {
   interpretation?: SemanticInterpretation;
   provider: StructuredModelProvider;
   fallbackReason?: AiProviderResponse['fallbackReason'];
+  modelAttempts: NonNullable<AiProviderResponse['modelAttempts']>;
 }
 
 async function buildPrivateCacheKey(parts: string[]): Promise<string> {
@@ -136,6 +138,17 @@ async function requestGemini(
   maxOutputTokens: number,
   options?: StructuredModelRequestOptions
 ): Promise<StructuredModelResult> {
+  const startedAt = Date.now();
+  const attempts = (
+    status: StructuredModelResult['status'],
+    usage: { inputTokens?: number; outputTokens?: number } = {}
+  ) => [{
+    provider: 'gemini' as const,
+    model,
+    status,
+    durationMs: Date.now() - startedAt,
+    ...usage,
+  }];
   const controller = new AbortController();
   const timeoutId = globalThis.setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
   const thinkingConfig = getGeminiThinkingConfig(model);
@@ -176,6 +189,7 @@ async function requestGemini(
           return {
             status: response.status === 429 ? 'rate_limited' : 'api_error',
             provider: 'gemini',
+            attempts: attempts(response.status === 429 ? 'rate_limited' : 'api_error'),
           };
         }
         const data = await response.json();
@@ -186,20 +200,27 @@ async function requestGemini(
               .map((part) => part.text)
               .join('')
           : undefined;
+        const usage = data.usageMetadata ?? {};
+        const token = (value: unknown): number | undefined =>
+          Number.isInteger(value) && Number(value) >= 0 ? Number(value) : undefined;
+        const tokenUsage = {
+          inputTokens: token(usage.promptTokenCount),
+          outputTokens: token(usage.candidatesTokenCount),
+        };
         return typeof text === 'string'
-          ? { status: 'ok', provider: 'gemini', text }
-          : { status: 'api_error', provider: 'gemini' };
+          ? { status: 'ok', provider: 'gemini', text, attempts: attempts('ok', tokenUsage) }
+          : { status: 'api_error', provider: 'gemini', attempts: attempts('api_error', tokenUsage) };
       } catch {
         if (attempt === 0 && !controller.signal.aborted) {
           await wait(retryDelay());
           continue;
         }
-        return { status: 'api_error', provider: 'gemini' };
+        return { status: 'api_error', provider: 'gemini', attempts: attempts('api_error') };
       }
     }
-    return { status: 'api_error', provider: 'gemini' };
+    return { status: 'api_error', provider: 'gemini', attempts: attempts('api_error') };
   } catch {
-    return { status: 'api_error', provider: 'gemini' };
+    return { status: 'api_error', provider: 'gemini', attempts: attempts('api_error') };
   } finally {
     globalThis.clearTimeout(timeoutId);
   }
@@ -213,6 +234,7 @@ export function normalizeGeminiModel(value: string): string {
 export class GeminiModelClient implements StructuredModelClient {
   readonly provider = 'gemini' as const;
   readonly providerChain = ['gemini'] as const;
+  readonly modelChain: readonly string[];
   readonly cacheKey: string;
 
   constructor(
@@ -221,6 +243,7 @@ export class GeminiModelClient implements StructuredModelClient {
     private readonly fallbackModel: string
   ) {
     this.cacheKey = `gemini:${primaryModel}:${fallbackModel}`;
+    this.modelChain = [...new Set([primaryModel, fallbackModel])];
   }
 
   async request(
@@ -244,7 +267,7 @@ export class GeminiModelClient implements StructuredModelClient {
     if (primaryIsValid || this.fallbackModel === this.primaryModel) {
       return primaryResponse;
     }
-    return requestGemini(
+    const fallbackResponse = await requestGemini(
       this.apiKey,
       this.fallbackModel,
       contents,
@@ -252,6 +275,17 @@ export class GeminiModelClient implements StructuredModelClient {
       maxOutputTokens,
       options
     );
+    return {
+      ...fallbackResponse,
+      attempts: [
+        ...(primaryResponse.attempts ?? []).map((attempt) =>
+          primaryResponse.status === 'ok'
+            ? { ...attempt, status: 'invalid_response' as const }
+            : attempt
+        ),
+        ...(fallbackResponse.attempts ?? []),
+      ],
+    };
   }
 }
 
@@ -479,7 +513,9 @@ export class GeminiProvider implements AiProvider {
 
     const request = (async (): Promise<SemanticAttempt> => {
       const selection = selectSemanticRuleCandidates(query, rules);
-      const semanticPrompt = buildSemanticInterpretationPrompt(
+      const semanticPrompt = modelClient.provider === 'local'
+        ? buildLocalInterpretationPrompt(query, service, selection.rules, clarificationQuestions)
+        : buildSemanticInterpretationPrompt(
         query,
         service,
         selection.rules,
@@ -504,6 +540,7 @@ export class GeminiProvider implements AiProvider {
         return {
           provider: response.provider,
           fallbackReason: response.status === 'rate_limited' ? 'rate_limited' : 'api_error',
+          modelAttempts: response.attempts ?? [],
         };
       }
       const interpretation = parseSemanticInterpretation(
@@ -516,6 +553,7 @@ export class GeminiProvider implements AiProvider {
         interpretation,
         provider: response.provider,
         fallbackReason: interpretation ? undefined : 'invalid_response',
+        modelAttempts: response.attempts ?? [],
       };
     })().finally(() => {
       this.semanticInFlight.delete(cacheKey);
@@ -557,6 +595,7 @@ export class GeminiProvider implements AiProvider {
     let fallbackReason: AiProviderResponse['fallbackReason'] = modelClient
       ? undefined
       : 'no_api_key';
+    const modelAttempts: NonNullable<AiProviderResponse['modelAttempts']> = [];
 
     // A IA interpreta a linguagem e já produz uma resposta curta. O motor apenas
     // valida a regra e a conclusão oficial antes de liberar o texto ao analista.
@@ -598,6 +637,7 @@ export class GeminiProvider implements AiProvider {
             interpretation = semanticAttempt.interpretation;
             semanticProvider = semanticAttempt.provider;
             fallbackReason = semanticAttempt.fallbackReason;
+            modelAttempts.push(...semanticAttempt.modelAttempts);
             if (interpretation) {
               this.cacheInterpretation(cacheKey, interpretation, semanticProvider);
             }
@@ -629,6 +669,7 @@ export class GeminiProvider implements AiProvider {
                 : interpretation.conversation || !usableSemanticEvaluation
                   ? 'invalid_response'
                   : undefined,
+              modelAttempts,
             };
           }
         }
@@ -644,6 +685,7 @@ export class GeminiProvider implements AiProvider {
           768,
           { responseSchema: NARRATIVE_RESPONSE_SCHEMA }
         );
+        modelAttempts.push(...(narrativeResponse.attempts ?? []));
         if (narrativeResponse.status === 'ok') {
           const narrative = narrativeResponse.text
             ? parseNarrative(narrativeResponse.text, evaluation)
@@ -655,6 +697,7 @@ export class GeminiProvider implements AiProvider {
               content: formatEvaluationResponse(evaluation, narrative),
               decision: evaluation.decision,
               evaluation,
+              modelAttempts,
             };
           }
           fallbackReason = 'invalid_response';
@@ -700,6 +743,7 @@ export class GeminiProvider implements AiProvider {
       decision: evaluation.decision,
       evaluation,
       fallbackReason,
+      modelAttempts,
     };
   }
 

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ruleEngine } from '../../src/services/RuleEngine';
 import { createWorkerApp, type WorkerEnvironment } from '../app';
 import { createFakeD1 } from './fakeD1';
+import type { D1Database } from '../feedbackRepository';
 
 const TOKEN = 'token-individual-com-mais-de-trinta-e-dois-caracteres';
 const ADMIN_TOKEN = 'token-administrativo-separado-e-com-mais-de-trinta-caracteres';
@@ -57,7 +58,11 @@ describe('Cloudflare Worker do AEBOT', () => {
     const app = createWorkerApp({ logger: { info: vi.fn(), error: vi.fn() } });
     const response = await app.fetch(
       request('/health'),
-      await environment({ AI: { run: vi.fn() }, GEMINI_API_KEY: 'chave-de-teste' })
+      await environment({
+        AI: { run: vi.fn() },
+        GEMINI_API_KEY: 'chave-de-teste',
+        AEBOT_WORKERS_AI_FALLBACK_MODELS: '@cf/qwen/qwen3-30b-a3b-fp8',
+      })
     );
     const body = await response.json() as Record<string, unknown>;
 
@@ -65,6 +70,12 @@ describe('Cloudflare Worker do AEBOT', () => {
       aiConfigured: true,
       aiProvider: 'gemini',
       aiProviders: ['gemini', 'workers-ai'],
+      aiModels: [
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash',
+        '@cf/openai/gpt-oss-20b',
+        '@cf/qwen/qwen3-30b-a3b-fp8',
+      ],
     });
   });
 
@@ -109,6 +120,7 @@ describe('Cloudflare Worker do AEBOT', () => {
     expect(response.status).toBe(200);
     expect(body.result.decision).toBe('Reprovado');
     expect(body.result.evaluation.outcome).toBe('decision');
+    expect(body.result).not.toHaveProperty('modelAttempts');
     expect(JSON.stringify(logger.info.mock.calls)).not.toContain('sem foto depois');
     expect(JSON.stringify(logger.info.mock.calls)).not.toContain(TOKEN);
   });
@@ -335,6 +347,47 @@ describe('Cloudflare Worker do AEBOT', () => {
     });
     expect(adminDeleteResponse.status).toBe(200);
     expect(fake.rows).toHaveLength(0);
+  });
+
+  it('protege e entrega métricas administrativas sem conteúdo das conversas', async () => {
+    const emptyDatabase: D1Database = {
+      prepare: () => ({
+        bind() { return this; },
+        run: vi.fn().mockResolvedValue({ success: true, results: [] }),
+        all: vi.fn().mockResolvedValue({ success: true, results: [] }),
+      }),
+    };
+    const app = createWorkerApp({
+      logger: { info: vi.fn(), error: vi.fn() },
+      now: () => Date.parse('2026-09-01T12:00:00.000Z'),
+    });
+    const env = await environment({
+      FEEDBACK_DB: emptyDatabase,
+      AEBOT_ADMIN_TOKEN_HASH: await tokenHash(ADMIN_TOKEN),
+      AI: { run: vi.fn() },
+      AEBOT_WORKERS_AI_FALLBACK_MODELS: '@cf/qwen/qwen3-30b-a3b-fp8',
+    });
+
+    const unauthorized = await app.fetch(request('/v1/admin/metrics'), env);
+    const response = await app.fetch(request('/v1/admin/metrics?days=30', {
+      headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
+    }), env);
+    const body = await response.json() as Record<string, unknown>;
+
+    expect(unauthorized.status).toBe(401);
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      metrics: {
+        period: { startDay: '2026-08-03', endDay: '2026-09-01', days: 30 },
+        totals: { analyses: 0, activeAnalysts: 0 },
+      },
+      quotas: {
+        gemini: { remainingQuotaAvailableHere: false, quotaScope: 'project' },
+        workersAi: { freeDailyNeurons: 10_000 },
+      },
+      privacy: expect.stringContaining('Nenhum texto'),
+    });
+    expect(JSON.stringify(body)).not.toContain(TOKEN);
   });
 
   it('serve a página administrativa com CSP restritiva', async () => {

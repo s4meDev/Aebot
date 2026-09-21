@@ -16,11 +16,11 @@ Sempre justificar.
 
 # Usuários e volume
 
-40 analistas em máquinas e redes diferentes.
+Até 60 analistas em máquinas independentes. Piloto inicial com 5 a 10 pessoas.
 
 Pouco mais de 3.000 Ordens de Serviço analisadas por dia no total.
 
-Os analistas podem enviar feedback escrito sobre respostas, regras ou interface. O responsável deve conseguir consultar os registros persistidos online em acesso administrativo separado.
+No desktop, feedback é salvo localmente e exportado voluntariamente com métricas para o responsável. Conversas não são persistidas. A coleta central online anterior continua apenas no perfil legado.
 
 ---
 
@@ -40,23 +40,23 @@ Frontend React
 
 ↓
 
-API online serverless
+Aplicativo Windows (Electron, interface React isolada)
 
 ↓
 
-Rule Engine
+Qwen3-4B-GGUF Q4_K_M em llama.cpp local, com JSON validado
 
 ↓
 
-Base de regras versionada
+Rule Engine compartilhado e base de regras versionada
 
 ↓
 
-Provider de IA substituível e opcional
+Resposta rastreável por serviço, regra, versão, evidência e conclusão
 
-O Cloudflare Worker é o destino principal do MVP online. O backend Node permanece para desenvolvimento e contingência. Ambos reutilizam o mesmo motor e a mesma base.
+Direção atual: desktop offline por computador, conforme apresentação da coordenação de setembro/2026. Runtime, modelo, regras e interface são distribuídos em um instalador. Cloudflare, API Node e extensão permanecem compatíveis como legado; o desktop não os consulta nem possui fallback para nuvem.
 
-Os modelos de suporte também são online. O Gemini 3.5 Flash-Lite atende primeiro às interpretações semânticas por oferecer baixa latência; o Gemini 3.5 Flash é a segunda opção do mesmo provedor e o Workers AI atua como contingência. O motor determinístico responde sem consumir IA sempre que o texto já encontra regra suficiente.
+O Qwen interpreta linguagem em fatos rastreáveis (regra candidata, trecho literal e ocorrência/hipótese/consulta). O motor valida os fatos, resolve conflitos e calcula a conclusão. Casos determinísticos já conclusivos evitam inferência desnecessária. Falta do runtime nunca ativa API externa. Não há cobrança por chamada; CPU, RAM e tempo de resposta continuam limitantes.
 
 A IA usa seu conhecimento linguístico para associar linguagem livre, informal, sinônimos, frases incompletas e respostas curtas ao catálogo do serviço. Em dúvidas e casos ambíguos, ela conversa primeiro, responde em até quatro frases e faz somente uma pergunta útil por vez; nunca escolhe ou altera uma conclusão sem apoio do motor.
 
@@ -77,4 +77,10 @@ No enquadramento da execução: troca exclusiva do registro usa Substituição d
 
 5. Segurança e privacidade.
 
-6. Operação para 40 acessos remotos.
+6. Instalação e operação offline em até 60 notebooks, começando com piloto controlado.
+
+# Governança e homologação
+
+Pacotes de regras devem conter responsável, vigência, versão e descrição da alteração. A importação valida o schema, exige versão superior e preserva a base anterior. A distribuição do pacote depende de canal confiável da TI; metadados declarados não são assinatura digital.
+
+O modelo 4B é experimental até homologação. O piloto deve comparar pelo menos 100 perguntas com gabarito revisado por referência operacional, medir divergências críticas e desempenho no Latitude 3420 de 16 GB. Não escalar automaticamente pela aprovação de testes unitários.

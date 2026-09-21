@@ -25,6 +25,12 @@ import {
   saveFeedback,
   type D1Database,
 } from './feedbackRepository';
+import {
+  getOperationalMetrics,
+  recordAnalysisMetrics,
+  recordFeedbackMetrics,
+  type OperationalMetrics,
+} from './metricsRepository';
 
 interface RateLimitBinding {
   limit(options: { key: string }): Promise<{ success: boolean }>;
@@ -39,6 +45,7 @@ export interface WorkerEnvironment {
   AEBOT_TOKEN_HASHES?: string;
   AEBOT_ADMIN_TOKEN_HASH?: string;
   AEBOT_WORKERS_AI_MODEL?: string;
+  AEBOT_WORKERS_AI_FALLBACK_MODELS?: string;
   AEBOT_AI_PROVIDER_ORDER?: string;
   AEBOT_HUMANIZE_DETERMINISTIC?: string;
   AEBOT_BODY_LIMIT_BYTES?: string;
@@ -58,6 +65,10 @@ interface WorkerDependencies {
   logger?: WorkerLogger;
   randomUUID?: () => string;
   now?: () => number;
+}
+
+interface WorkerExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
 }
 
 const DEFAULT_BODY_LIMIT = 32_768;
@@ -80,10 +91,17 @@ function booleanValue(value: string | undefined): boolean {
 }
 
 function createModelClient(env: WorkerEnvironment): StructuredModelClient | null {
+  const workersModels = [
+    env.AEBOT_WORKERS_AI_MODEL?.trim() || DEFAULT_WORKERS_AI_MODEL,
+    ...(env.AEBOT_WORKERS_AI_FALLBACK_MODELS?.split(',').map((model) => model.trim()) ?? []),
+  ].filter((model, index, models) => Boolean(model) && models.indexOf(model) === index);
   const workersAi = env.AI
-    ? new WorkersAiModelClient(
-        env.AI,
-        env.AEBOT_WORKERS_AI_MODEL?.trim() || DEFAULT_WORKERS_AI_MODEL
+    ? workersModels.slice(1).reduce<StructuredModelClient>(
+        (chain, model) => new FallbackStructuredModelClient(
+          chain,
+          new WorkersAiModelClient(env.AI!, model)
+        ),
+        new WorkersAiModelClient(env.AI, workersModels[0])
       )
     : null;
   const geminiKey = env.GEMINI_API_KEY?.trim() ?? '';
@@ -101,6 +119,60 @@ function createModelClient(env: WorkerEnvironment): StructuredModelClient | null
       : new FallbackStructuredModelClient(gemini, workersAi);
   }
   return workersAi ?? gemini;
+}
+
+const WORKERS_AI_FREE_NEURONS_PER_DAY = 10_000;
+const WORKERS_AI_NEURONS_PER_MILLION_TOKENS: Record<
+  string,
+  { input: number; output: number }
+> = {
+  '@cf/openai/gpt-oss-20b': { input: 18_182, output: 27_273 },
+  '@cf/qwen/qwen3-30b-a3b-fp8': { input: 4_625, output: 30_475 },
+};
+
+function quotaOverview(metrics: OperationalMetrics) {
+  const todayModels = metrics.models.filter((row) => row.day === metrics.period.endDay);
+  const geminiRows = todayModels.filter((row) => row.provider === 'gemini');
+  const workersRows = todayModels.filter((row) => row.provider === 'workers-ai');
+  const geminiRequests = geminiRows.reduce((sum, row) => sum + Number(row.request_count), 0);
+  const geminiTokens = geminiRows.reduce(
+    (sum, row) => sum + Number(row.input_tokens) + Number(row.output_tokens),
+    0
+  );
+  const workersEstimateComplete = workersRows.every((row) =>
+    Boolean(WORKERS_AI_NEURONS_PER_MILLION_TOKENS[row.model]) &&
+    (Number(row.request_count) === 0 || Number(row.input_tokens) + Number(row.output_tokens) > 0)
+  );
+  const estimatedWorkersNeurons = workersEstimateComplete
+    ? workersRows.reduce((sum, row) => {
+        const rate = WORKERS_AI_NEURONS_PER_MILLION_TOKENS[row.model];
+        if (!rate) return sum;
+        return sum +
+          Number(row.input_tokens) * rate.input / 1_000_000 +
+          Number(row.output_tokens) * rate.output / 1_000_000;
+      }, 0)
+    : null;
+  return {
+    gemini: {
+      measuredRequestsToday: geminiRequests,
+      measuredTokensToday: geminiTokens || null,
+      remainingQuotaAvailableHere: false,
+      quotaScope: 'project',
+      dashboardUrl: 'https://aistudio.google.com/usage',
+      note: 'O Gemini não expõe ao AEBOT a cota restante do projeto. Consulte os limites ativos no Google AI Studio.',
+    },
+    workersAi: {
+      freeDailyNeurons: WORKERS_AI_FREE_NEURONS_PER_DAY,
+      estimatedNeuronsToday: estimatedWorkersNeurons === null
+        ? null
+        : Math.round(estimatedWorkersNeurons * 100) / 100,
+      estimateComplete: workersEstimateComplete,
+      dashboardUrl: 'https://dash.cloudflare.com/',
+      note: workersEstimateComplete
+        ? 'Estimativa calculada pelos tokens reportados e pelas tarifas públicas de neurons dos modelos configurados.'
+        : 'O provedor não reportou tokens em todas as tentativas; consulte o painel Cloudflare para o consumo oficial.',
+    },
+  };
 }
 
 export function createCloudAnalysisService(env: WorkerEnvironment): AnalysisService {
@@ -279,7 +351,11 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
   };
 
   return {
-    async fetch(request: Request, env: WorkerEnvironment): Promise<Response> {
+    async fetch(
+      request: Request,
+      env: WorkerEnvironment,
+      context?: WorkerExecutionContext
+    ): Promise<Response> {
       const startedAt = now();
       const requestId = randomUUID();
       const requestUrl = new URL(request.url);
@@ -323,7 +399,10 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
 
       const isPublicEndpoint = path === '/' || path === '/health';
       const adminFeedbackMatch = path.match(/^\/v1\/admin\/feedback\/([a-f0-9-]{36})$/i);
-      const isAdminEndpoint = path === '/v1/admin/feedback' || Boolean(adminFeedbackMatch);
+      const isAdminEndpoint =
+        path === '/v1/admin/feedback' ||
+        path === '/v1/admin/metrics' ||
+        Boolean(adminFeedbackMatch);
       const adminAuthenticated = isAdminEndpoint
         ? await authorizedAdmin(request, env.AEBOT_ADMIN_TOKEN_HASH)
         : false;
@@ -386,6 +465,7 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
             aiConfigured: status.aiConfigured,
             aiProvider: status.aiProvider,
             aiProviders: status.aiProviders,
+            aiModels: status.aiModels,
             geminiConfigured: status.geminiConfigured,
             accessConfigured: tokenHashes(env).size > 0,
             feedbackConfigured: Boolean(env.FEEDBACK_DB),
@@ -430,7 +510,18 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
             positiveInteger(env.AEBOT_BODY_LIMIT_BYTES, DEFAULT_BODY_LIMIT)
           ));
           const result = await service.analyze(input);
-          const response = jsonResponse(200, { result, requestId }, requestId, origin);
+          const { modelAttempts, ...publicResult } = result;
+          if (env.FEEDBACK_DB) {
+            const metricWrite = recordAnalysisMetrics(env.FEEDBACK_DB, {
+              analystId: analystId!,
+              occurredAt: new Date(now()).toISOString(),
+              durationMs: now() - startedAt,
+              result,
+            }).catch(() => logger.error({ requestId, path, errorType: 'metric_write_failed' }));
+            context?.waitUntil(metricWrite);
+            if (!context) await metricWrite;
+          }
+          const response = jsonResponse(200, { result: publicResult, requestId }, requestId, origin);
           finish(200, {
             analystId,
             outcome: result.evaluation.outcome,
@@ -466,6 +557,10 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
             id: feedbackId,
             analystId: analystId!,
             createdAt: new Date(now()).toISOString(),
+          });
+          await recordFeedbackMetrics(env.FEEDBACK_DB, {
+            analystId: analystId!,
+            occurredAt: new Date(now()).toISOString(),
           });
           const response = jsonResponse(201, {
             status: 'saved',
@@ -505,6 +600,33 @@ export function createWorkerApp(dependencies: WorkerDependencies = {}) {
             requestId,
           }, requestId, origin);
           finish(200, { identity: 'admin', feedbackCount: feedback.length });
+          return response;
+        }
+
+        if (request.method === 'GET' && path === '/v1/admin/metrics') {
+          if (!env.FEEDBACK_DB) {
+            const response = jsonResponse(503, {
+              error: 'metrics_unavailable',
+              requestId,
+            }, requestId, origin);
+            finish(503, { identity: 'admin' });
+            return response;
+          }
+          const days = Math.min(
+            positiveInteger(requestUrl.searchParams.get('days') ?? undefined, 7),
+            90
+          );
+          const endDay = new Date(now()).toISOString().slice(0, 10);
+          const startDay = new Date(now() - (days - 1) * 86_400_000).toISOString().slice(0, 10);
+          const metrics = await getOperationalMetrics(env.FEEDBACK_DB, { startDay, endDay, days });
+          const response = jsonResponse(200, {
+            metrics,
+            quotas: quotaOverview(metrics),
+            configuredModels: analysisService(env).status().aiModels ?? [],
+            privacy: 'Nenhum texto de pergunta, resposta, histórico ou token de acesso é armazenado.',
+            requestId,
+          }, requestId, origin);
+          finish(200, { identity: 'admin', metricDays: days });
           return response;
         }
 

@@ -1,8 +1,35 @@
 # Arquitetura do AEBOT
 
-## Estratégia de IA online
+## Rota atual: desktop offline
 
-O motor calcula uma avaliação técnica inicial, mas resultados informativos, orientativos ou ambíguos passam pela camada conversacional AI-first. O backend tenta `gemini-3.5-flash-lite`, depois `gemini-3.5-flash` e, diante de falha técnica ou limite, usa `@cf/openai/gpt-oss-20b` no Workers AI. O catálogo do serviço e o histórico recente são apresentados ao modelo, que devolve simultaneamente os mapeamentos permitidos e uma resposta curta. O backend recalcula e valida a conclusão antes de liberar esse texto.
+O novo ponto de entrada é `desktop/main.ts`, um processo Electron que inicia o runtime e mantém o motor fora da interface. A interface React existente acessa somente operações tipadas em `src/desktop/contracts.ts` através de `desktop/preload.ts`. Não há servidor central ou autenticação por API no desktop.
+
+Ordem de execução: interface → IPC validado → `AnalysisService` → `LocalModelClient` → Qwen/llama.cpp no loopback → JSON validado pelo `SemanticInterpreter` → `RuleEngine` → explicação curta. Casos já conclusivos usam diretamente o motor. Perguntas pendentes e retificações continuam usando os contratos existentes.
+
+Arquivos do desktop, na ordem de responsabilidade:
+
+- `desktop/main.ts`: janela, validação do remetente IPC, coordenação das análises e diálogos de importação/exportação.
+- `desktop/preload.ts`: ponte limitada entre interface isolada e processo principal; não expõe Node nem IPC genérico.
+- `src/desktop/contracts.ts`: operações e estado do aplicativo local.
+- `desktop/ModelRuntime.ts`: processo llama.cpp oculto, porta aleatória em 127.0.0.1, credencial temporária, prontidão e encerramento.
+- `desktop/LocalModelClient.ts`: requisição local com JSON restrito, timeout e validação; não tem contingência externa.
+- `desktop/RuleRelease.ts`: pacote de regras com responsável, vigência, versão e histórico descritivo; reutiliza o schema oficial.
+- `desktop/LocalData.ts`: escrita atômica, métricas sem conversas e feedback voluntário local.
+- `src/components/DesktopSettings.tsx`: situação da IA, importação e exportação, sem pedir chave ou endereço.
+- `desktop/evaluate.ts`: compara o modelo real ao corpus técnico; mantém homologação operacional como pendente.
+- `scripts/build-desktop.mjs`: compila renderer, processo principal e preload separadamente.
+- `scripts/prepare-desktop-assets.mjs`: baixa runtime/modelo de fontes oficiais com revisão e SHA-256 fixados.
+- `scripts/verify-desktop-assets.mjs`: bloqueia o instalador se faltarem arquivos, hashes ou licenças.
+- `desktop-resources/assets-lock.json`: identidade reproduzível dos artefatos, sem colocar pesos/binaries no Git.
+- `electron-builder.json`: instalador Windows x64 com modelo, runtime e licenças; sem exigir Node no notebook do analista.
+
+Os arquivos de regras instalados em `%APPDATA%/AEBOT` prevalecem sobre a base embarcada apenas se válidos e atuais. Uma importação substitui o motor e seu cache juntos. A interface recarrega o catálogo e limpa o caso para não misturar versões. O pacote anterior fica disponível em `.previous` para recuperação pela TI.
+
+O restante deste mapa descreve o núcleo compartilhado e os perfis online anteriores, preservados durante a migração. Eles não são chamados pelo aplicativo offline. Veja `docs/ADR-001-DESKTOP-LOCAL.md` para os limites da primeira entrega.
+
+## Estratégia de IA online (legado)
+
+O motor calcula uma avaliação técnica inicial, mas resultados informativos, orientativos ou ambíguos passam pela camada conversacional AI-first. O backend tenta `gemini-3.5-flash-lite`, `gemini-3.5-flash`, `@cf/openai/gpt-oss-20b` e por fim `@cf/qwen/qwen3-30b-a3b-fp8`. Cada próximo modelo só é chamado diante de falha técnica, limite ou resposta fora do contrato. O catálogo do serviço e o histórico recente são apresentados ao modelo, que devolve simultaneamente os mapeamentos permitidos e uma resposta curta. O backend recalcula e valida a conclusão antes de liberar esse texto.
 
 Informações pendentes são transportadas em `pendingInformation`; o backend não depende de reconhecer frases que ele mesmo escreveu. Assim, respostas curtas como “interna”, “terceirizada” ou o nome de uma superintendência continuam o caso correto sem transformar a pergunta pendente em fato da OS.
 
@@ -14,7 +41,7 @@ Este arquivo é o mapa de manutenção do projeto. A ordem abaixo acompanha o ca
 
 ## 1. Visão geral
 
-O AEBOT tem três partes executáveis:
+Além do desktop acima, o AEBOT preserva três partes executáveis legadas:
 
 1. **Extensão Chrome** (`src`): mostra o side panel e conversa com a API.
 2. **Cloudflare Worker** (`worker`): API online usada pelos analistas em produção.
@@ -102,7 +129,8 @@ O modelo compreende linguagem informal, referências ao histórico e frases inco
 - A resposta volta pelo backend e é exibida por `ChatPanel.tsx`.
 - O feedback segue para `POST /v1/feedback` sem copiar automaticamente a conversa.
 - `worker/feedbackRepository.ts` grava o registro no D1.
-- `worker/adminPage.ts` fornece a página protegida para leitura e tratamento dos feedbacks.
+- `worker/adminPage.ts` fornece a página protegida para métricas operacionais e feedbacks.
+- `worker/metricsRepository.ts` agrega uso por dia, analista, modelo e estado técnico sem persistir o conteúdo do chat.
 
 ## 3. Fonte de verdade e dependências
 
@@ -225,7 +253,8 @@ Regras que evitam acoplamento:
 - `app.ts`: rotas, autenticação, CORS, limites e chamada do serviço de análise.
 - `feedbackRepository.ts`: operações tipadas no banco D1.
 - `adminPage.ts`: HTML, CSS e JavaScript da página administrativa.
-- `migrations/0001_feedback.sql`: criação inicial das tabelas de feedback.
+- `migrations/0001_feedback.sql`: criação inicial da tabela de feedback.
+- `migrations/0002_operational_metrics.sql`: métricas agregadas de atividade e tentativas de IA.
 - `__tests__`: testes de API, segurança, capacidade e banco simulado.
 
 ### `server` — backend Node local

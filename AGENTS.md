@@ -1,5 +1,10 @@
 # AEBOT — decisões técnicas permanentes
 
+- Rota principal desde setembro/2026: aplicativo Windows offline por notebook, Qwen3-4B-GGUF Q4_K_M em llama.cpp gerenciado pelo Electron. Piloto com 5–10 analistas; expansão até 60 depende de homologação. As diretrizes online abaixo se aplicam somente aos perfis legados, nunca ao desktop.
+- O desktop usa IPC tipado, renderer isolado/sandboxed, runtime em 127.0.0.1 com credencial temporária e sem fallback de nuvem. Modelo e runtime são empacotados; o analista não configura chave, URL ou porta.
+- Atualizações de regras locais exigem pacote validado, versão superior, responsável declarado, vigência e descrição da revisão. Preserve a versão anterior; autoria declarada não substitui assinatura nem distribuição confiável da TI.
+- No desktop, métricas e feedback voluntário são locais e exportados explicitamente. Nunca persistir conversas. Testes de contrato não homologam o modelo: medir inferência real e validar o gabarito com referência operacional antes de escalar.
+
 - O produto é um Assistente de Análise, não um chatbot genérico. Respostas devem ser curtas, objetivas e fundamentadas apenas nas regras cadastradas.
 - As únicas conclusões oficiais são `Conforme`, `Não Conforme` e `Reprovado`. Ausência de regra suficiente produz `decision: null` e validação humana; nunca use decisão padrão para aprovar.
 - Regras específicas de serviços pertencem exclusivamente a `src/data/rulesStore.json`. O motor TypeScript deve permanecer genérico, sem IDs, textos ou heurísticas de um serviço.
@@ -54,5 +59,8 @@
 - O fluxo conversacional é AI-first para resultados informativos, orientativos ou ambíguos: o modelo recebe o histórico recente e responde em até quatro frases, podendo fazer uma única pergunta útil. Casos já conclusivos podem usar a resposta determinística curta para preservar latência e cota.
 - Uma resposta natural validada pelo backend nunca deve ser descartada em favor de um template burocrático; o formatador fixo é apenas contingência técnica.
 - Perguntas objetivas pendentes devem viajar como estado tipado (`pendingInformation`). Nunca dependa apenas de procurar frases na resposta renderizada para continuar o caso.
+- A telemetria operacional registra somente contagens, identidade do analista, conclusão técnica, modelo, status, tokens informados e latência; nunca persiste pergunta, resposta, histórico, chave ou token legível.
+- O painel administrativo deve distinguir consumo medido, estimativas e cotas externas. Cota restante do Gemini não pode ser inferida; a fonte é o Google AI Studio. Estimativa de neurons do Workers AI só aparece quando há tokens reportados.
+- A cadeia online atual é Gemini Flash-Lite, Gemini Flash, Workers AI GPT-OSS e Workers AI Qwen3. Contingências só executam após falha, limite ou saída inválida e nunca alteram a decisão determinística.
 - Falha de todos os provedores online nunca deve apagar uma orientação ou explicação já fundamentada pelo motor local. Use `semantic_unavailable` somente quando o resultado local também for realmente insuficiente.
 - Diagnósticos de produção podem criar feedback técnico para validar o D1, mas devem consultar e remover automaticamente apenas o registro criado pelo próprio teste.

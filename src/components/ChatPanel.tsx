@@ -11,6 +11,7 @@ import { storageAdapter } from '../storage/StorageAdapter';
 import { STORAGE_KEYS } from '../constants/storageKeys';
 import { parseNewCaseCommand } from '../services/ConversationContextResolver';
 import { FeedbackModal } from './FeedbackModal';
+import { desktopBridge, type DesktopStatus } from '../desktop/contracts';
 
 interface ChatPanelProps {
   service: ServiceRecord;
@@ -41,6 +42,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [draft, setDraft] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [localStatus, setLocalStatus] = useState<DesktopStatus | null>(null);
   const [backendConnection, setBackendConnection] = useState<BackendUiState>({
     state: 'not_configured',
   });
@@ -49,11 +51,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const isGeminiKeyConfigured = !getPackagedBackendUrl() && Boolean(
     storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, '').trim()
   );
-  const isBackendConfigured = Boolean(resolveBackendUrl(
+  const isBackendConfigured = !desktopBridge() && Boolean(resolveBackendUrl(
     storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
   ));
 
   useEffect(() => {
+    const desktop = desktopBridge();
+    if (desktop) {
+      let active = true;
+      const refresh = () => void desktop.status().then((status) => {
+        if (active) setLocalStatus(status);
+      }).catch(() => { /* A próxima consulta atualiza o estado. */ });
+      refresh();
+      const timer = setInterval(refresh, 2000);
+      return () => { active = false; clearInterval(timer); };
+    }
     const backendUrl = resolveBackendUrl(
       storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
     );
@@ -77,7 +89,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
   useEffect(() => {
     setMessages([createWelcomeMessage(service.name)]);
-  }, [service.id, service.name]);
+  }, [service.id, service.name, configurationRevision]);
 
   useEffect(() => {
     const messageList = messageListRef.current;
@@ -197,6 +209,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   };
 
   const engineStatus = (() => {
+    if (desktopBridge()) return {
+      label: localStatus?.state === 'ready' ? 'Local · Qwen' : localStatus?.state === 'starting' ? 'Carregando IA' : 'Local · regras',
+      className: localStatus?.state === 'ready' ? 'api-mode' : 'sim-mode',
+      title: localStatus?.message ?? 'Verificando a IA local…',
+    };
     if (backendConnection.state === 'checking') {
       return {
         label: 'Verificando',

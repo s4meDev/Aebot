@@ -20,6 +20,7 @@ Cloudflare Worker
   -> Gemini 3.5 Flash-Lite como interpretação principal de baixa latência
   -> Gemini 3.5 Flash como contingência do mesmo provedor
   -> Workers AI com gpt-oss-20b como contingência
+  -> Workers AI com Qwen3 30B como última contingência
   -> D1 para feedback escrito pelos analistas
 ```
 
@@ -143,7 +144,7 @@ O analista faz isso somente uma vez. Recarregar a extensão, gerar um novo build
 
 O botão **Feedback** fica no cabeçalho do chat. Ele envia somente o texto digitado pelo analista, categoria, serviço, versão e identidade operacional. Pergunta, resposta e histórico do chat não são anexados automaticamente.
 
-Para ler os registros, abra `https://aebot-api.pedrolucasbotelho.workers.dev/admin` e informe o token administrativo. Ele fica apenas na aba atual. A tela permite filtrar, carregar registros antigos e exportar os itens exibidos em CSV. Os mesmos dados também podem ser consultados diretamente no painel D1 da Cloudflare.
+Para administrar a operação, abra `https://aebot-api.pedrolucasbotelho.workers.dev/admin` e informe o token administrativo. Ele fica apenas na aba atual. A tela mostra uso, atividade por analista, saúde e latência dos modelos, estimativa de consumo quando possível e os feedbacks, que podem ser filtrados e exportados em CSV. Os dados brutos também podem ser consultados no D1 da Cloudflare.
 
 ## 6. Teste piloto antes dos 40 usuários
 

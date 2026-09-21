@@ -9,9 +9,16 @@ O pacote dos analistas usa uma única API Cloudflare publicada. A ordem atual é
 1. `gemini-3.5-flash-lite`: interpretação principal, priorizando rapidez;
 2. `gemini-3.5-flash`: segunda tentativa do Gemini;
 3. `@cf/openai/gpt-oss-20b`: contingência no Workers AI;
+4. `@cf/qwen/qwen3-30b-a3b-fp8`: última contingência online, multilíngue e com bom custo de entrada.
 4. motor local: mantém decisões e orientações já fundamentadas se todos os modelos falharem.
 
 Os modelos podem escrever respostas diferentes. Não é possível prometer que o Workers AI responderá exatamente como o Gemini: o `gpt-oss-20b` é competente em raciocínio, mas tende a ser menos consistente em português informal e em JSON estruturado. A segurança vem do backend: qualquer modelo só associa a linguagem ao catálogo permitido, e o motor recalcula a conclusão oficial.
+
+## Painel de administração
+
+Abra `https://aebot-api.pedrolucasbotelho.workers.dev/admin` e informe o token administrativo. O painel apresenta análises e analistas ativos, conclusões técnicas, respostas locais ou com IA, latência, tentativas e falhas por modelo, tokens quando reportados e feedbacks. Nenhum texto de pergunta, resposta ou histórico é salvo nessa telemetria.
+
+O AEBOT mede o próprio uso, mas não consegue consultar a cota restante do Gemini: o Google aplica RPM, TPM e RPD ao projeto e mostra os limites ativos no AI Studio. Para Workers AI, o painel estima neurons somente quando recebeu os tokens da chamada; a Cloudflare continua sendo a fonte oficial do consumo. Não trate essas estimativas como faturamento.
 
 ## Gratuito não significa ilimitado
 
@@ -73,4 +80,5 @@ Só expanda para os 40 usuários após esse resultado. Se a cota gratuita não b
 - [Preços e franquia do Workers AI](https://developers.cloudflare.com/workers-ai/platform/pricing/)
 - [Uso de dados no Workers AI](https://developers.cloudflare.com/workers-ai/platform/data-usage/)
 - [Modelo gpt-oss-20b no Workers AI](https://developers.cloudflare.com/workers-ai/models/gpt-oss-20b/)
+- [Catálogo de modelos Workers AI](https://developers.cloudflare.com/workers-ai/models/)
 - [Limites do Cloudflare Workers](https://developers.cloudflare.com/workers/platform/limits/)

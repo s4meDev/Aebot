@@ -19,11 +19,18 @@ describe('WorkersAiModelClient', () => {
       1_024
     );
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       status: 'ok',
       provider: 'workers-ai',
       text: '{"mappings":[]}',
     });
+    expect(result.attempts).toEqual([
+      expect.objectContaining({
+        provider: 'workers-ai',
+        model: DEFAULT_WORKERS_AI_MODEL,
+        status: 'ok',
+      }),
+    ]);
     expect(run).toHaveBeenCalledWith(DEFAULT_WORKERS_AI_MODEL, expect.objectContaining({
       temperature: 0,
       max_tokens: 1_024,

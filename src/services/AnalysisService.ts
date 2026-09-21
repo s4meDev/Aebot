@@ -16,6 +16,7 @@ export interface AnalysisStatus {
   aiConfigured: boolean;
   aiProvider: StructuredModelProvider | 'none';
   aiProviders: StructuredModelProvider[];
+  aiModels?: string[];
   geminiConfigured: boolean;
   serviceCount?: number;
   ruleCount?: number;
@@ -78,6 +79,7 @@ export class AebotAnalysisService implements AnalysisService {
       aiConfigured: Boolean(this.options.modelClient),
       aiProvider: this.options.modelClient?.provider ?? 'none',
       aiProviders: [...(this.options.modelClient?.providerChain ?? [])],
+      aiModels: [...(this.options.modelClient?.modelChain ?? [])],
       geminiConfigured: Boolean(this.options.geminiConfigured),
       serviceCount: this.engine.getServices().length,
       ruleCount: this.engine.getServices().reduce(

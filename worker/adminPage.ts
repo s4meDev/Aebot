@@ -1,296 +1,58 @@
-// A página fica no próprio Worker para não criar outro site ou outra implantação.
-// HTML, JavaScript e CSS são separados para manter uma CSP sem código inline.
+// O painel fica no próprio Worker: não exige outro servidor nem expõe dados do chat.
+// HTML, JavaScript e CSS separados permitem uma CSP estrita, sem código inline.
 const ADMIN_HTML = `<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AEBOT | Feedback dos analistas</title>
-  <link rel="stylesheet" href="/admin/styles.css">
-</head>
-<body>
-  <main class="shell">
-    <header class="header">
-      <div>
-        <span class="eyebrow">AEBOT</span>
-        <h1>Feedback dos analistas</h1>
-        <p>Consulta protegida dos relatos enviados pela extensão.</p>
-      </div>
-      <button id="logout" class="quiet hidden" type="button">Sair</button>
-    </header>
-
-    <section id="login-panel" class="panel">
-      <h2>Acesso do responsável</h2>
-      <p>Informe o token administrativo. Ele permanece apenas nesta aba.</p>
-      <form id="login-form" class="login-form">
-        <label for="token">Token administrativo</label>
-        <input id="token" type="password" autocomplete="off" required>
-        <button type="submit">Acessar feedbacks</button>
-      </form>
-    </section>
-
-    <section id="feedback-panel" class="hidden">
-      <div class="toolbar panel">
-        <label for="category">Categoria</label>
-        <select id="category">
-          <option value="">Todas</option>
-          <option value="resposta_incorreta">Resposta incorreta</option>
-          <option value="regra_ausente">Regra ausente</option>
-          <option value="dificuldade_entendimento">Difícil de entender</option>
-          <option value="interface">Interface</option>
-          <option value="sugestao">Sugestão</option>
-          <option value="outro">Outro</option>
-        </select>
-        <button id="refresh" type="button">Atualizar</button>
-        <button id="export" class="quiet" type="button">Exportar CSV</button>
-      </div>
-      <div id="summary" class="summary" aria-live="polite"></div>
-      <div id="feedback-list" class="feedback-list"></div>
-      <button id="load-more" class="quiet load-more hidden" type="button">Carregar mais</button>
-    </section>
-
-    <div id="message" class="message" role="status" aria-live="polite"></div>
-  </main>
-  <script src="/admin/app.js" defer></script>
-</body>
-</html>`;
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>AEBOT | Administração</title><link rel="stylesheet" href="/admin/styles.css"></head>
+<body><main class="shell">
+  <header class="header"><div><span class="eyebrow">AEBOT · OPERAÇÃO</span><h1>Administração do assistente</h1><p>Uso, saúde das IAs e feedback dos analistas em um único lugar.</p></div><button id="logout" class="quiet hidden" type="button">Sair</button></header>
+  <section id="login-panel" class="panel login-panel"><h2>Acesso do responsável</h2><p>Informe o token administrativo. Ele permanece somente nesta aba.</p><form id="login-form" class="login-form"><label for="token">Token administrativo</label><input id="token" type="password" autocomplete="off" required><button type="submit">Acessar painel</button></form></section>
+  <section id="dashboard-panel" class="hidden dashboard">
+    <div class="section-head"><div><span class="section-number">01</span><h2>Uso e saúde das IAs</h2></div><div class="toolbar compact"><label for="days">Período</label><select id="days"><option value="1">Hoje</option><option value="7" selected>7 dias</option><option value="30">30 dias</option><option value="90">90 dias</option></select><button id="refresh" type="button">Atualizar</button></div></div>
+    <p class="privacy">Privacidade: o painel não armazena perguntas, respostas, histórico nem tokens de acesso.</p>
+    <div id="metric-cards" class="metric-grid" aria-live="polite"></div><div id="quota-grid" class="quota-grid"></div>
+    <div class="data-grid">
+      <article class="panel data-panel"><h3>Tentativas por modelo</h3><div class="table-wrap"><table><thead><tr><th>Modelo</th><th>Status</th><th>Chamadas</th><th>Tokens</th><th>Latência média</th></tr></thead><tbody id="models-body"></tbody></table></div></article>
+      <article class="panel data-panel"><h3>Atividade por analista</h3><div class="table-wrap"><table><thead><tr><th>Analista</th><th>Análises</th><th>Feedbacks</th><th>Último uso</th></tr></thead><tbody id="analysts-body"></tbody></table></div></article>
+    </div>
+    <div class="section-head feedback-heading"><div><span class="section-number">02</span><h2>Feedback dos analistas</h2></div></div>
+    <div class="toolbar panel"><label for="category">Categoria</label><select id="category"><option value="">Todas</option><option value="resposta_incorreta">Resposta incorreta</option><option value="regra_ausente">Regra ausente</option><option value="dificuldade_entendimento">Difícil de entender</option><option value="interface">Interface</option><option value="sugestao">Sugestão</option><option value="outro">Outro</option></select><button id="export" class="quiet" type="button">Exportar CSV</button></div>
+    <div id="summary" class="summary" aria-live="polite"></div><div id="feedback-list" class="feedback-list"></div><button id="load-more" class="quiet load-more hidden" type="button">Carregar mais</button>
+  </section><div id="message" class="message" role="status" aria-live="polite"></div>
+</main><script src="/admin/app.js" defer></script></body></html>`;
 
 const ADMIN_JS = `(() => {
   'use strict';
-  const labels = {
-    resposta_incorreta: 'Resposta incorreta',
-    regra_ausente: 'Regra ausente',
-    dificuldade_entendimento: 'Difícil de entender',
-    interface: 'Interface',
-    sugestao: 'Sugestão',
-    outro: 'Outro'
-  };
-  const elements = {
-    loginPanel: document.querySelector('#login-panel'),
-    feedbackPanel: document.querySelector('#feedback-panel'),
-    loginForm: document.querySelector('#login-form'),
-    token: document.querySelector('#token'),
-    logout: document.querySelector('#logout'),
-    category: document.querySelector('#category'),
-    refresh: document.querySelector('#refresh'),
-    export: document.querySelector('#export'),
-    summary: document.querySelector('#summary'),
-    list: document.querySelector('#feedback-list'),
-    loadMore: document.querySelector('#load-more'),
-    message: document.querySelector('#message')
-  };
-  let currentFeedback = [];
-  let nextOffset = null;
+  const labels = { resposta_incorreta:'Resposta incorreta', regra_ausente:'Regra ausente', dificuldade_entendimento:'Difícil de entender', interface:'Interface', sugestao:'Sugestão', outro:'Outro' };
+  const statusLabels = { ok:'Sucesso', api_error:'Erro', rate_limited:'Limite', invalid_response:'Resposta inválida' };
+  const e = Object.fromEntries(['login-panel','dashboard-panel','login-form','token','logout','days','refresh','metric-cards','quota-grid','models-body','analysts-body','category','export','summary','feedback-list','load-more','message'].map((id) => [id.replaceAll('-',''), document.querySelector('#' + id)]));
+  let currentFeedback = []; let nextOffset = null;
+  const token = () => sessionStorage.getItem('aebot_admin_token');
+  const node = (tag, className, text) => { const element=document.createElement(tag); if(className) element.className=className; if(text!==undefined) element.textContent=text; return element; };
+  const number = (value) => new Intl.NumberFormat('pt-BR').format(Number(value)||0);
+  const duration = (value) => value===null||value===undefined?'—':number(value)+' ms';
+  const setMessage = (text,error=false) => { e.message.textContent=text; e.message.classList.toggle('error',error); };
+  const setAuthenticated = (ok) => { e.loginpanel.classList.toggle('hidden',ok); e.dashboardpanel.classList.toggle('hidden',!ok); e.logout.classList.toggle('hidden',!ok); };
+  const authenticatedFetch = async (url) => { const response=await fetch(url,{headers:{Authorization:'Bearer '+token()},cache:'no-store'}); if(response.status===401){sessionStorage.removeItem('aebot_admin_token');setAuthenticated(false);throw new Error('auth');} if(!response.ok) throw new Error('HTTP '+response.status); return response.json(); };
+  const metricCard = (label,value,detail) => { const card=node('article','metric-card');card.append(node('span','metric-label',label),node('strong','',value),node('small','',detail));return card; };
 
-  const setMessage = (text, error = false) => {
-    elements.message.textContent = text;
-    elements.message.classList.toggle('error', error);
+  const renderMetrics = (body) => {
+    const metrics=body.metrics, totals=metrics.totals;
+    e.metriccards.replaceChildren(metricCard('Análises',number(totals.analyses),metrics.period.days+(metrics.period.days===1?' dia':' dias')+' · UTC'),metricCard('Analistas ativos',number(totals.activeAnalysts),'com análise ou feedback'),metricCard('Respostas com IA',number(totals.aiResponses),number(totals.localResponses)+' respostas locais'),metricCard('Sem decisão',number(totals.decisions.semDecisao),'casos que pediram contexto ou validação'),metricCard('Latência média',duration(totals.averageAnalysisDurationMs),'tempo completo da análise'),metricCard('Feedbacks',number(totals.feedbacks),'enviados voluntariamente'));
+    const gemini=body.quotas.gemini, workers=body.quotas.workersAi;
+    const geminiCard=node('article','quota-card');geminiCard.append(node('span','provider','GEMINI'),node('h3','',number(gemini.measuredRequestsToday)+' chamadas medidas hoje'),node('p','',gemini.measuredTokensToday?number(gemini.measuredTokensToday)+' tokens reportados.':'Tokens não reportados nas chamadas atuais.'),node('small','','A cota restante é por projeto e só aparece no Google AI Studio.'));
+    const workersCard=node('article','quota-card');const workerValue=workers.estimatedNeuronsToday===null?'Consumo oficial no Cloudflare':number(workers.estimatedNeuronsToday)+' / '+number(workers.freeDailyNeurons)+' neurons';workersCard.append(node('span','provider','WORKERS AI'),node('h3','',workerValue),node('p','',workers.note),node('small','','Estimativa, quando há tokens; o painel Cloudflare é a fonte oficial.'));
+    const chainCard=node('article','quota-card');chainCard.append(node('span','provider','CONTINGÊNCIA'),node('h3','',(body.configuredModels||[]).length+' modelos configurados'),node('p','',(body.configuredModels||[]).join(' → ')||'Nenhum modelo online.'),node('small','','O próximo modelo só é chamado se o anterior falhar, atingir limite ou responder fora do contrato.'));e.quotagrid.replaceChildren(geminiCard,workersCard,chainCard);
+    e.modelsbody.replaceChildren();const grouped=new Map();for(const row of metrics.models){const key=row.provider+'|'+row.model+'|'+row.status;const old=grouped.get(key)||{...row,request_count:0,input_tokens:0,output_tokens:0,duration_ms_total:0};old.request_count+=Number(row.request_count);old.input_tokens+=Number(row.input_tokens);old.output_tokens+=Number(row.output_tokens);old.duration_ms_total+=Number(row.duration_ms_total);grouped.set(key,old);}for(const row of grouped.values()){const tr=node('tr');[row.provider+' · '+row.model,statusLabels[row.status]||row.status,number(row.request_count),number(row.input_tokens+row.output_tokens),duration(row.request_count?Math.round(row.duration_ms_total/row.request_count):null)].forEach((value)=>tr.append(node('td','',value)));e.modelsbody.append(tr);}if(!grouped.size){const tr=node('tr'),td=node('td','empty','Nenhuma tentativa de IA registrada no período.');td.colSpan=5;tr.append(td);e.modelsbody.append(tr);}
+    e.analystsbody.replaceChildren();for(const row of metrics.analysts){const tr=node('tr');[row.analyst_id,number(row.analysis_count),number(row.feedback_count),new Date(row.last_seen_at).toLocaleString('pt-BR')].forEach((value)=>tr.append(node('td','',value)));e.analystsbody.append(tr);}if(!metrics.analysts.length){const tr=node('tr'),td=node('td','empty','Nenhuma atividade registrada no período.');td.colSpan=4;tr.append(td);e.analystsbody.append(tr);}
   };
-
-  const setAuthenticated = (authenticated) => {
-    elements.loginPanel.classList.toggle('hidden', authenticated);
-    elements.feedbackPanel.classList.toggle('hidden', !authenticated);
-    elements.logout.classList.toggle('hidden', !authenticated);
-  };
-
-  const node = (tag, className, text) => {
-    const element = document.createElement(tag);
-    if (className) element.className = className;
-    if (text !== undefined) element.textContent = text;
-    return element;
-  };
-
-  const render = (items, append) => {
-    currentFeedback = append ? currentFeedback.concat(items) : items;
-    if (!append) elements.list.replaceChildren();
-    elements.summary.textContent = currentFeedback.length
-      ? currentFeedback.length + (currentFeedback.length === 1 ? ' feedback exibido' : ' feedbacks exibidos')
-      : 'Nenhum feedback encontrado.';
-    for (const item of items) {
-      const card = node('article', 'feedback-card');
-      const top = node('div', 'feedback-top');
-      top.append(
-        node('span', 'category', labels[item.category] || item.category),
-        node('time', '', new Date(item.createdAt).toLocaleString('pt-BR'))
-      );
-      const meta = node(
-        'p',
-        'meta',
-        'Analista: ' + item.analystId + ' | Serviço: ' + item.serviceId + ' | Extensão: ' + item.appVersion
-      );
-      const message = node('p', 'feedback-message', item.message);
-      card.append(top, meta, message);
-      elements.list.append(card);
-    }
-  };
-
-  const load = async (append = false) => {
-    const token = sessionStorage.getItem('aebot_admin_token');
-    if (!token) {
-      setAuthenticated(false);
-      return;
-    }
-    elements.refresh.disabled = true;
-    setMessage('Carregando...');
-    try {
-      const params = new URLSearchParams({ limit: '50' });
-      if (elements.category.value) params.set('category', elements.category.value);
-      if (append && nextOffset !== null) params.set('offset', String(nextOffset));
-      const response = await fetch('/v1/admin/feedback?' + params.toString(), {
-        headers: { Authorization: 'Bearer ' + token },
-        cache: 'no-store'
-      });
-      if (response.status === 401) {
-        sessionStorage.removeItem('aebot_admin_token');
-        setAuthenticated(false);
-        setMessage('Token administrativo inválido.', true);
-        return;
-      }
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      const body = await response.json();
-      render(Array.isArray(body.feedback) ? body.feedback : [], append);
-      nextOffset = Number.isInteger(body.nextOffset) ? body.nextOffset : null;
-      elements.loadMore.classList.toggle('hidden', nextOffset === null);
-      setAuthenticated(true);
-      setMessage('');
-    } catch {
-      setMessage('Não foi possível carregar os feedbacks.', true);
-    } finally {
-      elements.refresh.disabled = false;
-    }
-  };
-
-  const csvCell = (value) => {
-    const raw = String(value ?? '');
-    const safe = /^\\s*[=+\\-@]/.test(raw) ? "'" + raw : raw;
-    return '"' + safe.replaceAll('"', '""') + '"';
-  };
-  const exportCsv = () => {
-    if (!currentFeedback.length) {
-      setMessage('Não há feedbacks para exportar.', true);
-      return;
-    }
-    const rows = [['data', 'analista', 'servico', 'categoria', 'versao', 'feedback']];
-    for (const item of currentFeedback) {
-      rows.push([
-        item.createdAt,
-        item.analystId,
-        item.serviceId,
-        labels[item.category] || item.category,
-        item.appVersion,
-        item.message
-      ]);
-    }
-    const csv = '\\ufeff' + rows.map((row) => row.map(csvCell).join(';')).join('\\r\\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'aebot-feedbacks-' + new Date().toISOString().slice(0, 10) + '.csv';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  elements.loginForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const token = elements.token.value.trim();
-    if (!token) return;
-    sessionStorage.setItem('aebot_admin_token', token);
-    elements.token.value = '';
-    void load();
-  });
-  elements.logout.addEventListener('click', () => {
-    sessionStorage.removeItem('aebot_admin_token');
-    currentFeedback = [];
-    render([], false);
-    nextOffset = null;
-    elements.loadMore.classList.add('hidden');
-    setMessage('');
-    setAuthenticated(false);
-  });
-  elements.refresh.addEventListener('click', () => { nextOffset = null; void load(false); });
-  elements.category.addEventListener('change', () => { nextOffset = null; void load(false); });
-  elements.loadMore.addEventListener('click', () => void load(true));
-  elements.export.addEventListener('click', exportCsv);
-  setAuthenticated(Boolean(sessionStorage.getItem('aebot_admin_token')));
-  if (sessionStorage.getItem('aebot_admin_token')) void load();
+  const renderFeedback = (items,append) => { currentFeedback=append?currentFeedback.concat(items):items;if(!append)e.feedbacklist.replaceChildren();e.summary.textContent=currentFeedback.length?currentFeedback.length+(currentFeedback.length===1?' feedback exibido':' feedbacks exibidos'):'Nenhum feedback encontrado.';for(const item of items){const card=node('article','feedback-card'),top=node('div','feedback-top');top.append(node('span','category',labels[item.category]||item.category),node('time','',new Date(item.createdAt).toLocaleString('pt-BR')));card.append(top,node('p','meta','Analista: '+item.analystId+' · Serviço: '+item.serviceId+' · Extensão: '+item.appVersion),node('p','feedback-message',item.message));e.feedbacklist.append(card);} };
+  const loadFeedback = async (append=false) => { const params=new URLSearchParams({limit:'50'});if(e.category.value)params.set('category',e.category.value);if(append&&nextOffset!==null)params.set('offset',String(nextOffset));const body=await authenticatedFetch('/v1/admin/feedback?'+params);renderFeedback(Array.isArray(body.feedback)?body.feedback:[],append);nextOffset=Number.isInteger(body.nextOffset)?body.nextOffset:null;e.loadmore.classList.toggle('hidden',nextOffset===null); };
+  const loadAll = async () => { if(!token()){setAuthenticated(false);return;}e.refresh.disabled=true;setMessage('Atualizando painel...');try{const [metrics]=await Promise.all([authenticatedFetch('/v1/admin/metrics?days='+e.days.value),loadFeedback(false)]);renderMetrics(metrics);setAuthenticated(true);setMessage('');}catch(error){setMessage(error.message==='auth'?'Token administrativo inválido.':'Não foi possível carregar o painel.',true);}finally{e.refresh.disabled=false;} };
+  const csvCell = (value) => { const raw=String(value??''),safe=/^\\s*[=+\\-@]/.test(raw)?"'"+raw:raw;return '"'+safe.replaceAll('"','""')+'"'; };
+  const exportCsv = () => { if(!currentFeedback.length){setMessage('Não há feedbacks para exportar.',true);return;}const rows=[['data','analista','servico','categoria','versao','feedback'],...currentFeedback.map((item)=>[item.createdAt,item.analystId,item.serviceId,labels[item.category]||item.category,item.appVersion,item.message])];const csv='\\ufeff'+rows.map((row)=>row.map(csvCell).join(';')).join('\\r\\n'),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})),link=document.createElement('a');link.href=url;link.download='aebot-feedbacks-'+new Date().toISOString().slice(0,10)+'.csv';link.click();URL.revokeObjectURL(url); };
+  e.loginform.addEventListener('submit',(event)=>{event.preventDefault();const value=e.token.value.trim();if(!value)return;sessionStorage.setItem('aebot_admin_token',value);e.token.value='';void loadAll();});e.logout.addEventListener('click',()=>{sessionStorage.removeItem('aebot_admin_token');currentFeedback=[];nextOffset=null;setMessage('');setAuthenticated(false);});e.refresh.addEventListener('click',()=>void loadAll());e.days.addEventListener('change',()=>void loadAll());e.category.addEventListener('change',()=>void loadFeedback(false).catch(()=>setMessage('Não foi possível carregar os feedbacks.',true)));e.loadmore.addEventListener('click',()=>void loadFeedback(true));e.export.addEventListener('click',exportCsv);setAuthenticated(Boolean(token()));if(token())void loadAll();
 })();`;
 
-const ADMIN_CSS = `:root {
-  color-scheme: dark;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #070707;
-  color: #f4f4f5;
-}
-* { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; background: #070707; }
-button, input, select { font: inherit; }
-.shell { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 64px; }
-.header { display: flex; justify-content: space-between; gap: 24px; align-items: start; margin-bottom: 24px; }
-.eyebrow { color: #4169e1; font-size: 12px; letter-spacing: .14em; font-weight: 700; }
-h1 { font-size: clamp(26px, 5vw, 40px); margin: 6px 0; }
-h2 { margin-top: 0; font-size: 18px; }
-p { color: #a1a1aa; line-height: 1.5; }
-.panel { background: #101010; border: 1px solid #252525; border-radius: 10px; padding: 18px; }
-.login-form { display: grid; gap: 10px; max-width: 480px; }
-label { font-size: 13px; font-weight: 650; }
-input, select { background: #080808; border: 1px solid #303030; color: #f4f4f5; border-radius: 7px; padding: 10px; }
-input:focus, select:focus { outline: 1px solid #4169e1; border-color: #4169e1; }
-button { border: 0; border-radius: 7px; background: #4169e1; color: white; font-weight: 650; padding: 10px 14px; cursor: pointer; }
-button:disabled { opacity: .5; cursor: wait; }
-button.quiet { background: #181818; border: 1px solid #303030; color: #e4e4e7; }
-.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.toolbar select { min-width: 190px; }
-.summary { color: #a1a1aa; font-size: 13px; padding: 16px 2px 10px; }
-.feedback-list { display: grid; gap: 10px; }
-.feedback-card { background: #0d0d0d; border: 1px solid #242424; border-radius: 9px; padding: 15px; }
-.feedback-top { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
-.category { color: #dbe4ff; background: #121b38; border: 1px solid #22376e; border-radius: 999px; padding: 4px 8px; font-size: 12px; }
-time, .meta { color: #71717a; font-size: 12px; }
-.meta { margin: 10px 0 4px; }
-.feedback-message { white-space: pre-wrap; overflow-wrap: anywhere; margin: 7px 0 0; color: #f4f4f5; }
-.message { min-height: 24px; padding-top: 12px; color: #a1a1aa; }
-.message.error { color: #f87171; }
-.load-more { display: block; margin: 16px auto 0; }
-.hidden { display: none !important; }
-@media (max-width: 600px) {
-  .shell { width: min(100% - 20px, 940px); padding-top: 22px; }
-  .header, .feedback-top { align-items: stretch; flex-direction: column; }
-  .toolbar > * { width: 100%; }
-}`;
+const ADMIN_CSS = `:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#070707;color:#f4f4f5}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#070707}button,input,select{font:inherit}.shell{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:40px 0 64px}.header,.section-head,.feedback-top,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px}.header{align-items:start;margin-bottom:28px}.eyebrow,.section-number,.provider{color:#4169e1;font-size:11px;letter-spacing:.14em;font-weight:800}h1{font-size:clamp(28px,5vw,44px);margin:7px 0;letter-spacing:-.035em}h2{margin:0;font-size:20px}h3{margin:8px 0;font-size:15px}p{color:#a1a1aa;line-height:1.5}.panel,.metric-card,.quota-card{background:#101010;border:1px solid #252525;border-radius:12px}.panel{padding:18px}.login-panel{max-width:560px}.login-form{display:grid;gap:10px;max-width:480px}label{font-size:12px;font-weight:700;color:#d4d4d8}input,select{background:#080808;border:1px solid #303030;color:#f4f4f5;border-radius:8px;padding:10px 12px}input:focus,select:focus{outline:1px solid #4169e1;border-color:#4169e1}button{border:0;border-radius:8px;background:#4169e1;color:white;font-weight:700;padding:10px 14px;cursor:pointer}button:disabled{opacity:.5;cursor:wait}button.quiet{background:#181818;border:1px solid #303030;color:#e4e4e7}.dashboard{display:grid;gap:16px}.section-head>div:first-child{display:flex;align-items:center;gap:12px}.toolbar{justify-content:flex-start;flex-wrap:wrap}.toolbar.compact{padding:0}.privacy{margin:0;padding:11px 14px;border-left:2px solid #4169e1;background:#0d0d0d;font-size:12px}.metric-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.metric-card{padding:15px;min-width:0}.metric-card strong{display:block;margin:8px 0 4px;font-size:24px;letter-spacing:-.03em}.metric-card small,.quota-card small{color:#71717a;line-height:1.4}.metric-label{color:#a1a1aa;font-size:12px}.quota-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.quota-card{padding:17px;overflow:hidden}.quota-card p{min-height:42px;font-size:12px;margin:8px 0}.data-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}.data-panel{min-width:0}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #242424;white-space:nowrap}th{color:#71717a;font-weight:650}td{color:#d4d4d8}.empty{color:#71717a;text-align:center}.feedback-heading{margin-top:22px}.summary{color:#a1a1aa;font-size:13px;padding:2px}.feedback-list{display:grid;gap:10px}.feedback-card{background:#0d0d0d;border:1px solid #242424;border-radius:10px;padding:15px}.category{color:#dbe4ff;background:#121b38;border:1px solid #22376e;border-radius:999px;padding:4px 8px;font-size:12px}time,.meta{color:#71717a;font-size:12px}.meta{margin:10px 0 4px}.feedback-message{white-space:pre-wrap;overflow-wrap:anywhere;margin:7px 0 0;color:#f4f4f5}.message{min-height:24px;color:#a1a1aa}.message.error{color:#f87171}.load-more{display:block;margin:0 auto}.hidden{display:none!important}@media(max-width:1000px){.metric-grid{grid-template-columns:repeat(3,1fr)}.quota-grid,.data-grid{grid-template-columns:1fr}}@media(max-width:620px){.shell{width:min(100% - 20px,1180px);padding-top:22px}.header,.section-head,.feedback-top{align-items:stretch;flex-direction:column}.metric-grid{grid-template-columns:repeat(2,1fr)}.toolbar>*{flex:1}.metric-card strong{font-size:20px}}`;
 
-const ADMIN_CSP = [
-  "default-src 'none'",
-  "script-src 'self'",
-  "style-src 'self'",
-  "connect-src 'self'",
-  "img-src 'none'",
-  "base-uri 'none'",
-  "frame-ancestors 'none'",
-  "form-action 'none'",
-].join('; ');
-
-export function adminAssetResponse(path: string): Response | null {
-  const commonHeaders = {
-    'Cache-Control': 'no-store',
-    'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'no-referrer',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-    'Content-Security-Policy': ADMIN_CSP,
-  };
-  if (path === '/admin' || path === '/admin/') {
-    return new Response(ADMIN_HTML, {
-      headers: { ...commonHeaders, 'Content-Type': 'text/html; charset=utf-8' },
-    });
-  }
-  if (path === '/admin/app.js') {
-    return new Response(ADMIN_JS, {
-      headers: { ...commonHeaders, 'Content-Type': 'text/javascript; charset=utf-8' },
-    });
-  }
-  if (path === '/admin/styles.css') {
-    return new Response(ADMIN_CSS, {
-      headers: { ...commonHeaders, 'Content-Type': 'text/css; charset=utf-8' },
-    });
-  }
-  return null;
-}
+const ADMIN_CSP = ["default-src 'none'","script-src 'self'","style-src 'self'","connect-src 'self'","img-src 'none'","base-uri 'none'","frame-ancestors 'none'","form-action 'none'"].join('; ');
+export function adminAssetResponse(path:string):Response|null{const headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Permissions-Policy':'camera=(), microphone=(), geolocation=()','Content-Security-Policy':ADMIN_CSP};if(path==='/admin'||path==='/admin/')return new Response(ADMIN_HTML,{headers:{...headers,'Content-Type':'text/html; charset=utf-8'}});if(path==='/admin/app.js')return new Response(ADMIN_JS,{headers:{...headers,'Content-Type':'text/javascript; charset=utf-8'}});if(path==='/admin/styles.css')return new Response(ADMIN_CSS,{headers:{...headers,'Content-Type':'text/css; charset=utf-8'}});return null;}

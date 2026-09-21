@@ -23,11 +23,13 @@ describe('FallbackStructuredModelClient', () => {
       status: 'ok',
       provider: 'gemini',
       text: '{"resposta":"fora do contrato"}',
+      attempts: [{ provider: 'gemini', model: 'gemini-a', status: 'ok', durationMs: 10 }],
     });
     const fallback = client('workers-ai', {
       status: 'ok',
       provider: 'workers-ai',
       text: '{"mappings":[]}',
+      attempts: [{ provider: 'workers-ai', model: 'workers-b', status: 'ok', durationMs: 20 }],
     });
     const chain = new FallbackStructuredModelClient(primary, fallback);
 
@@ -36,6 +38,10 @@ describe('FallbackStructuredModelClient', () => {
     });
 
     expect(result.provider).toBe('workers-ai');
+    expect(result.attempts).toEqual([
+      expect.objectContaining({ model: 'gemini-a', status: 'invalid_response' }),
+      expect.objectContaining({ model: 'workers-b', status: 'ok' }),
+    ]);
     expect(fallback.request).toHaveBeenCalledOnce();
   });
 

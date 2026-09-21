@@ -153,3 +153,20 @@ ${JSON.stringify(catalog)}
 Pergunta do analista:
 ${userPrompt}`;
 }
+
+/** Instrução compacta para CPU; mantém descrições completas e condições pendentes. */
+export function buildLocalInterpretationPrompt(query: string, service: DataService, rules: DataRule[], pending: string[] = []): string {
+  return `Interprete a pergunta sobre ${service.name} usando SOMENTE o catálogo abaixo.
+Entenda sinônimos e linguagem informal. Não invente fatos, regras, região ou tipo de equipe.
+Para cada fato relacionado, indique ruleId do catálogo, sourceQuote literal da pergunta e stance:
+asserted=ocorreu; hypothetical=hipótese; informational=consulta; negated_or_present=falha negada/evidência presente.
+Mencionar foto não significa que falta foto. Se uma condição estiver pendente, use a orientação correspondente e pergunte, sem escolher conclusão.
+Contexto pendente: ${pending.join('; ') || 'nenhum'}.
+Responda somente JSON: {"mappings":[{"ruleId":"ID","sourceQuote":"trecho literal","stance":"asserted"}],"conversation":{"answer":"orientação em até 4 frases","question":"uma pergunta necessária ou vazio"}}.
+Se não existir regra, mappings deve ser []. Não invente conclusão e não repita pergunta já respondida.
+Catálogo: ${JSON.stringify(rules.map((rule) => ({ id: rule.id, title: rule.title,
+    description: rule.description, evidence: rule.relatedEvidence ?? [],
+    examples: (rule.examples ?? []).slice(0, 1), decision: rule.severity ?? null,
+    guidance: rule.guidance ?? rule.message, missingInformation: rule.missingInformation ?? [] })))}
+Pergunta: ${query}`;
+}

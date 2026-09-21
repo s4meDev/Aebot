@@ -23,6 +23,19 @@ function extractResponseText(value: unknown): string | undefined {
   return undefined;
 }
 
+function extractUsage(value: unknown): { inputTokens?: number; outputTokens?: number } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const usage = (value as Record<string, unknown>).usage;
+  if (!usage || typeof usage !== 'object' || Array.isArray(usage)) return {};
+  const source = usage as Record<string, unknown>;
+  const integer = (candidate: unknown): number | undefined =>
+    Number.isInteger(candidate) && Number(candidate) >= 0 ? Number(candidate) : undefined;
+  return {
+    inputTokens: integer(source.prompt_tokens ?? source.input_tokens),
+    outputTokens: integer(source.completion_tokens ?? source.output_tokens),
+  };
+}
+
 function isRateLimitError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const source = error as Record<string, unknown>;
@@ -34,6 +47,7 @@ function isRateLimitError(error: unknown): boolean {
 export class WorkersAiModelClient implements StructuredModelClient {
   readonly provider = 'workers-ai' as const;
   readonly providerChain = ['workers-ai'] as const;
+  readonly modelChain: readonly string[];
   readonly cacheKey: string;
   readonly model: string;
 
@@ -44,6 +58,7 @@ export class WorkersAiModelClient implements StructuredModelClient {
     const candidate = model.trim();
     if (!validModel(candidate)) throw new Error('Modelo do Workers AI inválido.');
     this.model = candidate;
+    this.modelChain = [candidate];
     this.cacheKey = `workers-ai:${candidate}`;
   }
 
@@ -59,6 +74,7 @@ export class WorkersAiModelClient implements StructuredModelClient {
         content: content.parts.map((part) => part.text).join(''),
       })),
     ];
+    const startedAt = Date.now();
     try {
       const response = await this.binding.run(this.model, {
         messages,
@@ -66,13 +82,43 @@ export class WorkersAiModelClient implements StructuredModelClient {
         max_tokens: Math.max(1, Math.min(maxOutputTokens, 2_048)),
       });
       const text = extractResponseText(response);
+      const usage = extractUsage(response);
+      const status = text ? 'ok' as const : 'api_error' as const;
       return text
-        ? { status: 'ok', provider: this.provider, text }
-        : { status: 'api_error', provider: this.provider };
+        ? {
+            status,
+            provider: this.provider,
+            text,
+            attempts: [{
+              provider: this.provider,
+              model: this.model,
+              status,
+              durationMs: Date.now() - startedAt,
+              ...usage,
+            }],
+          }
+        : {
+            status,
+            provider: this.provider,
+            attempts: [{
+              provider: this.provider,
+              model: this.model,
+              status,
+              durationMs: Date.now() - startedAt,
+              ...usage,
+            }],
+          };
     } catch (error) {
+      const status = isRateLimitError(error) ? 'rate_limited' as const : 'api_error' as const;
       return {
-        status: isRateLimitError(error) ? 'rate_limited' : 'api_error',
+        status,
         provider: this.provider,
+        attempts: [{
+          provider: this.provider,
+          model: this.model,
+          status,
+          durationMs: Date.now() - startedAt,
+        }],
       };
     }
   }

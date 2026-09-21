@@ -3,6 +3,7 @@ import { STORAGE_KEYS } from '../constants/storageKeys';
 import { storageAdapter, type StorageAdapter } from '../storage/StorageAdapter';
 import { serviceRepository } from '../repositories/serviceRepository';
 import { checkBackendAccess, resolveBackendUrl } from '../ai/BackendClient';
+import { desktopBridge } from '../desktop/contracts';
 
 interface CatalogDependencies {
   repository?: typeof serviceRepository;
@@ -20,6 +21,8 @@ export class ServiceCatalogService {
   }
 
   async load(): Promise<ServiceCatalogResult> {
+    const desktop = desktopBridge();
+    if (desktop) return desktop.catalog();
     const local = await this.repository.getAll();
     if (local.type !== 'success' || !local.services?.length) {
       return { type: 'error', message: local.message ?? 'Nenhum serviço encontrado.' };

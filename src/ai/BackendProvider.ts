@@ -12,6 +12,7 @@ import { GeminiProvider } from './GeminiProvider';
 import { resolveBackendUrl } from './BackendClient';
 import { ruleEngine } from '../services/RuleEngine';
 import { formatEvaluationResponse } from '../services/ResponseFormatter';
+import { desktopBridge } from '../desktop/contracts';
 
 const BACKEND_TIMEOUT_MS = 25_000;
 const OFFICIAL_DECISIONS = new Set<DecisionType>(['Conforme', 'Não Conforme', 'Reprovado']);
@@ -212,4 +213,12 @@ export class BackendProvider implements AiProvider {
   }
 }
 
-export const assistantProvider = new BackendProvider();
+const legacyProvider = new BackendProvider();
+export const assistantProvider: AiProvider = {
+  generateResponse(context, prompt, service, history = []) {
+    const desktop = desktopBridge();
+    return desktop
+      ? desktop.analyze({ serviceId: service.id, prompt, history })
+      : legacyProvider.generateResponse(context, prompt, service, history);
+  },
+};

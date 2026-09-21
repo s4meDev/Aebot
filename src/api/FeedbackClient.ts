@@ -3,6 +3,7 @@ import { resolveBackendUrl } from '../ai/BackendClient';
 import { STORAGE_KEYS } from '../constants/storageKeys';
 import { storageAdapter } from '../storage/StorageAdapter';
 import type { FeedbackCategory } from './feedbackContracts';
+import { desktopBridge } from '../desktop/contracts';
 
 const FEEDBACK_TIMEOUT_MS = 10_000;
 
@@ -26,6 +27,15 @@ export async function submitFeedback(input: {
   category: FeedbackCategory;
   message: string;
 }): Promise<FeedbackSubmitResult> {
+  const desktop = desktopBridge();
+  if (desktop) {
+    try {
+      const saved = await desktop.saveFeedback({ ...input, appVersion: appVersion() });
+      return { state: 'saved', feedbackId: saved.feedbackId };
+    } catch {
+      return { state: 'error', message: 'Não foi possível salvar o feedback neste computador. Contate o responsável.' };
+    }
+  }
   const backendUrl = resolveBackendUrl(
     storageAdapter.get<string>(STORAGE_KEYS.BACKEND_URL, '')
   );

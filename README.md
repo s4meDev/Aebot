@@ -2,7 +2,31 @@
 
 Assistente de Análise para revisão de Ordens de Serviço executadas por equipes de campo.
 
-O AEBOT é uma extensão Chrome Manifest V3 exibida no painel lateral do navegador. Ele ajuda o analista a interpretar situações escritas em linguagem natural, consultar as regras cadastradas e chegar a uma orientação curta e fundamentada.
+O AEBOT está migrando para um aplicativo Windows com IA local e funcionamento offline. Ele ajuda o analista a interpretar situações em linguagem natural, aplicar as regras cadastradas e receber orientação curta e fundamentada. A extensão Chrome e a API online continuam no repositório como versões legadas compatíveis.
+
+## Rota atual: desktop offline
+
+Conforme a apresentação à coordenação, cada notebook executa Qwen3-4B-GGUF Q4_K_M com llama.cpp. A IA interpreta; o motor compartilhado decide. O usuário instala o AEBOT, abre o atalho, seleciona o serviço e pergunta, sem cadastrar token ou chave de API.
+
+Para preparar o aplicativo em Windows x64, com Node 22.12 ou superior:
+
+```powershell
+npm install
+npm run desktop:assets
+npm run desktop:start
+```
+
+O download ocorre na preparação do pacote (~2,5 GB de modelo). Depois, o aplicativo funciona offline. Para gerar o instalador completo:
+
+```powershell
+npm run desktop:package
+```
+
+O resultado fica em `desktop-release`. Não distribua somente o executável da pasta descompactada: ele depende dos arquivos auxiliares. Distribua o instalador `AEBOT-<versão>-Setup.exe`.
+
+Nas configurações do aplicativo é possível verificar a IA, reiniciá-la, importar um pacote de regras aprovado e exportar métricas/feedbacks para a gestão. O modelo não recebe suas conversas pela internet. Atualizar as regras não exige redistribuir o modelo.
+
+Consulte [Guia do desktop e piloto](docs/DESKTOP-LOCAL.md) e [decisão de arquitetura](docs/ADR-001-DESKTOP-LOCAL.md). A qualidade semântica e a velocidade precisam ser homologadas no notebook corporativo; o piloto começa com 5 a 10 analistas e pode chegar a 60 após validação.
 
 ## O que o sistema faz
 
@@ -36,7 +60,7 @@ Pergunta do analista
 
 O motor de regras escolhe a decisão. A inteligência artificial é opcional e serve para conectar linguagem informal aos termos cadastrados e organizar a explicação; ela não pode criar regras nem alterar a conclusão calculada.
 
-## Situação atual
+## Capacidades preservadas e perfil online legado
 
 - extensão React + TypeScript + Vite pronta para Chrome;
 - backend online publicado em Cloudflare Workers;
@@ -44,8 +68,8 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - autenticação individual preparada para 40 analistas;
 - teste de capacidade para 3.000 avaliações;
 - feedback persistente em Cloudflare D1;
-- painel administrativo protegido por credencial separada;
-- Gemini 3.5 Flash, Gemini 3.5 Flash-Lite e Workers AI como integrações online substituíveis;
+- painel administrativo protegido com uso, atividade, saúde dos modelos, cotas disponíveis e feedback;
+- Gemini 3.5 Flash-Lite/Flash e Workers AI GPT-OSS/Qwen3 em contingência online validada;
 - interpretação semântica das regras pertinentes do serviço, inclusive para linguagem informal e respostas curtas de esclarecimento;
 - conversa AI-first para dúvidas e casos ambíguos, com resposta direta de até quatro frases e uma única pergunta quando faltar contexto;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
@@ -59,7 +83,7 @@ O motor de regras escolhe a decisão. A inteligência artificial é opcional e s
 - Reparo de Rede compartilha as regras gerais de antes, durante e depois do Ramal; metragem lançada sem comprovação é zerada e pontuada como Não Conforme.
 - Quando uma regra depende de contexto ausente, o AEBOT faz uma pergunta objetiva e aproveita a resposta curta do analista na continuação do mesmo caso.
 
-## Carregar a extensão no Chrome
+## Carregar a extensão no Chrome (legado)
 
 Pré-requisito para gerar o pacote: Node.js 22.12 ou superior.
 
@@ -80,10 +104,12 @@ O `npm run build` já gera o pacote empresarial conectado à API oficial e com i
 
 Para testar deliberadamente Gemini direto ou backend local, use `npm run build:development`. Esse perfil não deve ser distribuído aos analistas.
 
-## Ambiente online
+## Ambiente online (legado; não utilizado pelo desktop)
 
 - API: [aebot-api.pedrolucasbotelho.workers.dev](https://aebot-api.pedrolucasbotelho.workers.dev)
-- Painel de feedback: [aebot-api.pedrolucasbotelho.workers.dev/admin](https://aebot-api.pedrolucasbotelho.workers.dev/admin)
+- Painel administrativo: [aebot-api.pedrolucasbotelho.workers.dev/admin](https://aebot-api.pedrolucasbotelho.workers.dev/admin)
+
+O painel usa o token administrativo e mostra análises, analistas ativos, decisões técnicas, latência, tentativas por modelo, tokens quando informados pelo provedor e feedbacks. Ele não armazena o texto das conversas. A cota restante do Gemini continua disponível somente no Google AI Studio; o consumo de Workers AI exibido no AEBOT é uma estimativa quando os tokens são reportados.
 
 O procedimento completo de publicação, geração de credenciais e instalação está em [Implantação para 40 analistas](docs/DEPLOYMENT-40-USERS.md).
 O material simplificado que deve acompanhar o piloto está em [Guia rápido para teste dos analistas](docs/GUIA-TESTE-ANALISTAS.md).

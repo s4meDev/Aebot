@@ -1365,3 +1365,4 @@ button:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+:root .desktop-actions { display: grid; gap: 10px; }

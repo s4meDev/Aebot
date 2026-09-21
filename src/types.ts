@@ -257,7 +257,7 @@ export interface AnalysisRequest {
 
 export interface AiProviderResponse {
   content: string;
-  provider: 'backend' | 'gemini' | 'workers-ai' | 'simulated';
+  provider: 'backend' | 'gemini' | 'workers-ai' | 'local' | 'simulated';
   decision: DecisionType | null;
   evaluation: RuleEvaluationResult;
   fallbackReason?:
@@ -266,6 +266,17 @@ export interface AiProviderResponse {
     | 'rate_limited'
     | 'invalid_response'
     | 'backend_error';
+  /** Metadados técnicos sem texto da conversa, usados somente pela operação do backend. */
+  modelAttempts?: AiModelAttempt[];
+}
+
+export interface AiModelAttempt {
+  provider: 'gemini' | 'workers-ai' | 'local';
+  model: string;
+  status: 'ok' | 'api_error' | 'rate_limited' | 'invalid_response';
+  durationMs: number;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 export interface AiProvider {

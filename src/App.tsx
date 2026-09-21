@@ -8,6 +8,8 @@ import { usePersistentState } from './state/usePersistentState';
 import { STORAGE_KEYS } from './constants/storageKeys';
 import { serviceCatalogService } from './services/ServiceCatalogService';
 import type { ServiceRecord } from './types';
+import { desktopBridge } from './desktop/contracts';
+import { DesktopSettings } from './components/DesktopSettings';
 
 const knowledgeService = new KnowledgeService();
 
@@ -131,7 +133,7 @@ export default function App() {
             {catalogStatus.warning ?? (
               catalogStatus.source === 'backend'
                 ? `Base sincronizada${catalogStatus.version ? ` · ${catalogStatus.version}` : ''}`
-                : 'Base de contingência'
+                : desktopBridge() ? `Base local · ${catalogStatus.version ?? ''}` : 'Base de contingência'
             )}
           </div>
         </section>
@@ -155,11 +157,13 @@ export default function App() {
         <span aria-hidden="true">●</span>
       </footer>
 
-      <ConfigModal
+      {desktopBridge() ? <DesktopSettings isOpen={isConfigOpen}
+        onClose={() => setIsConfigOpen(false)}
+        onRulesChanged={() => setConfigurationRevision((revision) => revision + 1)} /> : <ConfigModal
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
         onSaved={() => setConfigurationRevision((revision) => revision + 1)}
-      />
+      />}
     </div>
   );
 }
