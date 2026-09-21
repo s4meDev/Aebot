@@ -22,11 +22,13 @@ O download ocorre na preparação do pacote (~2,5 GB de modelo). Depois, o aplic
 npm run desktop:package
 ```
 
-O resultado fica em `desktop-release`. Não distribua somente o executável da pasta descompactada: ele depende dos arquivos auxiliares. Distribua o instalador `AEBOT-<versão>-Setup.exe`.
+O resultado fica em `desktop-release`. Entregue juntos `AEBOT-<versão>-Setup.exe`, `Qwen3-4B-Q4_K_M.gguf`, `SHA256SUMS.txt` e `LEIA-ME.txt`. O analista mantém os arquivos na mesma pasta e executa o Setup; o modelo é copiado automaticamente. Essa separação evita o limite de 2 GB do instalador e não exige internet. Não distribua somente o EXE nem a pasta `win-unpacked`, destinada à preparação técnica.
 
 Nas configurações do aplicativo é possível verificar a IA, reiniciá-la, importar um pacote de regras aprovado e exportar métricas/feedbacks para a gestão. O modelo não recebe suas conversas pela internet. Atualizar as regras não exige redistribuir o modelo.
 
 Consulte [Guia do desktop e piloto](docs/DESKTOP-LOCAL.md) e [decisão de arquitetura](docs/ADR-001-DESKTOP-LOCAL.md). A qualidade semântica e a velocidade precisam ser homologadas no notebook corporativo; o piloto começa com 5 a 10 analistas e pode chegar a 60 após validação.
+
+O [relatório de validação atual](docs/STATUS-DESKTOP-2026-09-21.md) registra divergências reais do Qwen que ainda impedem a liberação ampla. Build e testes de código aprovados não significam IA homologada.
 
 ## O que o sistema faz
 

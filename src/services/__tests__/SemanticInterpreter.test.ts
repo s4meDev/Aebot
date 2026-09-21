@@ -19,6 +19,30 @@ function response(overrides: Record<string, unknown> = {}): string {
 }
 
 describe('SemanticInterpreter', () => {
+  it('recusa a pergunta inteira como prova quando ela mistura presença e ausência', () => {
+    const query = 'Tem foto antes e depois, mas não mostrou o reparo sendo executado.';
+    expect(parseSemanticInterpretation(JSON.stringify({ mappings: [{
+      ruleId: duringRule.id, sourceQuote: query, stance: 'asserted',
+    }] }), query, rules)).toBeNull();
+    expect(parseSemanticInterpretation(JSON.stringify({ mappings: [{
+      ruleId: duringRule.id, sourceQuote: 'não mostrou o reparo sendo executado', stance: 'asserted',
+    }] }), query, rules)?.canonicalPrompt).toBe('sem foto durante');
+  });
+  it('não deixa o modelo escolher uma regra agregadora sem comprovar os fatos', () => {
+    const aggregate = rules.find((rule) => rule.matchPolicy?.minimumMatchedFactGroups)!;
+    expect(parseSemanticInterpretation(JSON.stringify({ mappings: [{
+      ruleId: aggregate.id, sourceQuote: 'Não registraram como ficou no fim', stance: 'asserted',
+    }] }), 'Não registraram como ficou no fim.', rules)).toBeNull();
+  });
+
+  it('fotografaram indica presença, não uma falta afirmada pelo modelo', () => {
+    const before = rules.find((rule) => rule.conditionKeywords.includes('sem foto antes'))!;
+    const result = parseSemanticInterpretation(JSON.stringify({ mappings: [{
+      ruleId: before.id, sourceQuote: 'fotografaram antes de começar', stance: 'asserted',
+    }] }), 'Só fotografaram antes de começar e no meio.', rules);
+    expect(result?.canonicalPrompt).toBeNull();
+    expect(result?.mappings[0].stance).toBe('negated_or_present');
+  });
   it('aceita lista vazia como ausência semântica confirmada de correspondência', () => {
     expect(parseSemanticInterpretation(
       '{"mappings":[]}',

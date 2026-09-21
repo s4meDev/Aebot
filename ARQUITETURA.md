@@ -12,6 +12,7 @@ Arquivos do desktop, na ordem de responsabilidade:
 - `desktop/preload.ts`: ponte limitada entre interface isolada e processo principal; não expõe Node nem IPC genérico.
 - `src/desktop/contracts.ts`: operações e estado do aplicativo local.
 - `desktop/ModelRuntime.ts`: processo llama.cpp oculto, porta aleatória em 127.0.0.1, credencial temporária, prontidão e encerramento.
+- `desktop/ModelIntegrity.ts`: confere tamanho e SHA-256 do modelo antes de iniciar a inferência.
 - `desktop/LocalModelClient.ts`: requisição local com JSON restrito, timeout e validação; não tem contingência externa.
 - `desktop/RuleRelease.ts`: pacote de regras com responsável, vigência, versão e histórico descritivo; reutiliza o schema oficial.
 - `desktop/LocalData.ts`: escrita atômica, métricas sem conversas e feedback voluntário local.
@@ -20,8 +21,10 @@ Arquivos do desktop, na ordem de responsabilidade:
 - `scripts/build-desktop.mjs`: compila renderer, processo principal e preload separadamente.
 - `scripts/prepare-desktop-assets.mjs`: baixa runtime/modelo de fontes oficiais com revisão e SHA-256 fixados.
 - `scripts/verify-desktop-assets.mjs`: bloqueia o instalador se faltarem arquivos, hashes ou licenças.
+- `scripts/finalize-desktop-package.mjs`: coloca a cópia do modelo ao lado do Setup, gera hashes e instruções de distribuição.
+- `desktop/installer.nsh`: exige o modelo ao lado do Setup e o copia para a instalação, sem download.
 - `desktop-resources/assets-lock.json`: identidade reproduzível dos artefatos, sem colocar pesos/binaries no Git.
-- `electron-builder.json`: instalador Windows x64 com modelo, runtime e licenças; sem exigir Node no notebook do analista.
+- `electron-builder.json`: instalador Windows x64 com runtime e licenças; modelo auxiliar externo ao Setup, sem exigir Node no notebook do analista.
 
 Os arquivos de regras instalados em `%APPDATA%/AEBOT` prevalecem sobre a base embarcada apenas se válidos e atuais. Uma importação substitui o motor e seu cache juntos. A interface recarrega o catálogo e limpa o caso para não misturar versões. O pacote anterior fica disponível em `.previous` para recuperação pela TI.
 

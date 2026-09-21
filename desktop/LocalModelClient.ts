@@ -5,7 +5,7 @@ export class LocalModelClient implements StructuredModelClient {
   readonly provider = 'local' as const;
   readonly providerChain = ['local'] as const;
   readonly modelChain = ['Qwen3-4B-Q4_K_M'] as const;
-  readonly cacheKey = 'local:qwen3-4b-q4_k_m:v1';
+  readonly cacheKey = 'local:qwen3-4b-q4_k_m:v2';
 
   constructor(private readonly connection: () => { url: string; token: string } | null) {}
 
@@ -27,7 +27,9 @@ export class LocalModelClient implements StructuredModelClient {
         method: 'POST', signal: AbortSignal.timeout(180_000), redirect: 'error',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${connection.token}` },
         body: JSON.stringify({
-          model: 'aebot-local', temperature: 0, stream: false,
+          // Perfil non-thinking recomendado pelo Qwen. Seed fixa ajuda a comparar
+          // rodadas; não garante respostas idênticas entre máquinas/runtimes.
+          model: 'aebot-local', temperature: 0.7, top_p: 0.8, top_k: 20, min_p: 0, seed: 42, stream: false,
           max_tokens: Math.min(maxOutputTokens, 1024),
           chat_template_kwargs: { enable_thinking: false },
           messages: [{ role: 'system', content: `${systemInstruction}\n/no_think` },

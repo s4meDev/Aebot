@@ -8,7 +8,7 @@ Cada analista executa a IA no seu notebook. Até 60 instalações independentes,
 
 Electron foi escolhido para reaproveitar React/TypeScript e o motor sem reescrever o núcleo em outra linguagem. O custo é um pacote maior que uma casca WebView; o modelo de cerca de 2,5 GB já domina o tamanho da distribuição. A interface é sandboxed, sem Node, com context isolation, navegação bloqueada e ponte IPC restrita. O runtime CPU llama.cpp é um processo separado gerenciado pelo aplicativo, sem console visível, vinculado apenas a 127.0.0.1 e autenticado por segredo temporário.
 
-Qwen3-4B Q4_K_M é o modelo inicial solicitado, não uma garantia de qualidade. O cliente usa schema JSON, temperatura zero e modo sem thinking para reduzir latência. Saídas truncadas, JSON inválido ou IDs/citações não sustentadas não autorizam conclusão. Os fatos estruturados reutilizam `SemanticRuleMapping`: regra candidata, trecho citado, expressão canônica validada e modalidade do relato. Não há duas bases nem um novo motor concorrente.
+Qwen3-4B Q4_K_M é o modelo inicial solicitado, não uma garantia de qualidade. O cliente usa schema JSON e modo sem thinking para reduzir latência. A amostragem segue o perfil non-thinking do [model card oficial](https://huggingface.co/Qwen/Qwen3-4B#best-practices): temperatura 0,7, top-p 0,8, top-k 20 e min-p 0. Seed fixa facilita a comparação de testes, mas não garante determinismo entre máquinas. Saídas truncadas, JSON inválido ou IDs/citações não sustentadas não autorizam conclusão. Os fatos estruturados reutilizam `SemanticRuleMapping`: regra candidata, trecho citado, expressão canônica validada e modalidade do relato. Não há duas bases nem um novo motor concorrente.
 
 ## Governança
 
@@ -20,7 +20,7 @@ Não criamos sincronização automática que tornaria a internet obrigatória. A
 
 As regras têm regressões automatizadas e o cliente local possui testes de contrato. `desktop:evaluate` executa inferência real sobre o corpus técnico, registrando divergências, aprovação indevida e latência. Esse corpus não substitui 100 perguntas reais/simuladas com gabarito aprovado pela referência operacional. A medição neste computador não representa automaticamente o Latitude 3420.
 
-O instalador inclui todos os recursos e não exige instalação manual de IA. Download é feito uma vez pela máquina de preparação. Piloto: 5–10 analistas; expansão até 60 condicionada a qualidade, latência e disponibilidade de memória aceitáveis com os sistemas corporativos abertos.
+O pacote de distribuição contém Setup e modelo GGUF auxiliar na mesma pasta; o Setup copia os recursos e não exige instalação manual de IA. O modelo ultrapassa o limite de 2 GB do arquivo embutido NSIS, por isso não está dentro do EXE. Download é feito uma vez pela máquina de preparação. Piloto: 5–10 analistas; expansão até 60 condicionada a qualidade, latência e disponibilidade de memória aceitáveis com os sistemas corporativos abertos.
 
 ## Referências técnicas
 

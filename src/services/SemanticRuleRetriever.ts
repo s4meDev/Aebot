@@ -23,9 +23,9 @@ function meaningfulTokens(text: string): Set<string> {
   const tokens = normalizeText(text).tokens.filter(
     (token) => token.length > 1 && !STOP_WORDS.has(token)
   );
-  return new Set(tokens.flatMap((token) =>
-    token.length >= 5 ? [token, `~${token.slice(0, 4)}`] : [token]
-  ));
+  // Prefixos curtos confundiam verbos como "registraram" com a peça "registro".
+  // A equivalência semântica fica com o modelo; a busca lexical usa palavras inteiras.
+  return new Set(tokens);
 }
 
 function overlapScore(queryTokens: Set<string>, values: string[] | undefined, weight: number): number {
@@ -81,8 +81,13 @@ export function selectSemanticRuleCandidates(
 
   const queryTokens = meaningfulTokens(query);
   const queryPolarity = detectSemanticPolarity(query);
+  const absenceSegments = normalizeText(query).segments.filter(
+    (segment) => detectSemanticPolarity(segment) === 'absence'
+  );
+  const focusTokens = meaningfulTokens(absenceSegments.join(' '));
   const ranked = rules
-    .map((rule) => ({ rule, score: scoreRule(queryTokens, queryPolarity, rule) }))
+    .map((rule) => ({ rule, score: scoreRule(queryTokens, queryPolarity, rule) +
+      (absenceSegments.length ? 2 * scoreRule(focusTokens, queryPolarity, rule) : 0) }))
     .filter((candidate) => candidate.score > 0)
     .sort((left, right) => right.score - left.score || left.rule.id.localeCompare(right.rule.id));
 

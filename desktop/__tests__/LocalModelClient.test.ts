@@ -26,6 +26,7 @@ describe('Qwen local', () => {
     const body = JSON.parse(fetch.mock.calls[0][1].body);
     expect(body.response_format.schema).toEqual({ type: 'object' });
     expect(body.chat_template_kwargs.enable_thinking).toBe(false);
+    expect(body).toMatchObject({ temperature: 0.7, top_p: 0.8, top_k: 20, min_p: 0, seed: 42 });
   });
   it.each(['length', 'stop'])('recusa saída truncada ou fora do contrato (%s)', async (finish_reason) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{

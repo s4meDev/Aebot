@@ -7,6 +7,20 @@ const service = ruleEngine.getServices()[0];
 const rules = ruleEngine.getRulesForService(service.id);
 
 describe('SemanticRuleRetriever', () => {
+  it('não perde a regra da execução entre duas etapas presentes', () => {
+    const result = selectSemanticRuleCandidates(
+      'Tem foto antes e depois, mas não mostrou o reparo sendo executado.', rules, 6
+    );
+    const during = rules.find((rule) => rule.conditionKeywords.includes('sem foto durante'))!;
+    expect(result.rules.map((rule) => rule.id)).toContain(during.id);
+  });
+  it('mantém a evidência final entre candidatos mesmo quando o início está presente', () => {
+    const result = selectSemanticRuleCandidates(
+      'Só fotografaram antes de começar e no meio. Não registraram como ficou no fim.', rules, 6
+    );
+    const finalRule = rules.find((rule) => rule.conditionKeywords.includes('sem foto depois'))!;
+    expect(result.rules.map((rule) => rule.id)).toContain(finalRule.id);
+  });
   it('prioriza conceitos relacionados sem decidir a conclusão', () => {
     const result = selectSemanticRuleCandidates(
       'não apareceu o torque aplicado na virola',

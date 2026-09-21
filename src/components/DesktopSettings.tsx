@@ -31,6 +31,7 @@ export function DesktopSettings({ isOpen, onClose, onRulesChanged }: {
       <p className="help-text">Funciona offline, sem chave de API. As conversas não saem deste computador e são descartadas ao fechar o aplicativo.</p>
       {status?.rulesWarning && <p className="danger-text">{status.rulesWarning}</p>}
       <h4>Operação do piloto</h4>
+      <p className="help-text">Versão em validação. Confira as orientações antes de concluir a OS; testes técnicos não substituem homologação operacional.</p>
       <p>{status?.analyses ?? 0} análises · {status?.modelCalls ?? 0} chamadas locais · {status?.modelErrors ?? 0} falhas do modelo</p>
       <p className="help-text">Tempo médio: {status?.averageDurationMs === null ? 'sem medições' : `${((status?.averageDurationMs ?? 0) / 1000).toFixed(1)} s`}. Sem cobrança por pergunta; o desempenho depende do computador.</p>
       <div className="desktop-actions">

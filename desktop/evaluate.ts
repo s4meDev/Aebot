@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { ModelRuntime } from './ModelRuntime';
 import { LocalModelClient } from './LocalModelClient';
 import { AebotAnalysisService } from '../src/services/AnalysisService';
+import { ruleEngine } from '../src/services/RuleEngine';
 import cases from '../src/data/regressionCases.json';
 import pilotCases from '../src/data/desktopPilotCases.json';
 import type { AiMessage } from '../src/types';
@@ -31,11 +32,21 @@ try {
           pendingInformation: response.evaluation.followUpQuestion ? [response.evaluation.followUpQuestion] : undefined });
     }
     const result = await service.analyze({ serviceId: test.serviceId, prompt: test.query, history });
+    const matchedIds = new Set(result.evaluation.matchedRules.map((rule) => rule.id));
+    const factGroups = ruleEngine.getRulesForService(test.serviceId)
+      .filter((rule) => matchedIds.has(rule.id) && rule.factGroup).map((rule) => rule.factGroup!);
+    const expectedGroups = 'expectedFactGroups' in test ? test.expectedFactGroups : undefined;
+    const factsMatch = !expectedGroups || expectedGroups.length === factGroups.length &&
+      expectedGroups.every((group) => factGroups.includes(group));
     const row = { case: test.name, expected: test.decision, actual: result.decision,
-      passed: result.decision === test.decision,
+      passed: result.decision === test.decision && factsMatch,
+      factGroups, expectedFactGroups: expectedGroups,
       unsafeApproval: result.decision === 'Conforme' && test.decision !== 'Conforme',
+      missedRejection: test.decision === 'Reprovado' && result.decision !== 'Reprovado',
       durationMs: Date.now() - started, provider: result.provider,
       semanticApplied: result.evaluation.semanticInterpretationApplied === true,
+      // Somente o corpus sintético de teste; nunca habilitar isto na telemetria do app.
+      mappings: result.evaluation.semanticMappings,
       fallbackReason: result.fallbackReason, rules: result.evaluation.matchedRules.map((rule) => rule.id) };
     rows.push(row);
     console.log(`${index + 1}/${Math.min(limit, pilot.length)}: ${row.passed ? 'OK' : 'DIVERGÊNCIA'} · ${row.durationMs} ms · ${row.provider}`);

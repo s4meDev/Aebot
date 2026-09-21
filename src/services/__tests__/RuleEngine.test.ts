@@ -47,6 +47,16 @@ function store(rules: DataRule[], serviceIds = ['service-a']): RuleStoreSchema {
 }
 
 describe('RuleEngine — recuperação e evidência', () => {
+  it.each([
+    ['Tem durante e depois, faltou a foto antes.', 'Não Conforme'],
+    ['Tem foto durante e depois, faltou a foto antes.', 'Não Conforme'],
+    ['Não tem foto durante nem depois.', 'Reprovado'],
+    ['Sem foto antes e sem foto depois.', 'Reprovado'],
+    ['Sem foto antes nem durante.', 'Reprovado'],
+  ])('preserva o escopo da ausência: %s', (query, decision) => {
+    expect(ruleEngine.evaluatePrompt(query, selectedServiceId).decision).toBe(decision);
+  });
+
   it('retorna sem decisão quando não existe regra relevante', () => {
     const result = ruleEngine.evaluatePrompt('A equipe chegou cedo ao endereço.', selectedServiceId);
     expect(result.decision).toBeNull();

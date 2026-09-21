@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, session, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
+import { mkdirSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { ModelRuntime } from './ModelRuntime';
 import { LocalModelClient } from './LocalModelClient';
@@ -13,9 +14,16 @@ import { parseRuleRelease } from './RuleRelease';
 import { smokeDesktop } from './smoke';
 
 app.setName('AEBOT');
+const smoke = !app.isPackaged && process.argv.includes('--aebot-smoke');
+if (smoke) {
+  // O teste não disputa o perfil aberto nem altera métricas de um analista.
+  const profile = path.join(app.getAppPath(), 'desktop-release', 'smoke-profile');
+  mkdirSync(profile, { recursive: true });
+  app.setPath('userData', profile);
+}
 let runtime: ModelRuntime;
 let window: BrowserWindow | null = null;
-if (!app.requestSingleInstanceLock()) app.quit();
+if (!app.requestSingleInstanceLock()) { if (smoke) app.exit(1); else app.quit(); }
 else void app.whenReady().then(async () => {
   const resources = app.isPackaged ? path.join(process.resourcesPath, 'local-ai')
     : path.join(app.getAppPath(), 'desktop-resources');
@@ -114,16 +122,19 @@ else void app.whenReady().then(async () => {
     // A interface só abre recursos empacotados. A inferência roda fora do renderer.
     callback({ cancel: !details.url.startsWith('file://') && !details.url.startsWith('devtools://') });
   });
-  const smoke = !app.isPackaged && process.argv.includes('--aebot-smoke');
   window = new BrowserWindow({ width: 860, height: 900, minWidth: 420, minHeight: 600, show: !smoke,
     backgroundColor: '#090909', title: 'AEBOT · Análise local', autoHideMenuBar: true,
     webPreferences: { preload: path.join(app.getAppPath(), 'desktop-dist', 'preload.cjs'),
-      nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true } });
+      nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, spellcheck: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
   await window.loadFile(indexFile);
   if (smoke) await smokeDesktop(window);
   else void runtime.start();
+}).catch(() => {
+  runtime?.stop();
+  if (!smoke) dialog.showErrorBox('AEBOT não iniciou', 'Não foi possível abrir o aplicativo. Solicite à TI a conferência da instalação.');
+  app.exit(1);
 });
 app.on('second-instance', () => { window?.restore(); window?.focus(); });
 app.on('window-all-closed', () => app.quit());

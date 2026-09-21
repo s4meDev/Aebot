@@ -4,6 +4,8 @@ import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:net';
 import { availableParallelism } from 'node:os';
+import assetsLock from '../desktop-resources/assets-lock.json';
+import { verifyModelIntegrity } from './ModelIntegrity';
 
 export class ModelRuntime {
   private child?: ChildProcess;
@@ -25,8 +27,17 @@ export class ModelRuntime {
       return;
     }
     this.state = 'starting';
-    this.message = 'Carregando a IA neste computador…';
+    this.message = 'Conferindo o modelo e carregando a IA neste computador…';
     try {
+      try { await verifyModelIntegrity(model, assetsLock.model); }
+      catch {
+        if (generation === this.generation) {
+          this.state = 'unavailable';
+          this.message = 'Modelo ausente ou corrompido. Solicite à TI a reinstalação do pacote completo.';
+        }
+        return;
+      }
+      if (generation !== this.generation) return;
       const port = await new Promise<number>((resolve, reject) => {
         const probe = createServer();
         probe.once('error', reject);

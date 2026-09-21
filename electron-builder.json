@@ -2,11 +2,11 @@
   "appId": "br.com.aebot.desktop",
   "productName": "AEBOT",
   "directories": { "output": "desktop-release" },
-  "files": ["desktop-dist/**/*", "package.json"],
+  "files": ["desktop-dist/ui/**/*", "desktop-dist/main.cjs", "desktop-dist/preload.cjs", "desktop-dist/build-info.json", "package.json"],
   "extraMetadata": { "main": "desktop-dist/main.cjs" },
-  "extraResources": [{ "from": "desktop-resources", "to": "local-ai", "filter": ["runtime/**/*", "models/*.gguf", "assets-lock.json", "licenses/**/*"] }],
+  "extraResources": [{ "from": "desktop-resources", "to": "local-ai", "filter": ["runtime/**/*", "assets-lock.json", "licenses/**/*"] }],
   "asar": true,
   "npmRebuild": false,
   "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "signAndEditExecutable": false },
-  "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "artifactName": "AEBOT-${version}-Setup.exe" }
+  "nsis": { "include": "desktop/installer.nsh", "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "artifactName": "AEBOT-${version}-Setup.exe" }
 }

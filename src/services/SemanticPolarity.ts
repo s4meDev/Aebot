@@ -13,12 +13,13 @@ const ABSENCE = [
   /\bfalt(?:a|am|ou|aram|ando)\b/,
   /\bausencia\b/,
   /\bausent(?:e|es|ou|aram|ia)\b/,
-  /\bnao (?:tem|teve|mostrou|apresentou|aparece|apareceu|veio|registrou|mediu|mediram|aferiu|aferiram|comprovou|incluiu|lancou|colocou)\b/,
+  /\bnao (?:tem|teve|mostrou|mostraram|apresentou|apresentaram|aparece|apareceu|veio|registrou|registraram|mediu|mediram|aferiu|aferiram|comprovou|comprovaram|incluiu|lancou|colocou)\b/,
   /\bnao foi (?:apresentad[ao]|registrad[ao]|medid[ao]|aferid[ao]|comprovad[ao])\b/,
   /\bninguem (?:registrou|mostrou|mediu|aferiu)\b/,
 ];
 
 const PRESENCE = [
+  /\b(?:fotografou|fotografaram|registraram|mostraram|apresentaram)\b/,
   /\b(?:tem|mostrou|apresentou|registrou|mediu|aferiu|comprovou)\b/,
   /\bfoi (?:apresentad[ao]|registrad[ao]|medid[ao]|aferid[ao]|comprovad[ao])\b/,
 ];

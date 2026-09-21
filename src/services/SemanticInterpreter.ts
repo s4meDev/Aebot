@@ -160,6 +160,8 @@ export function parseSemanticInterpretation(
 
       const rule = rulesById.get(source.ruleId);
       if (!rule) continue;
+      // A soma de falhas exige fatos separados confirmados; não é uma inferência livre.
+      if (rule.matchPolicy?.minimumMatchedFactGroups) continue;
       const canonicalExpression = canonicalExpressionForRule(rule, source.canonicalExpression);
       if (!canonicalExpression) continue;
       const proposedQuote = source.sourceQuote.trim();
@@ -177,6 +179,10 @@ export function parseSemanticInterpretation(
       }
 
       const sourcePolarity = detectSemanticPolarity(quote);
+      const clausePolarities = normalizeText(quote).segments.map(detectSemanticPolarity);
+      // Uma citação que mistura presença e falta não comprova qual delas pertence
+      // à regra escolhida. O modelo precisa apontar o trecho específico do fato.
+      if (clausePolarities.includes('present') && clausePolarities.includes('absence')) continue;
       const rulePolarity = detectSemanticPolarity([
         rule.title,
         rule.description,

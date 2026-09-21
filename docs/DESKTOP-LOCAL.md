@@ -1,8 +1,10 @@
 # Guia do desktop e do piloto
 
+Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-21.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
+
 ## Para o analista
 
-1. Instale o pacote AEBOT entregue pela TI e abra o atalho.
+1. Mantenha o Setup e o arquivo `.gguf` entregues pela TI na mesma pasta. Execute o Setup e abra o atalho AEBOT.
 2. Aguarde `Local · Qwen`. O primeiro carregamento pode levar mais tempo.
 3. Selecione Reparo de Cavalete para o piloto e descreva o caso.
 4. Se o assistente pedir informação, responda no mesmo chat. Para outra OS, use Novo caso.
@@ -24,7 +26,9 @@ npm run desktop:evaluate -- --limit=4
 npm run desktop:package
 ```
 
-Os downloads são de fontes oficiais, com revisões e hashes em `desktop-resources/assets-lock.json`. O instalador gerado inclui modelo e runtime; o usuário final não precisa de internet nem Node. Binários e pesos são ignorados no Git.
+Os downloads são de fontes oficiais, com revisões e hashes em `desktop-resources/assets-lock.json`. Distribua os quatro arquivos gerados em `desktop-release`: `AEBOT-<versão>-Setup.exe`, `Qwen3-4B-Q4_K_M.gguf`, `SHA256SUMS.txt` e `LEIA-ME.txt`. O runtime está dentro do instalador; o modelo vai ao lado porque ultrapassa o limite de 2 GB de arquivo embutido do NSIS. O Setup copia o modelo automaticamente e o aplicativo confere seu SHA-256 antes de executar. O usuário final não precisa de internet nem Node. Binários e pesos são ignorados no Git.
+
+Reserve pelo menos 4 GB no destino da instalação, além dos arquivos de distribuição. A pasta `win-unpacked` é intermediária e não é o pacote de entrega. Se o modelo estiver ausente ou alterado, a IA fica indisponível e o aplicativo informa o problema; não baixa outra cópia nem usa nuvem automaticamente.
 
 O instalador não é assinado com certificado corporativo nesta entrega. A TI deve aprovar o executável e o runtime conforme suas políticas antes de distribuí-los. Não desative controles de segurança para contornar bloqueios.
 
@@ -37,6 +41,8 @@ Em cada desktop, use Configurações → Importar regras aprovadas. A aplicaçã
 ## Avaliar o modelo real
 
 `npm run desktop:evaluate` compara o Qwen com 100 casos propostos de Cavalete (66 regressões existentes e 34 cenários em `src/data/desktopPilotCases.json`). Use `-- --limit=4` para uma amostra curta ou `-- --offset=66 --limit=6` para cenários novos. O relatório `desktop-release/local-evaluation.json` inclui decisão esperada/obtida, tempo, contingências e regras, sem registrar as conversas reais dos usuários. O último relatório substitui o anterior; preserve uma cópia antes de outra rodada se precisar comparar.
+
+Nos casos que possuem `expectedFactGroups`, o avaliador confere também as etapas que fundamentaram a resposta: acertar a decisão pela regra errada conta como divergência. `missedRejection` indica uma reprovação esperada que não foi recomendada (inclusive quando o modelo ficou sem decisão). Os trechos em `mappings` são exclusivamente perguntas sintéticas desse corpus, não telemetria do aplicativo.
 
 Prepare com a referência operacional pelo menos 100 perguntas do piloto, incluindo linguagem informal, informações faltantes, mudanças de caso, retificações, hipóteses, negações, ausência de duas etapas, local incorreto e parametrização. Casos técnicos não são automaticamente gabarito homologado. A ferramenta não anuncia aprovação de negócio.
 

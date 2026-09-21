@@ -68,7 +68,7 @@ function normalizeValue(text: string): string {
 export function normalizeText(text: string): NormalizedText {
   const value = normalizeValue(text);
   const segments = text
-    .split(/[.!?;\r\n]+|\b(?:mas|porém|porem|contudo|entretanto)\b/giu)
+    .split(/[.!?;\r\n]+|,\s*(?=(?:não|nao|sem|falt\w*|tem|teve|foi|foram)\b)|\b(?:mas|porém|porem|contudo|entretanto)\b/giu)
     .map(normalizeValue)
     .filter(Boolean);
 
@@ -207,6 +207,26 @@ function closestDistance(
   return distances.length ? Math.min(...distances) : Number.POSITIVE_INFINITY;
 }
 
+/** Em listas, o nome pode aparecer só uma vez: "documento A nem B". */
+function evidenceRanges(segment: NormalizedText, expression: string): ExpressionRange[] {
+  const ranges = findExpressionRanges(segment, expression);
+  const tokens = normalizedExpressionTokens(expression);
+  if (tokens.length < 2) return ranges;
+  const prefix = tokens.slice(0, -1).join(' ');
+  const tail = tokens[tokens.length - 1];
+  for (const head of findExpressionRanges(segment, prefix)) {
+    // Aceita apenas uma lista coordenada curta, sem atravessar outra oração.
+    let cursor = head.end + 2;
+    while (cursor + 1 < segment.tokens.length && ['e', 'nem'].includes(segment.tokens[cursor])) {
+      if (tokensEquivalent(segment.tokens[cursor + 1], tail)) {
+        ranges.push({ start: cursor + 1, end: cursor + 1 });
+      }
+      cursor += 2;
+    }
+  }
+  return ranges;
+}
+
 /**
  * Relaciona sinal e evidência no mesmo trecho. Quando há sinais positivos e
  * negativos, vence o mais próximo da evidência; empate favorece a negação.
@@ -222,7 +242,7 @@ export function hasScopedPositiveSignal(
   const evidenceOccurrences = text.segments.flatMap((segmentValue, segmentIndex) => {
     const segment = normalizeText(segmentValue);
     return evidenceExpressions.flatMap((expression) =>
-      findExpressionRanges(segment, expression).map((evidence) => ({
+      evidenceRanges(segment, expression).map((evidence) => ({
         segment,
         segmentIndex,
         evidence,

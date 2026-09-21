@@ -13,7 +13,7 @@
     "desktop:assets": "node scripts/prepare-desktop-assets.mjs",
     "desktop:evaluate": "node scripts/evaluate-local.mjs",
     "desktop:rules": "npm run rules:check && node scripts/create-rule-release.mjs",
-    "desktop:package": "npm run desktop:build && node scripts/verify-desktop-assets.mjs && electron-builder --config electron-builder.json --win --x64",
+    "desktop:package": "npm run desktop:build && node scripts/verify-desktop-assets.mjs && electron-builder --config electron-builder.json --win --x64 && node scripts/finalize-desktop-package.mjs",
     "dev": "vite",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.worker.json --noEmit",
     "test": "vitest run",

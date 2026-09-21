@@ -25,7 +25,17 @@ async function download(url, file, expected) {
 for (const directory of ['models', 'runtime', 'licenses']) await mkdir(path.join(root, directory), { recursive: true });
 const archive = path.join(root, `llama-${lock.runtime.version}.zip`);
 await download(lock.runtime.url, archive, lock.runtime.sha256);
-if (!existsSync(path.join(root, 'runtime', 'llama-server.exe'))) {
+const existingRuntime = existsSync(path.join(root, 'runtime', 'llama-server.exe'));
+if (existingRuntime) {
+  // Não recalcula uma assinatura para aceitar silenciosamente um runtime alterado.
+  const expected = JSON.parse(await readFile(path.join(root, 'runtime', 'checksums.json'), 'utf8'));
+  if (!expected['llama-server.exe']) throw new Error('Runtime existente sem manifesto de integridade.');
+  for (const [name, sum] of Object.entries(expected)) {
+    if (path.basename(name) !== name || await hash(path.join(root, 'runtime', name)) !== sum) {
+      throw new Error('Runtime existente alterado. Revise o pacote antes de preparar novamente.');
+    }
+  }
+} else {
   // Só extrai o ZIP oficial depois de conferir o hash publicado na release.
   const quote = (value) => "'" + value.replaceAll("'", "''") + "'";
   execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
