@@ -28,7 +28,7 @@ Nas configurações do aplicativo é possível verificar a IA, reiniciá-la, imp
 
 Consulte [Guia do desktop e piloto](docs/DESKTOP-LOCAL.md) e [decisão de arquitetura](docs/ADR-001-DESKTOP-LOCAL.md). A qualidade semântica e a velocidade precisam ser homologadas no notebook corporativo; o piloto começa com 5 a 10 analistas e pode chegar a 60 após validação.
 
-O [relatório de validação atual](docs/STATUS-DESKTOP-2026-09-21.md) registra divergências reais do Qwen que ainda impedem a liberação ampla. Build e testes de código aprovados não significam IA homologada.
+O [relatório de validação atual](docs/STATUS-DESKTOP-2026-09-22.md) compara os modos de inferência e registra as limitações que ainda impedem a liberação ampla. Build e testes de código aprovados não significam IA homologada.
 
 ## O que o sistema faz
 

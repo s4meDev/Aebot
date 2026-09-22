@@ -50,7 +50,8 @@ export class ModelRuntime {
       const token = randomBytes(32).toString('hex');
       const child = spawn(executable, ['--model', model, '--host', '127.0.0.1', '--port', String(port),
         '--ctx-size', '16384', '--parallel', '1', '--threads', String(Math.max(1, Math.min(6, availableParallelism() - 2))),
-        '--n-gpu-layers', '0', '--no-webui', '--jinja', '--log-disable'], {
+        '--n-gpu-layers', '0', '--no-webui', '--jinja', '--log-disable',
+        '--reasoning-format', 'deepseek', '--reasoning-budget', '512'], {
         windowsHide: true, stdio: 'ignore', shell: false,
         env: { ...process.env, LLAMA_API_KEY: token },
       });

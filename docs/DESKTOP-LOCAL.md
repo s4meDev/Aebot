@@ -1,6 +1,6 @@
 # Guia do desktop e do piloto
 
-Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-21.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
+Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-22.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
 
 ## Para o analista
 
@@ -40,7 +40,9 @@ Em cada desktop, use Configurações → Importar regras aprovadas. A aplicaçã
 
 ## Avaliar o modelo real
 
-`npm run desktop:evaluate` compara o Qwen com 100 casos propostos de Cavalete (66 regressões existentes e 34 cenários em `src/data/desktopPilotCases.json`). Use `-- --limit=4` para uma amostra curta ou `-- --offset=66 --limit=6` para cenários novos. O relatório `desktop-release/local-evaluation.json` inclui decisão esperada/obtida, tempo, contingências e regras, sem registrar as conversas reais dos usuários. O último relatório substitui o anterior; preserve uma cópia antes de outra rodada se precisar comparar.
+`npm run desktop:evaluate` compara o Qwen com 100 casos propostos de Cavalete (66 regressões existentes e 34 cenários em `src/data/desktopPilotCases.json`). Use `-- --limit=4` para uma amostra curta ou `-- --offset=66 --limit=6` para cenários novos. O relatório `desktop-release/local-evaluation.json` inclui decisão esperada/obtida, tempo, contingências e regras, sem registrar as conversas reais dos usuários. Cada rodada também tem seu próprio arquivo em `desktop-release/evaluations/`, atualizado após cada caso. Confira `completed`: um relatório parcial não comprova a conclusão da rodada.
+
+Para comparar experimentalmente o modo com raciocínio, use `npm run desktop:evaluate -- --offset=66 --limit=6 --thinking`. O runtime limita esse raciocínio a 512 tokens e separa seu conteúdo da resposta; ele não é exportado. Essa flag altera somente a avaliação técnica, não o modo padrão do aplicativo. O relatório registra o perfil usado; compare qualidade e latência antes de promover uma configuração.
 
 Nos casos que possuem `expectedFactGroups`, o avaliador confere também as etapas que fundamentaram a resposta: acertar a decisão pela regra errada conta como divergência. `missedRejection` indica uma reprovação esperada que não foi recomendada (inclusive quando o modelo ficou sem decisão). Os trechos em `mappings` são exclusivamente perguntas sintéticas desse corpus, não telemetria do aplicativo.
 

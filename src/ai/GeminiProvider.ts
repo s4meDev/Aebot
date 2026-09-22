@@ -21,8 +21,8 @@ import { STORAGE_KEYS } from '../constants/storageKeys';
 import {
   buildEvaluationPrompt,
   buildSemanticInterpretationPrompt,
-  buildLocalInterpretationPrompt,
 } from './PromptBuilder';
+import { createLocalInterpretation } from './LocalInterpretation';
 import { resolveContextualQuery } from '../services/ConversationContextResolver';
 import {
   parseSemanticInterpretation,
@@ -76,16 +76,6 @@ const NARRATIVE_RESPONSE_SCHEMA: Record<string, unknown> = {
   properties: {
     answer: { type: 'string' },
     question: { type: 'string' },
-  },
-};
-// No modelo pequeno, resumir os fatos antes dos IDs ajuda a separar o relato
-// da escolha da regra. O resumo não vai para logs nem para métricas.
-const LOCAL_SEMANTIC_RESPONSE_SCHEMA: Record<string, unknown> = {
-  ...SEMANTIC_RESPONSE_SCHEMA,
-  required: ['observations', 'mappings', 'conversation'],
-  properties: {
-    observations: { type: 'string', maxLength: 400 },
-    ...(SEMANTIC_RESPONSE_SCHEMA.properties as Record<string, unknown>),
   },
 };
 
@@ -526,9 +516,13 @@ export class GeminiProvider implements AiProvider {
       // O modelo não pode pular essa comprovação escolhendo diretamente a soma.
       const atomicRules = rules.filter((rule) => !rule.matchPolicy?.minimumMatchedFactGroups);
       const selection = selectSemanticRuleCandidates(query, atomicRules, modelClient.provider === 'local' ? 6 : undefined);
-      const semanticPrompt = modelClient.provider === 'local'
-        ? buildLocalInterpretationPrompt(query, service, selection.rules, clarificationQuestions)
-        : buildSemanticInterpretationPrompt(
+      const localRequest = modelClient.provider === 'local' ? createLocalInterpretation(
+        query, service, selection.rules, clarificationQuestions, { allowSingleTokenQuote: clarificationApplied }
+      ) : undefined;
+      const parseInterpretation = localRequest?.parse ?? ((text: string) => parseSemanticInterpretation(
+        text, query, selection.rules, { allowSingleTokenQuote: clarificationApplied }
+      ));
+      const semanticPrompt = localRequest?.prompt ?? buildSemanticInterpretationPrompt(
         query,
         service,
         selection.rules,
@@ -540,28 +534,19 @@ export class GeminiProvider implements AiProvider {
         'Converse como um Analista Sênior: compreenda livremente a linguagem, seja breve e use somente o catálogo fornecido para regras e conclusões oficiais.',
         1536,
         {
-          responseSchema: modelClient.provider === 'local' ? LOCAL_SEMANTIC_RESPONSE_SCHEMA : SEMANTIC_RESPONSE_SCHEMA,
-          validateText: (text) => parseSemanticInterpretation(
-            text,
-            query,
-            selection.rules,
-            { allowSingleTokenQuote: clarificationApplied }
-          ) !== null,
+          responseSchema: localRequest?.schema ?? SEMANTIC_RESPONSE_SCHEMA,
+          validateText: (text) => parseInterpretation(text) !== null,
         }
       );
       if (response.status !== 'ok' || !response.text) {
         return {
           provider: response.provider,
-          fallbackReason: response.status === 'rate_limited' ? 'rate_limited' : 'api_error',
+          fallbackReason: response.status === 'rate_limited' ? 'rate_limited'
+            : response.attempts?.[response.attempts.length - 1]?.status === 'invalid_response' ? 'invalid_response' : 'api_error',
           modelAttempts: response.attempts ?? [],
         };
       }
-      const interpretation = parseSemanticInterpretation(
-        response.text,
-        query,
-        selection.rules,
-        { allowSingleTokenQuote: clarificationApplied }
-      ) ?? undefined;
+      const interpretation = parseInterpretation(response.text) ?? undefined;
       return {
         interpretation,
         provider: response.provider,

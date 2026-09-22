@@ -14,10 +14,12 @@ Arquivos do desktop, na ordem de responsabilidade:
 - `desktop/ModelRuntime.ts`: processo llama.cpp oculto, porta aleatória em 127.0.0.1, credencial temporária, prontidão e encerramento.
 - `desktop/ModelIntegrity.ts`: confere tamanho e SHA-256 do modelo antes de iniciar a inferência.
 - `desktop/LocalModelClient.ts`: requisição local com JSON restrito, timeout e validação; não tem contingência externa.
+- `src/ai/LocalInterpretation.ts`: divide a pergunta em trechos literais numerados, limita IDs de regras no schema local e reconstrói as citações antes da validação semântica compartilhada. Não decide a OS.
 - `desktop/RuleRelease.ts`: pacote de regras com responsável, vigência, versão e histórico descritivo; reutiliza o schema oficial.
 - `desktop/LocalData.ts`: escrita atômica, métricas sem conversas e feedback voluntário local.
 - `src/components/DesktopSettings.tsx`: situação da IA, importação e exportação, sem pedir chave ou endereço.
 - `desktop/evaluate.ts`: compara o modelo real ao corpus técnico; mantém homologação operacional como pendente.
+- As avaliações sintéticas são salvas após cada caso em `desktop-release/evaluations/`; `local-evaluation.json` aponta para a rodada mais recente. São artefatos de teste, não conversas dos analistas.
 - `scripts/build-desktop.mjs`: compila renderer, processo principal e preload separadamente.
 - `scripts/prepare-desktop-assets.mjs`: baixa runtime/modelo de fontes oficiais com revisão e SHA-256 fixados.
 - `scripts/verify-desktop-assets.mjs`: bloqueia o instalador se faltarem arquivos, hashes ou licenças.

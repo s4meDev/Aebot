@@ -153,22 +153,3 @@ ${JSON.stringify(catalog)}
 Pergunta do analista:
 ${userPrompt}`;
 }
-
-/** Instrução compacta para CPU; mantém descrições completas e condições pendentes. */
-export function buildLocalInterpretationPrompt(query: string, service: DataService, rules: DataRule[], pending: string[] = []): string {
-  return `Interprete a pergunta sobre ${service.name} usando SOMENTE o catálogo abaixo.
-Entenda sinônimos e linguagem informal. Não invente fatos, regras, região ou tipo de equipe.
-Para cada fato relacionado, indique ruleId do catálogo, sourceQuote literal da pergunta e stance:
-asserted=ocorreu; hypothetical=hipótese; informational=consulta; negated_or_present=falha negada/evidência presente.
-Mencionar foto não significa que falta foto. Se uma condição estiver pendente, use a orientação correspondente e pergunte, sem escolher conclusão.
-Separe cada oração: algo presente em uma etapa não é uma falta em outra. Mapeie TODAS as faltas relatadas, preservando qual etapa ou evidência falta. Use a menor citação completa que sustenta cada fato, nunca a pergunta inteira quando ela mistura presença e ausência. Uma descrição de resultado final ausente não significa condição inicial ausente. Se não conseguir identificar a evidência, pergunte em vez de escolher outra regra.
-Contexto pendente: ${pending.join('; ') || 'nenhum'}.
-Primeiro resuma em observations apenas quais fatos o analista informou, distinguindo o que está presente e o que falta. Só depois associe as faltas às regras. Nunca transforme um relato sobre presença de evidência em relato de uma ação que não foi mencionada.
-Responda somente JSON: {"observations":"resumo dos fatos, sem conclusão","mappings":[{"ruleId":"ID","sourceQuote":"trecho literal","stance":"asserted"}],"conversation":{"answer":"orientação em até 4 frases","question":"uma pergunta necessária ou vazio"}}.
-Se não existir regra, mappings deve ser []. Não invente conclusão e não repita pergunta já respondida.
-Catálogo: ${JSON.stringify(rules.map((rule) => ({ id: rule.id, title: rule.title,
-    description: rule.description, evidence: rule.relatedEvidence ?? [],
-    examples: (rule.examples ?? []).slice(0, 1), decision: rule.severity ?? null,
-    guidance: rule.guidance ?? rule.message, missingInformation: rule.missingInformation ?? [] })))}
-Pergunta: ${query}`;
-}

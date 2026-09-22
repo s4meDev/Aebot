@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { atomicJson } from './LocalData';
 import { ModelRuntime } from './ModelRuntime';
 import { LocalModelClient } from './LocalModelClient';
 import { AebotAnalysisService } from '../src/services/AnalysisService';
@@ -19,10 +19,14 @@ if (!Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(offset) |
 try {
   await runtime.start();
   if (runtime.state !== 'ready') throw new Error(runtime.message);
-  const service = new AebotAnalysisService({ modelClient: new LocalModelClient(runtime.connection),
+  const modelClient = new LocalModelClient(runtime.connection, { thinking: process.argv.includes('--thinking') });
+  const service = new AebotAnalysisService({ modelClient,
     humanizeDeterministicResponses: false });
   const rows = [];
-  for (const [index, test] of pilot.slice(offset, offset + limit).entries()) {
+  const startedAt = new Date().toISOString();
+  const archiveFile = `desktop-release/evaluations/${startedAt.replace(/[:.]/g, '-')}.json`;
+  const selectedCases = pilot.slice(offset, offset + limit);
+  for (const [index, test] of selectedCases.entries()) {
     const started = Date.now();
     const history: AiMessage[] = [];
     if ('previous' in test && typeof test.previous === 'string') {
@@ -44,19 +48,23 @@ try {
       unsafeApproval: result.decision === 'Conforme' && test.decision !== 'Conforme',
       missedRejection: test.decision === 'Reprovado' && result.decision !== 'Reprovado',
       durationMs: Date.now() - started, provider: result.provider,
+      outcome: result.evaluation.outcome,
       semanticApplied: result.evaluation.semanticInterpretationApplied === true,
       // Somente o corpus sintético de teste; nunca habilitar isto na telemetria do app.
       mappings: result.evaluation.semanticMappings,
       fallbackReason: result.fallbackReason, rules: result.evaluation.matchedRules.map((rule) => rule.id) };
     rows.push(row);
-    console.log(`${index + 1}/${Math.min(limit, pilot.length)}: ${row.passed ? 'OK' : 'DIVERGÊNCIA'} · ${row.durationMs} ms · ${row.provider}`);
+    console.log(`${index + 1}/${selectedCases.length}: ${row.passed ? 'OK' : 'DIVERGÊNCIA'} · ${row.durationMs} ms · ${row.provider}`);
+    // Salva cada caso concluído: uma pausa não perde a rodada nem apaga as anteriores.
+    const report = {
+      generatedAt: new Date().toISOString(), startedAt, model: 'Qwen3-4B-Q4_K_M', offset,
+      profile: modelClient.cacheKey,
+      completed: rows.length === selectedCases.length, expectedCases: selectedCases.length,
+      ruleVersion: service.status().ruleStoreVersion, operationalApproval: 'pending',
+      note: '100 casos técnicos propostos (66 regressões existentes e 34 cenários do piloto). Validação da referência operacional ainda necessária.', rows,
+    };
+    await atomicJson(archiveFile, report);
+    await atomicJson('desktop-release/local-evaluation.json', report);
   }
-  await mkdir('desktop-release', { recursive: true });
-  await writeFile('desktop-release/local-evaluation.json', JSON.stringify({
-    generatedAt: new Date().toISOString(), model: 'Qwen3-4B-Q4_K_M', offset,
-    ruleVersion: service.status().ruleStoreVersion,
-    operationalApproval: 'pending',
-    note: '100 casos técnicos propostos (66 regressões existentes e 34 cenários do piloto). Validação da referência operacional ainda necessária.', rows,
-  }, null, 2));
   if (rows.some((row) => !row.passed)) process.exitCode = 1;
 } finally { runtime.stop(); }

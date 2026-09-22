@@ -3,6 +3,18 @@ import { LocalModelClient } from '../LocalModelClient';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('Qwen local', () => {
+  it('mantém o raciocínio separado do texto e usa o perfil correspondente', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{
+      message: { content: '{"mappings":[]}', reasoning_content: 'raciocínio não exportável' }, finish_reason: 'stop',
+    }] })));
+    vi.stubGlobal('fetch', fetch);
+    const client = new LocalModelClient(() => ({ url: 'http://127.0.0.1:9876', token: 'x' }), { thinking: true });
+    const result = await client.request([], 'instrução', 1536);
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(body).toMatchObject({ temperature: 0.6, top_p: 0.95, chat_template_kwargs: { enable_thinking: true } });
+    expect(JSON.stringify(result)).not.toContain('não exportável');
+    expect(client.cacheKey).toContain('thinking-512');
+  });
   it('não tenta nuvem quando o runtime está indisponível', async () => {
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
     expect((await new LocalModelClient(() => null).request([], '', 32)).status).toBe('api_error');
@@ -35,5 +47,6 @@ describe('Qwen local', () => {
     const result = await new LocalModelClient(() => ({ url: 'http://127.0.0.1:9876', token: 'x' }))
       .request([], '', 32, { validateText: () => false });
     expect(result.status).toBe('api_error'); expect(result.text).toBeUndefined();
+    expect(result.attempts?.[0].status).toBe('invalid_response');
   });
 });

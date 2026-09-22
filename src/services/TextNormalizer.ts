@@ -67,8 +67,7 @@ function normalizeValue(text: string): string {
 
 export function normalizeText(text: string): NormalizedText {
   const value = normalizeValue(text);
-  const segments = text
-    .split(/[.!?;\r\n]+|,\s*(?=(?:não|nao|sem|falt\w*|tem|teve|foi|foram)\b)|\b(?:mas|porém|porem|contudo|entretanto)\b/giu)
+  const segments = splitTextClauses(text)
     .map(normalizeValue)
     .filter(Boolean);
 
@@ -78,6 +77,12 @@ export function normalizeText(text: string): NormalizedText {
     tokens: value ? value.split(' ') : [],
     segments: segments.length ? segments : value ? [value] : [],
   };
+}
+
+/** Mantém os trechos literais, inclusive a interrogação, para citar sua origem. */
+export function splitTextClauses(text: string): string[] {
+  return text.split(/(?<=[.!?;])\s*|[\r\n]+|,\s*(?=(?:não|nao|sem|falt\w*|tem|teve|foi|foram)\b)|\b(?:mas|porém|porem|contudo|entretanto)\b/giu)
+    .map((clause) => clause.trim()).filter(Boolean);
 }
 
 function singularize(token: string): string {
