@@ -3,6 +3,21 @@ import { LocalModelClient } from '../LocalModelClient';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('Qwen local', () => {
+  it('separa o cache do experimento com orçamento menor, sem mudar o padrão direto', () => {
+    const defaultClient = new LocalModelClient(() => null);
+    const limited = new LocalModelClient(() => null, { thinking: true, reasoningBudget: 128 });
+    expect(defaultClient.cacheKey).toContain(':direct');
+    expect(limited.cacheKey).toContain(':thinking-128');
+  });
+  it('preserva consumo reportado quando o texto não é JSON válido', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{
+      message: { content: '{resposta inválida' }, finish_reason: 'stop',
+    }], usage: { prompt_tokens: 120, completion_tokens: 20 } }))));
+    const result = await new LocalModelClient(() => ({ url: 'http://127.0.0.1:9876', token: 'x' }))
+      .request([], '', 32);
+    expect(result.text).toBeUndefined();
+    expect(result.attempts?.[0]).toMatchObject({ status: 'invalid_response', inputTokens: 120, outputTokens: 20 });
+  });
   it('mantém o raciocínio separado do texto e usa o perfil correspondente', async () => {
     const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{
       message: { content: '{"mappings":[]}', reasoning_content: 'raciocínio não exportável' }, finish_reason: 'stop',

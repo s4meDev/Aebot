@@ -5,10 +5,10 @@ export class LocalModelClient implements StructuredModelClient {
   readonly provider = 'local' as const;
   readonly providerChain = ['local'] as const;
   readonly modelChain = ['Qwen3-4B-Q4_K_M'] as const;
-  get cacheKey() { return `local:qwen3-4b-q4_k_m:v3:${this.options.thinking ? 'thinking-512' : 'direct'}`; }
+  get cacheKey() { return `local:qwen3-4b-q4_k_m:v5:${this.options.thinking ? 'thinking-' + (this.options.reasoningBudget ?? 512) : 'direct'}`; }
 
   constructor(private readonly connection: () => { url: string; token: string } | null,
-    private readonly options: { thinking?: boolean } = {}) {}
+    private readonly options: { thinking?: boolean; reasoningBudget?: number } = {}) {}
 
   async request(contents: StructuredModelContent[], systemInstruction: string, maxOutputTokens: number,
     options?: StructuredModelRequestOptions): Promise<StructuredModelResult> {
@@ -50,6 +50,10 @@ export class LocalModelClient implements StructuredModelClient {
           choices?: Array<{ message?: { content?: unknown }; finish_reason?: string }>;
           usage?: { prompt_tokens?: number; completion_tokens?: number };
         };
+        // A geração consumiu recursos mesmo se o JSON produzido não puder ser usado.
+        const count = (value: unknown) => Number.isSafeInteger(value) && Number(value) >= 0 ? Number(value) : undefined;
+        inputTokens = count(body.usage?.prompt_tokens);
+        outputTokens = count(body.usage?.completion_tokens);
         const choice = body.choices?.[0];
         const candidate = choice?.message?.content;
         if (typeof candidate === 'string' && candidate.length <= 32_768 && choice?.finish_reason !== 'length') {
@@ -58,9 +62,6 @@ export class LocalModelClient implements StructuredModelClient {
             text = candidate; status = 'ok'; invalidResponse = false;
           }
         }
-        const count = (value: unknown) => Number.isSafeInteger(value) && Number(value) >= 0 ? Number(value) : undefined;
-        inputTokens = count(body.usage?.prompt_tokens);
-        outputTokens = count(body.usage?.completion_tokens);
       }
     } catch { /* O texto bruto e os erros do runtime podem conter o prompt: não registrar. */ }
     return { provider: 'local', status, text, attempts: [{ provider: 'local',

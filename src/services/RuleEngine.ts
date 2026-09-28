@@ -6,6 +6,8 @@ import type {
   RuleConclusionMeta,
   RuleEvaluationResult,
   RuleStoreSchema,
+  SemanticEvaluationInput,
+  SemanticRuleMapping,
 } from '../types';
 import { classifyQueryIntent, isServiceOverviewQuestion } from './QueryIntentClassifier';
 import { resolveConflicts } from './ConflictResolver';
@@ -13,11 +15,13 @@ import {
   retrieveInformationalRules,
   retrieveRelatedRules,
   retrieveRules,
+  retrieveMappedRules,
 } from './RuleRetriever';
 import { normalizeText } from './TextNormalizer';
 import { describeServiceParameterization } from './ServiceParameterization';
 import { parseRuleStore } from './RuleStoreValidator';
 import { buildGroundedAdvisory } from './GroundedAdvisory';
+import { parseSemanticInterpretation } from './SemanticInterpreter';
 
 function confidenceFromScore(score: number | undefined): ConfidenceLevel {
   if (score === undefined) return 'insuficiente';
@@ -57,9 +61,36 @@ export class RuleEngine {
   }
 
   evaluatePrompt(prompt: string, serviceId: string): RuleEvaluationResult {
+    return this.evaluate(prompt, serviceId);
+  }
+
+  evaluateFacts(input: SemanticEvaluationInput): RuleEvaluationResult {
+    // Revalida na entrada do motor: um objeto tipado também pode vir de cache
+    // ou de um chamador que não passou pelo interpretador do modelo.
+    const interpretation = parseSemanticInterpretation(
+      JSON.stringify({ mappings: input.mappings }),
+      input.query,
+      this.getRulesForService(input.serviceId),
+      { allowSingleTokenQuote: input.allowSingleTokenQuote }
+    );
+    const actionable = interpretation?.mappings.filter(
+      (mapping) => mapping.stance !== 'negated_or_present'
+    );
+    if (!actionable?.length) return this.evaluatePrompt(input.query, input.serviceId);
+    return this.evaluate(input.query, input.serviceId, interpretation?.mappings);
+  }
+
+  private evaluate(
+    prompt: string,
+    serviceId: string,
+    mappings?: SemanticRuleMapping[]
+  ): RuleEvaluationResult {
     // 1. Entende a forma da pergunta sem decidir nada ainda.
     const normalized = normalizeText(prompt);
-    const intent = classifyQueryIntent(normalized);
+    const stance = mappings?.find((mapping) => mapping.stance !== 'negated_or_present')?.stance;
+    const intent = stance === 'informational' ? 'pergunta_informativa'
+      : stance === 'hypothetical' ? 'hipotese'
+      : classifyQueryIntent(normalized);
     const service = this.store.services.find((item) => item.id === serviceId);
 
     if (!service) {
@@ -117,7 +148,9 @@ export class RuleEngine {
 
     // 2. Procura somente nas regras do serviço realmente selecionado.
     const serviceRules = this.getRulesForService(serviceId);
-    const candidates = retrieveRules(normalized, intent, serviceRules);
+    const candidates = mappings
+      ? retrieveMappedRules(normalized, intent, serviceRules, mappings)
+      : retrieveRules(normalized, intent, serviceRules);
     const topicalCandidates = retrieveInformationalRules(normalized, serviceRules);
     const decisionCandidates = candidates.filter((rule) => rule.severity !== null);
     const guidanceCandidates = candidates.filter((rule) => rule.severity === null);

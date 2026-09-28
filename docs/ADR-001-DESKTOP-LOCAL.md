@@ -18,6 +18,8 @@ Não criamos sincronização automática que tornaria a internet obrigatória. A
 
 ## Validação e limites
 
+Conferência dos documentos reenviados em 25/09: a apresentação é idêntica à original. O [Kanban](KANBAN.md) registra critérios adicionais e lacunas. Em 28/09, `RuleEngine.evaluateFacts` passou a receber os mapeamentos diretamente, preservando o texto de origem e sem reavaliar uma frase canônica. A entrada é revalidada no motor; condições obrigatórias e exceções continuam determinísticas. O contrato ainda é centrado em regras: falta a ficha independente de evidências proposta no anexo, sem duplicar a base. A proposta de salvar perguntas do prompt anexo não altera a decisão atual de não persistir conversas.
+
 As regras têm regressões automatizadas e o cliente local possui testes de contrato. `desktop:evaluate` executa inferência real sobre o corpus técnico, registrando divergências, aprovação indevida e latência. Esse corpus não substitui 100 perguntas reais/simuladas com gabarito aprovado pela referência operacional. A medição neste computador não representa automaticamente o Latitude 3420.
 
 O pacote de distribuição contém Setup e modelo GGUF auxiliar na mesma pasta; o Setup copia os recursos e não exige instalação manual de IA. O modelo ultrapassa o limite de 2 GB do arquivo embutido NSIS, por isso não está dentro do EXE. Download é feito uma vez pela máquina de preparação. Piloto: 5–10 analistas; expansão até 60 condicionada a qualidade, latência e disponibilidade de memória aceitáveis com os sistemas corporativos abertos.

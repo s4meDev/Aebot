@@ -179,6 +179,15 @@ export interface SemanticRuleMapping {
   stance: SemanticMappingStance;
 }
 
+/** Entrada semântica do motor. As citações continuam vinculadas ao relato original. */
+export interface SemanticEvaluationInput {
+  serviceId: string;
+  query: string;
+  mappings: SemanticRuleMapping[];
+  /** Liberado somente quando a resposta completa uma pergunta pendente. */
+  allowSingleTokenQuote?: boolean;
+}
+
 export interface RuleEvaluationResult {
   serviceId: string;
   ruleStoreVersion: string;

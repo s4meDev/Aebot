@@ -517,7 +517,9 @@ export class GeminiProvider implements AiProvider {
       const atomicRules = rules.filter((rule) => !rule.matchPolicy?.minimumMatchedFactGroups);
       const selection = selectSemanticRuleCandidates(query, atomicRules, modelClient.provider === 'local' ? 6 : undefined);
       const localRequest = modelClient.provider === 'local' ? createLocalInterpretation(
-        query, service, selection.rules, clarificationQuestions, { allowSingleTokenQuote: clarificationApplied }
+        // A ficha precisa das alternativas do serviço, inclusive evidências presentes.
+        // A busca por faltas pode cortá-las e induzir o modelo a confundir os grupos.
+        query, service, selection.rules, clarificationQuestions, { allowSingleTokenQuote: clarificationApplied }, atomicRules
       ) : undefined;
       const parseInterpretation = localRequest?.parse ?? ((text: string) => parseSemanticInterpretation(
         text, query, selection.rules, { allowSingleTokenQuote: clarificationApplied }
@@ -531,7 +533,9 @@ export class GeminiProvider implements AiProvider {
       this.metrics.modelRequests += 1;
       const response = await modelClient.request(
         buildGeminiContents(history, currentPrompt, semanticPrompt),
-        'Converse como um Analista Sênior: compreenda livremente a linguagem, seja breve e use somente o catálogo fornecido para regras e conclusões oficiais.',
+        modelClient.provider === 'local'
+          ? 'Extraia fielmente os fatos do relato e preencha o JSON solicitado. Distinga evidências presentes, ausentes e não informadas, citando os trechos corretos. A decisão pertence ao motor de regras.'
+          : 'Converse como um Analista Sênior: compreenda livremente a linguagem, seja breve e use somente o catálogo fornecido para regras e conclusões oficiais.',
         1536,
         {
           responseSchema: localRequest?.schema ?? SEMANTIC_RESPONSE_SCHEMA,
@@ -642,11 +646,21 @@ export class GeminiProvider implements AiProvider {
           }
 
           if (interpretation) {
-            const semanticBase = interpretation.canonicalPrompt
-              ? this.engine.evaluatePrompt(interpretation.canonicalPrompt, service.id)
+            // Passa os fatos e suas citações, não uma frase montada para buscar
+            // todas as regras novamente. Desktop e legado usam a mesma entrada.
+            const hasActionableMapping = interpretation.mappings.some(
+              (mapping) => mapping.stance !== 'negated_or_present'
+            );
+            const semanticBase = hasActionableMapping
+              ? this.engine.evaluateFacts({
+                  query: contextualQuery.query,
+                  serviceId: service.id,
+                  mappings: interpretation.mappings,
+                  allowSingleTokenQuote: contextualQuery.clarificationApplied === true,
+                })
               : rawBaseEvaluation;
             const usableSemanticEvaluation =
-              semanticBase.outcome !== 'insufficient' || !interpretation.canonicalPrompt;
+              semanticBase.outcome !== 'insufficient' || !hasActionableMapping;
             if (usableSemanticEvaluation) {
               evaluation = applySemanticMetadata(
                 applyConversationContext(semanticBase, contextualQuery),

@@ -1,6 +1,8 @@
 # Guia do desktop e do piloto
 
-Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-22.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
+Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-25.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
+
+Para executar no VS Code ou diagnosticar comandos, use [Executar e testar](EXECUTAR-E-TESTAR.md). A sequência das próximas entregas está no [plano de validação](PLANO-DE-VALIDACAO-DESKTOP.md).
 
 ## Para o analista
 
@@ -19,11 +21,11 @@ Se aparecer `Local · regras`, abra as configurações: o aplicativo informará 
 Use Windows x64, Node.js 22.12+ e espaço livre para o modelo, runtime e instalador (reserve pelo menos 10 GB para preparação).
 
 ```powershell
-npm install
-npm run desktop:assets
-npm run desktop:build
-npm run desktop:evaluate -- --limit=4
-npm run desktop:package
+npm.cmd ci
+npm.cmd run desktop:assets
+npm.cmd run desktop:build
+npm.cmd run desktop:evaluate -- --limit=4
+npm.cmd run desktop:package
 ```
 
 Os downloads são de fontes oficiais, com revisões e hashes em `desktop-resources/assets-lock.json`. Distribua os quatro arquivos gerados em `desktop-release`: `AEBOT-<versão>-Setup.exe`, `Qwen3-4B-Q4_K_M.gguf`, `SHA256SUMS.txt` e `LEIA-ME.txt`. O runtime está dentro do instalador; o modelo vai ao lado porque ultrapassa o limite de 2 GB de arquivo embutido do NSIS. O Setup copia o modelo automaticamente e o aplicativo confere seu SHA-256 antes de executar. O usuário final não precisa de internet nem Node. Binários e pesos são ignorados no Git.

@@ -6,6 +6,10 @@ O novo ponto de entrada é `desktop/main.ts`, um processo Electron que inicia o 
 
 Ordem de execução: interface → IPC validado → `AnalysisService` → `LocalModelClient` → Qwen/llama.cpp no loopback → JSON validado pelo `SemanticInterpreter` → `RuleEngine` → explicação curta. Casos já conclusivos usam diretamente o motor. Perguntas pendentes e retificações continuam usando os contratos existentes.
 
+Desde 28/09, o orquestrador entrega `SemanticEvaluationInput` a `RuleEngine.evaluateFacts`: relato original, serviço selecionado e mapeamentos com citações. O motor revalida essa entrada e `RuleRetriever.retrieveMappedRules` avalia somente as regras apontadas e suas combinações previstas na base, sem reconstruir texto para pesquisar todo o catálogo novamente. Exceções e condições obrigatórias são conferidas no relato original, inclusive nas regras agregadoras. O resultado, o ranking e a formatação continuam compartilhados com `evaluatePrompt`.
+
+Limite desta etapa: o contrato ainda associa fatos a regras, não é uma ficha independente com todas as evidências presentes/ausentes/não informadas. `canonicalPrompt` permanece no interpretador por compatibilidade, mas não é mais usado para decidir. K09/K10 registram esse avanço parcial no [Kanban](docs/KANBAN.md); não foi criado um segundo motor ou outra base.
+
 Arquivos do desktop, na ordem de responsabilidade:
 
 - `desktop/main.ts`: janela, validação do remetente IPC, coordenação das análises e diálogos de importação/exportação.
@@ -19,6 +23,7 @@ Arquivos do desktop, na ordem de responsabilidade:
 - `desktop/LocalData.ts`: escrita atômica, métricas sem conversas e feedback voluntário local.
 - `src/components/DesktopSettings.tsx`: situação da IA, importação e exportação, sem pedir chave ou endereço.
 - `desktop/evaluate.ts`: compara o modelo real ao corpus técnico; mantém homologação operacional como pendente.
+- `desktop/EvaluationSummary.ts`: resume divergências, consumo informado e latência separada por casos com e sem chamadas à IA. É usado no avaliador técnico, não na decisão de uma OS.
 - As avaliações sintéticas são salvas após cada caso em `desktop-release/evaluations/`; `local-evaluation.json` aponta para a rodada mais recente. São artefatos de teste, não conversas dos analistas.
 - `scripts/build-desktop.mjs`: compila renderer, processo principal e preload separadamente.
 - `scripts/prepare-desktop-assets.mjs`: baixa runtime/modelo de fontes oficiais com revisão e SHA-256 fixados.
@@ -38,7 +43,7 @@ O motor calcula uma avaliação técnica inicial, mas resultados informativos, o
 
 Informações pendentes são transportadas em `pendingInformation`; o backend não depende de reconhecer frases que ele mesmo escreveu. Assim, respostas curtas como “interna”, “terceirizada” ou o nome de uma superintendência continuam o caso correto sem transformar a pergunta pendente em fato da OS.
 
-Essa ordem é configurável no Worker por `AEBOT_AI_PROVIDER_ORDER`. O padrão de produção é `gemini,workers-ai`. O projeto não depende de modelo executado na máquina do analista.
+Essa ordem é configurável no Worker por `AEBOT_AI_PROVIDER_ORDER`. O padrão configurado é `gemini,workers-ai`. Somente esse perfil online dispensa um modelo na máquina; o desktop descrito acima depende do Qwen local.
 
 Os provedores não são equivalentes em qualidade. O Gemini é mantido como principal por compreender melhor o português informal observado no piloto; o `gpt-oss-20b` é uma contingência online de raciocínio, não uma promessa de resposta idêntica. Respostas inválidas tentam o próximo modelo. Se toda a cadeia falhar, uma orientação ou explicação já fundamentada pelo motor é preservada; somente uma ausência real de correspondência vira `semantic_unavailable`.
 
@@ -113,7 +118,7 @@ O fallback embarcado só pode decidir quando conhece o serviço e comprova que a
 - `src/services/GroundedAdvisory.ts` transforma relações parciais confiáveis em orientação prática, sem criar conclusão oficial.
 - `src/services/SemanticRuleRetriever.ts` acrescenta candidatos semânticos permitidos, sem criar regra nova.
 - `src/services/ConflictResolver.ts` ordena compatibilidade, fatos, especificidade, relevância, prioridade e gravidade.
-- `src/services/RuleEngine.ts` coordena a avaliação determinística e devolve decisão, evidências, conflitos, confiança e necessidade de validação humana.
+- `src/services/RuleEngine.ts` recebe texto em `evaluatePrompt` ou fatos rastreáveis em `evaluateFacts`; compartilha a avaliação final e devolve decisão, evidências, conflitos, confiança e necessidade de validação humana.
 - `src/services/ResponseFormatter.ts` gera a resposta curta de contingência.
 - `src/services/AnalysisService.ts` executa o mesmo fluxo na extensão, no servidor Node e no Worker.
 
@@ -307,6 +312,7 @@ Os testes ficam perto da parte que protegem:
 - `src/services/__tests__/ConversationContextResolver.test.ts`: novo caso, continuação e correção de fatos.
 - `src/services/__tests__/RegressionCorpus.test.ts`: todas as frases cadastradas no corpus de regressão.
 - `src/services/__tests__/RuleEngine.test.ts`: decisões, intenções, conflitos, múltiplas regras e serviços.
+- `src/services/__tests__/StructuredEvaluation.test.ts`: entrada direta dos fatos, citações, isolamento do serviço, exceções, condições obrigatórias e combinação segura de regras.
 - `src/services/__tests__/RuleStoreValidator.test.ts`: schema e integridade da base.
 - `src/services/__tests__/SemanticInterpreter.test.ts`: limites da interpretação feita pelo modelo.
 - `src/services/__tests__/SemanticRuleRetriever.test.ts`: união segura de matches textuais e semânticos.

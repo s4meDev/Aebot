@@ -5,6 +5,7 @@ import type {
 } from '../types';
 import { normalizeText } from './TextNormalizer';
 import { detectSemanticPolarity } from './SemanticPolarity';
+import { classifyQueryIntent } from './QueryIntentClassifier';
 
 const ALLOWED_STANCES = new Set<SemanticMappingStance>([
   'asserted',
@@ -16,6 +17,7 @@ const MAX_MAPPINGS = 6;
 
 export interface SemanticInterpretation {
   mappings: SemanticRuleMapping[];
+  /** Compatibilidade com consumidores antigos; a decisão usa evaluateFacts, não este texto. */
   canonicalPrompt: string | null;
   conversation?: {
     answer: string;
@@ -144,6 +146,7 @@ export function parseSemanticInterpretation(
     }
 
     const rulesById = new Map(serviceRules.map((rule) => [rule.id, rule]));
+    const queryIntent = classifyQueryIntent(normalizeText(originalQuery));
     const mappings: SemanticRuleMapping[] = [];
 
     for (const rawMapping of parsed.mappings) {
@@ -192,7 +195,10 @@ export function parseSemanticInterpretation(
       // valor incorreto. Essa validação é linguística e vale para todo serviço.
       if (sourcePolarity === 'absence' && rulePolarity !== 'absence') continue;
 
-      let stance = source.stance as SemanticMappingStance;
+      // A IA não pode transformar uma consulta ou hipótese explícita em relato real.
+      // Usa a pergunta completa: a citação escolhida pode ter omitido o "?" ou "se".
+      let stance: SemanticMappingStance = queryIntent === 'pergunta_informativa' ? 'informational'
+        : queryIntent === 'hipotese' ? 'hypothetical' : source.stance as SemanticMappingStance;
       if (stance !== 'hypothetical' && stance !== 'informational') {
         if (sourcePolarity === 'absence') stance = 'asserted';
         if (sourcePolarity === 'present' && rulePolarity === 'absence') {

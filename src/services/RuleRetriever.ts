@@ -1,4 +1,4 @@
-import type { DataRule, MatchedRule, QueryIntent } from '../types';
+import type { DataRule, MatchedRule, QueryIntent, SemanticRuleMapping } from '../types';
 import {
   findExpression,
   findExpressions,
@@ -28,26 +28,34 @@ function getFactMatchQuality(intent: QueryIntent, hasDirectScenario: boolean): n
   }
 }
 
-function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): MatchedRule | null {
+function satisfiesConstraints(query: NormalizedText, rule: DataRule): boolean {
   const exceptionMatches = findExpressions(query, rule.exceptions);
   const negativeMatches = findExpressions(query, rule.negativeSignals);
-  if (exceptionMatches.length || negativeMatches.length) return null;
+  if (exceptionMatches.length || negativeMatches.length) return false;
+  return findExpressions(query, rule.mandatoryConditions).length ===
+    (rule.mandatoryConditions?.length ?? 0);
+}
+
+function matchRule(
+  query: NormalizedText,
+  intent: QueryIntent,
+  rule: DataRule,
+  mapping?: SemanticRuleMapping
+): MatchedRule | null {
+  // A expressão interpretada não pode apagar uma exceção nem completar uma
+  // condição obrigatória que o analista ainda não informou.
+  if (!satisfiesConstraints(query, rule)) return null;
 
   const scenarioExpressions = [
     ...rule.conditionKeywords,
     ...(rule.equivalentExpressions ?? []),
   ];
-  const directMatches = findExpressions(query, scenarioExpressions);
+  const directMatches = mapping
+    ? [mapping.canonicalExpression]
+    : findExpressions(query, scenarioExpressions);
   const signalMatches = findExpressions(query, rule.positiveSignals);
   const evidenceMatches = findExpressions(query, rule.relatedEvidence);
   const mandatoryMatches = findExpressions(query, rule.mandatoryConditions);
-
-  if (
-    rule.mandatoryConditions?.length &&
-    mandatoryMatches.length !== rule.mandatoryConditions.length
-  ) {
-    return null;
-  }
 
   const allOf = rule.matchPolicy?.allOf ?? [];
   const allOfMatches = findExpressions(query, allOf);
@@ -96,6 +104,7 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
   }
   if (satisfiesAllOf) matchReasons.push('todas as condições da regra foram identificadas');
   if (mandatoryMatches.length) matchReasons.push('condições obrigatórias presentes');
+  if (mapping) matchReasons.push('interpretação validada e vinculada ao trecho original');
 
   const specificity = Math.max(
     1,
@@ -125,7 +134,7 @@ function matchRule(query: NormalizedText, intent: QueryIntent, rule: DataRule): 
     specificity,
     relevance,
     matchReasons,
-    matchedTerms,
+    matchedTerms: mapping ? unique([...matchedTerms, mapping.sourceQuote]) : matchedTerms,
     attentionLevel: rule.attentionLevel,
     guidance: rule.guidance,
     message: rule.message,
@@ -142,6 +151,40 @@ export function retrieveRules(
     const match = matchRule(query, intent, rule);
     return match ? [match] : [];
   });
+  return combineFactGroups(query, rules, directMatches);
+}
+
+/** Recebe mapeamentos já validados pelo motor, sem pesquisar uma frase inventada. */
+export function retrieveMappedRules(
+  query: NormalizedText,
+  intent: QueryIntent,
+  rules: DataRule[],
+  mappings: SemanticRuleMapping[]
+): MatchedRule[] {
+  const byId = new Map(rules.map((rule) => [rule.id, rule]));
+  const negatedIds = new Set(mappings.filter((item) => item.stance === 'negated_or_present')
+    .map((item) => item.ruleId));
+  const matches = new Map<string, MatchedRule>();
+  for (const mapping of mappings) {
+    const rule = byId.get(mapping.ruleId);
+    if (!rule || negatedIds.has(rule.id) || rule.matchPolicy?.minimumMatchedFactGroups) continue;
+    const match = matchRule(query, intent, rule, mapping);
+    if (!match) continue;
+    const previous = matches.get(rule.id);
+    const best = previous && previous.score > match.score ? previous : match;
+    matches.set(rule.id, previous ? {
+      ...best,
+      matchedTerms: unique([...previous.matchedTerms, ...match.matchedTerms]),
+    } : match);
+  }
+  return combineFactGroups(query, rules, [...matches.values()]);
+}
+
+function combineFactGroups(
+  query: NormalizedText,
+  rules: DataRule[],
+  directMatches: MatchedRule[]
+): MatchedRule[] {
   const sourceRulesById = new Map(rules.map((rule) => [rule.id, rule]));
   const matchesById = new Map(directMatches.map((match) => [match.id, match]));
 
@@ -150,7 +193,7 @@ export function retrieveRules(
   // decide o que acontece quando os dois grupos aparecem juntos.
   for (const aggregateRule of rules) {
     const policy = aggregateRule.matchPolicy?.minimumMatchedFactGroups;
-    if (!policy) continue;
+    if (!policy || !satisfiesConstraints(query, aggregateRule)) continue;
 
     const bestMatchByGroup = new Map<string, MatchedRule>();
     for (const match of directMatches) {

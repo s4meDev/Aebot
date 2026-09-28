@@ -4,6 +4,19 @@ Assistente de Análise para revisão de Ordens de Serviço executadas por equipe
 
 O AEBOT está migrando para um aplicativo Windows com IA local e funcionamento offline. Ele ajuda o analista a interpretar situações em linguagem natural, aplicar as regras cadastradas e receber orientação curta e fundamentada. A extensão Chrome e a API online continuam no repositório como versões legadas compatíveis.
 
+## Por onde começar
+
+O aplicativo e o instalador estão implementados para testes supervisionados. **A qualidade da IA local ainda não está homologada para distribuição ampla.** Testes de código aprovados não garantem que o modelo interprete corretamente qualquer relato.
+
+| Preciso de… | Onde encontrar |
+| --- | --- |
+| Instalar, abrir e usar o aplicativo | [Guia do desktop e do piloto](docs/DESKTOP-LOCAL.md) |
+| Executar o código no VS Code e testar | [Executar e testar](docs/EXECUTAR-E-TESTAR.md) |
+| Entender pastas, arquivos e fluxo da análise | [Arquitetura](ARQUITETURA.md) |
+| Cadastrar ou corrigir regras | [Como editar as regras](docs/COMO-EDITAR-REGRAS.md) |
+| Saber o que falta antes de distribuir | [Plano de validação do desktop](docs/PLANO-DE-VALIDACAO-DESKTOP.md) |
+| Comparar o planejamento da gestão com o código | [Kanban de implantação](docs/KANBAN.md) |
+
 ## Rota atual: desktop offline
 
 Conforme a apresentação à coordenação, cada notebook executa Qwen3-4B-GGUF Q4_K_M com llama.cpp. A IA interpreta; o motor compartilhado decide. O usuário instala o AEBOT, abre o atalho, seleciona o serviço e pergunta, sem cadastrar token ou chave de API.
@@ -11,30 +24,37 @@ Conforme a apresentação à coordenação, cada notebook executa Qwen3-4B-GGUF 
 Para preparar o aplicativo em Windows x64, com Node 22.12 ou superior:
 
 ```powershell
-npm install
-npm run desktop:assets
-npm run desktop:start
+npm.cmd ci
+npm.cmd run desktop:assets
+npm.cmd run desktop:start
 ```
 
 O download ocorre na preparação do pacote (~2,5 GB de modelo). Depois, o aplicativo funciona offline. Para gerar o instalador completo:
 
 ```powershell
-npm run desktop:package
+npm.cmd test
+npm.cmd run typecheck
+npm.cmd run desktop:smoke
+npm.cmd run desktop:package
 ```
 
 O resultado fica em `desktop-release`. Entregue juntos `AEBOT-<versão>-Setup.exe`, `Qwen3-4B-Q4_K_M.gguf`, `SHA256SUMS.txt` e `LEIA-ME.txt`. O analista mantém os arquivos na mesma pasta e executa o Setup; o modelo é copiado automaticamente. Essa separação evita o limite de 2 GB do instalador e não exige internet. Não distribua somente o EXE nem a pasta `win-unpacked`, destinada à preparação técnica.
+
+O instalador ainda não possui assinatura corporativa; a distribuição depende de aprovação da TI. `npm.cmd` evita o bloqueio de `npm.ps1` sem alterar a Execution Policy. Não desative controles da empresa para executar o projeto.
+
+**Atenção aos comandos:** `desktop:start` abre o aplicativo completo; `dev` abre apenas a interface no navegador; `build` gera a extensão Chrome legada, não o instalador Windows.
 
 Nas configurações do aplicativo é possível verificar a IA, reiniciá-la, importar um pacote de regras aprovado e exportar métricas/feedbacks para a gestão. O modelo não recebe suas conversas pela internet. Atualizar as regras não exige redistribuir o modelo.
 
 Consulte [Guia do desktop e piloto](docs/DESKTOP-LOCAL.md) e [decisão de arquitetura](docs/ADR-001-DESKTOP-LOCAL.md). A qualidade semântica e a velocidade precisam ser homologadas no notebook corporativo; o piloto começa com 5 a 10 analistas e pode chegar a 60 após validação.
 
-O [relatório de validação atual](docs/STATUS-DESKTOP-2026-09-22.md) compara os modos de inferência e registra as limitações que ainda impedem a liberação ampla. Build e testes de código aprovados não significam IA homologada.
+O [relatório de evolução atual](docs/STATUS-DESKTOP-2026-09-28.md) registra a entrada direta dos fatos interpretados no motor, os testes e os próximos passos. As avaliações de [25/09](docs/STATUS-DESKTOP-2026-09-25.md) e [22/09](docs/STATUS-DESKTOP-2026-09-22.md) permanecem como histórico. Build e testes de código aprovados não significam IA homologada.
 
 ## O que o sistema faz
 
-- entende perguntas e relatos escritos de forma natural ou informal;
+- interpreta perguntas e relatos naturais ou informais, com limitações do modelo local ainda em avaliação;
 - considera o serviço selecionado e o contexto explícito da conversa;
-- localiza todas as regras realmente relacionadas ao caso;
+- recupera regras relacionadas ao caso, dentro do catálogo selecionado;
 - resolve conflitos de forma determinística;
 - explica a decisão e informa as regras utilizadas;
 - oferece orientação fundamentada quando há relação útil, mas ainda faltam fatos para uma conclusão oficial;
@@ -62,16 +82,20 @@ Pergunta do analista
 
 O motor de regras escolhe a decisão. A inteligência artificial é opcional e serve para conectar linguagem informal aos termos cadastrados e organizar a explicação; ela não pode criar regras nem alterar a conclusão calculada.
 
+Quando a IA é necessária, ela aponta a regra candidata e o trecho que sustenta a interpretação. O motor recebe esses dados diretamente em `evaluateFacts`, confere o serviço, as condições e as exceções, e combina os fatos quando a base permitir. Não transforma mais a interpretação em uma nova pergunta para procurar outras regras. O contrato ainda relaciona fatos a regras; uma ficha independente de evidências continua como evolução planejada.
+
 ## Capacidades preservadas e perfil online legado
 
+Os itens abaixo descrevem o código preservado e a configuração do perfil online. Não confirmam disponibilidade atual dos serviços publicados nem homologação de provedores. Não são requisitos para executar o desktop offline.
+
 - extensão React + TypeScript + Vite pronta para Chrome;
-- backend online publicado em Cloudflare Workers;
+- backend online implementado para Cloudflare Workers;
 - base central compartilhada entre extensão, Worker e servidor Node;
 - autenticação individual preparada para 40 analistas;
 - teste de capacidade para 3.000 avaliações;
 - feedback persistente em Cloudflare D1;
 - painel administrativo protegido com uso, atividade, saúde dos modelos, cotas disponíveis e feedback;
-- Gemini 3.5 Flash-Lite/Flash e Workers AI GPT-OSS/Qwen3 em contingência online validada;
+- configuração de contingência online Gemini Flash-Lite/Flash e Workers AI GPT-OSS/Qwen3;
 - interpretação semântica das regras pertinentes do serviço, inclusive para linguagem informal e respostas curtas de esclarecimento;
 - conversa AI-first para dúvidas e casos ambíguos, com resposta direta de até quatro frases e uma única pergunta quando faltar contexto;
 - 36 serviços cadastrados no catálogo, incluindo corte, religação, implantação, redes, repavimentação e Substituição de HD com e sem custo;
@@ -138,6 +162,10 @@ Em outro terminal, execute `npm run server:check`. As configurações privadas f
 
 | Comando | Finalidade |
 | --- | --- |
+| `npm run desktop:start` | Compila e abre o aplicativo Windows offline |
+| `npm run desktop:smoke` | Verifica o aplicativo real com dados sintéticos e perfil separado |
+| `npm run desktop:evaluate` | Executa o corpus técnico com o modelo real; não homologa o produto |
+| `npm run desktop:package` | Gera Setup e arquivos offline para testes supervisionados |
 | `npm test` | Executa os testes automatizados regulares |
 | `npm run test:capacity` | Executa isoladamente o teste de 3.000 avaliações |
 | `npm run typecheck` | Verifica o TypeScript da extensão, Node e Worker |
@@ -191,15 +219,13 @@ Nunca adicione chaves em variáveis `VITE_*`, pois elas seriam incorporadas ao p
 
 ## Limitações conhecidas
 
+- a IA local ainda apresenta falhas de interpretação e latência alta em alguns casos; faltam o corpus completo revisado e a medição no Latitude corporativo;
+- a instalação em máquina limpa, a assinatura/liberação pela TI e o piloto supervisionado continuam pendentes;
 - a maior parte das novas ITs define padrão de execução, não a conclusão oficial; nesses casos o AEBOT orienta e solicita validação sem inventar decisão;
 - seis nomes reconstruídos de rótulos cortados aguardam confirmação em uma captura completa;
-- os acessos técnicos ainda precisam ser associados aos analistas reais durante o piloto;
 - serviços e regras novas precisam ser cadastrados e protegidos por testes de regressão;
-- cotas gratuitas de provedores de IA não são consideradas ilimitadas.
-- no Gemini gratuito, perguntas e respostas podem ser usadas pelo provedor para melhoria dos produtos; o piloto deve usar casos anonimizados até a aprovação empresarial da política de dados.
+- no perfil online legado, acessos individuais, cotas e política de dados dos provedores precisam ser revisados antes de uso empresarial; isso não configura o desktop nem transforma cotas gratuitas em ilimitadas.
 
 ## Créditos
 
-Projeto idealizado e conduzido por **Pedro Lucas Botelho**.
-
-Desenvolvido para apoiar uma análise de Ordens de Serviço mais rápida, consistente e fundamentada.
+Projeto idealizado e conduzido por **Pedro Lucas Botelho**, responsável pela visão do produto e pelas diretrizes operacionais do AEBOT.

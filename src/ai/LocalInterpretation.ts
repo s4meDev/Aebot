@@ -1,10 +1,14 @@
+import { createEvidenceInterpretation } from './EvidenceInterpretation';
 import type { DataRule, DataService } from '../types';
 import { splitTextClauses } from '../services/TextNormalizer';
 import { parseSemanticInterpretation, type SemanticInterpretationOptions } from '../services/SemanticInterpreter';
 
 /** O modelo escolhe um trecho existente. Ele não redige a própria prova do fato. */
 export function createLocalInterpretation(query: string, service: DataService, rules: DataRule[],
-  pending: string[] = [], options: SemanticInterpretationOptions = {}) {
+  pending: string[] = [], options: SemanticInterpretationOptions = {}, evidenceRules: DataRule[] = rules) {
+  // Grupos declarados nos dados usam estado de evidência; os demais serviços mantêm o contrato por regra.
+  const evidenceRequest = createEvidenceInterpretation(query, service, rules, pending, options, evidenceRules);
+  if (evidenceRequest) return evidenceRequest;
   const sources = splitTextClauses(query);
   const schema: Record<string, unknown> = {
     type: 'object', required: ['mappings', 'conversation'], additionalProperties: false,

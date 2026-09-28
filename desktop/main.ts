@@ -45,6 +45,7 @@ else void app.whenReady().then(async () => {
   }
   runtime = new ModelRuntime(resources);
   const createAnalysis = () => new AebotAnalysisService({
+    // Casos já conclusivos não precisam esperar o modelo para reescrever a resposta.
     modelClient: new LocalModelClient(runtime.connection), humanizeDeterministicResponses: false,
   }, engine);
   let analysis = createAnalysis();
@@ -69,6 +70,7 @@ else void app.whenReady().then(async () => {
     ruleStoreVersion: engine.getRuleStoreVersion(), warning: rulesWarning,
     services: engine.getServices().map((service) => ({ ...service, businessRules: engine.getRulesForService(service.id) })) }));
   handle('aebot:analyze', async (value) => {
+    // Uma única inferência por vez evita disputar a RAM/CPU do notebook.
     if (busy) throw new Error('Aguarde a análise atual terminar.');
     if (JSON.stringify(value).length > 32_768) throw new Error('Conversa muito longa. Inicie um novo caso.');
     const request = parseAnalyzeRequest(value);

@@ -8,19 +8,22 @@ const NEGATED_ABSENCE = [
   /\bnao esta ausente\b/,
 ];
 
+// Usa os mesmos verbos nas duas formas: reconhecer "não aparece" também
+// exige reconhecer "aparece", para não aceitar uma falta inventada pelo modelo.
+const EVIDENCE_VERBS = 'tem|teve|mostrou|mostraram|apresentou|apresentaram|aparece|apareceu|veio|registrou|registraram|mediu|mediram|aferiu|aferiram|comprovou|comprovaram|incluiu|lancou|colocou|fotografou|fotografaram';
+
 const ABSENCE = [
   /\bsem\b/,
   /\bfalt(?:a|am|ou|aram|ando)\b/,
   /\bausencia\b/,
   /\bausent(?:e|es|ou|aram|ia)\b/,
-  /\bnao (?:tem|teve|mostrou|mostraram|apresentou|apresentaram|aparece|apareceu|veio|registrou|registraram|mediu|mediram|aferiu|aferiram|comprovou|comprovaram|incluiu|lancou|colocou)\b/,
+  new RegExp(`\\bnao (?:${EVIDENCE_VERBS})\\b`),
   /\bnao foi (?:apresentad[ao]|registrad[ao]|medid[ao]|aferid[ao]|comprovad[ao])\b/,
   /\bninguem (?:registrou|mostrou|mediu|aferiu)\b/,
 ];
 
 const PRESENCE = [
-  /\b(?:fotografou|fotografaram|registraram|mostraram|apresentaram)\b/,
-  /\b(?:tem|mostrou|apresentou|registrou|mediu|aferiu|comprovou)\b/,
+  new RegExp(`\\b(?:${EVIDENCE_VERBS})\\b`),
   /\bfoi (?:apresentad[ao]|registrad[ao]|medid[ao]|aferid[ao]|comprovad[ao])\b/,
 ];
 

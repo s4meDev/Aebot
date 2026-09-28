@@ -10,11 +10,16 @@ import { verifyModelIntegrity } from './ModelIntegrity';
 export class ModelRuntime {
   private child?: ChildProcess;
   private connectionValue: { url: string; token: string } | null = null;
+  // Impede que uma inicialização antiga publique conexão depois de um reinício.
   private generation = 0;
   state: 'starting' | 'ready' | 'unavailable' = 'unavailable';
   message = 'IA local ainda não iniciada.';
 
-  constructor(private readonly resources: string) {}
+  constructor(private readonly resources: string, private readonly reasoningBudget = 512) {
+    if (!Number.isSafeInteger(reasoningBudget) || reasoningBudget < 32 || reasoningBudget > 512) {
+      throw new Error('O orçamento de raciocínio deve estar entre 32 e 512 tokens.');
+    }
+  }
   connection = () => this.connectionValue;
 
   async start(): Promise<void> {
@@ -48,10 +53,11 @@ export class ModelRuntime {
       });
       if (generation !== this.generation) return;
       const token = randomBytes(32).toString('hex');
+      // A porta é privada deste processo; não é o backend online legado.
       const child = spawn(executable, ['--model', model, '--host', '127.0.0.1', '--port', String(port),
         '--ctx-size', '16384', '--parallel', '1', '--threads', String(Math.max(1, Math.min(6, availableParallelism() - 2))),
         '--n-gpu-layers', '0', '--no-webui', '--jinja', '--log-disable',
-        '--reasoning-format', 'deepseek', '--reasoning-budget', '512'], {
+        '--reasoning-format', 'deepseek', '--reasoning-budget', String(this.reasoningBudget)], {
         windowsHide: true, stdio: 'ignore', shell: false,
         env: { ...process.env, LLAMA_API_KEY: token },
       });
@@ -87,6 +93,7 @@ export class ModelRuntime {
   }
 
   stop(): void {
+    // Invalida as esperas em andamento antes de encerrar o processo filho.
     this.generation += 1;
     this.connectionValue = null; this.state = 'unavailable';
     this.child?.kill(); this.child = undefined;

@@ -6,6 +6,8 @@
 - No desktop, métricas e feedback voluntário são locais e exportados explicitamente. Nunca persistir conversas. Testes de contrato não homologam o modelo: medir inferência real e validar o gabarito com referência operacional antes de escalar.
 - O pacote offline é Setup + GGUF na mesma pasta (limite de 2 GB do NSIS embutido). A instalação copia o modelo automaticamente e o runtime confere SHA-256 antes de carregar; não distribuir somente o EXE.
 - Regras agregadoras com `minimumMatchedFactGroups` são calculadas pelo motor, nunca escolhidas livremente pelo modelo. Avaliações de piloto devem conferir também os fatos/regras que sustentam a conclusão, não apenas o rótulo final.
+- Interpretações semânticas entram em `RuleEngine.evaluateFacts`, com serviço, relato e citações revalidados. Não reintroduza avaliação de `canonicalPrompt`: isso pode acionar regras não apontadas. Condições obrigatórias e exceções devem considerar o relato original, inclusive na agregação de fatos.
+- Mantenha os guias de execução e arquitetura alinhados aos comandos reais. O README deve distinguir desktop e perfis legados e preservar os créditos de Pedro Lucas Botelho no final.
 
 - O produto é um Assistente de Análise, não um chatbot genérico. Respostas devem ser curtas, objetivas e fundamentadas apenas nas regras cadastradas.
 - As únicas conclusões oficiais são `Conforme`, `Não Conforme` e `Reprovado`. Ausência de regra suficiente produz `decision: null` e validação humana; nunca use decisão padrão para aprovar.

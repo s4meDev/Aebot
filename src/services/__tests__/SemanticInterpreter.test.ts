@@ -19,6 +19,21 @@ function response(overrides: Record<string, unknown> = {}): string {
 }
 
 describe('SemanticInterpreter', () => {
+  it.each(['Precisa mesmo de foto antes de começar?', 'Qual é a regra da foto antes'])
+    ('preserva consulta mesmo quando o modelo afirma ocorrência: %s', (query) => {
+      const before = rules.find((rule) => rule.conditionKeywords.includes('sem foto antes'))!;
+      const result = parseSemanticInterpretation(JSON.stringify({ mappings: [{
+        ruleId: before.id, sourceQuote: query.replace('?', ''), stance: 'asserted',
+      }] }), query, rules);
+      expect(result?.mappings[0].stance).toBe('informational');
+      expect(result?.canonicalPrompt).toMatch(/^qual e a regra/);
+    });
+  it('preserva a hipótese mesmo se a citação do modelo omitir a condição', () => {
+    const result = parseSemanticInterpretation(response({ sourceQuote: 'não apareceu o momento do torque', stance: 'asserted' }),
+      'E se não apareceu o momento do torque?', rules);
+    expect(result?.mappings[0].stance).toBe('hypothetical');
+    expect(result?.canonicalPrompt).toMatch(/^se /);
+  });
   it('recusa a pergunta inteira como prova quando ela mistura presença e ausência', () => {
     const query = 'Tem foto antes e depois, mas não mostrou o reparo sendo executado.';
     expect(parseSemanticInterpretation(JSON.stringify({ mappings: [{
