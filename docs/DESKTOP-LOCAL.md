@@ -1,6 +1,6 @@
 # Guia do desktop e do piloto
 
-Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-25.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
+Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-29.md) e a [liberação no Windows](ASSINATURA-E-LIBERACAO-WINDOWS.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
 
 Para executar no VS Code ou diagnosticar comandos, use [Executar e testar](EXECUTAR-E-TESTAR.md). A sequência das próximas entregas está no [plano de validação](PLANO-DE-VALIDACAO-DESKTOP.md).
 
@@ -32,7 +32,9 @@ Os downloads são de fontes oficiais, com revisões e hashes em `desktop-resourc
 
 Reserve pelo menos 4 GB no destino da instalação, além dos arquivos de distribuição. A pasta `win-unpacked` é intermediária e não é o pacote de entrega. Se o modelo estiver ausente ou alterado, a IA fica indisponível e o aplicativo informa o problema; não baixa outra cópia nem usa nuvem automaticamente.
 
-O instalador não é assinado com certificado corporativo nesta entrega. A TI deve aprovar o executável e o runtime conforme suas políticas antes de distribuí-los. Não desative controles de segurança para contornar bloqueios.
+O empacotamento exige assinatura do aplicativo e inclui as DLLs; o runtime copiado é conferido antes do Setup. Ainda não foi gerado um pacote com certificado real. A TI precisa definir a assinatura, autorizar o diagnóstico e aprovar a execução conforme suas políticas. O instalador antigo continua sem essas garantias. Não desative controles de segurança para contornar bloqueios.
+
+O runtime de desenvolvimento foi atualizado para a distribuição assinada da Unsloth e já executou o Qwen nesta máquina. Essa correção não atualiza o Setup antigo nem assina o próprio AEBOT. O [relatório atual](STATUS-DESKTOP-2026-10-01.md) registra os resultados e as pendências do piloto.
 
 ## Atualizar regras
 

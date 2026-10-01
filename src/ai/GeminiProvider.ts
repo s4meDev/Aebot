@@ -23,6 +23,7 @@ import {
   buildSemanticInterpretationPrompt,
 } from './PromptBuilder';
 import { createLocalInterpretation } from './LocalInterpretation';
+import { createLocalMappingVerification, preferExplicitLocalEvidence } from './LocalMappingVerification';
 import { resolveContextualQuery } from '../services/ConversationContextResolver';
 import {
   parseSemanticInterpretation,
@@ -550,12 +551,27 @@ export class GeminiProvider implements AiProvider {
           modelAttempts: response.attempts ?? [],
         };
       }
-      const interpretation = parseInterpretation(response.text) ?? undefined;
+      let interpretation = parseInterpretation(response.text) ?? undefined;
+      if (modelClient.provider === 'local' && interpretation) interpretation = preferExplicitLocalEvidence(interpretation, atomicRules);
+      const attempts = [...(response.attempts ?? [])];
+      const verification = modelClient.provider === 'local' && interpretation
+        ? createLocalMappingVerification(query, service, atomicRules, interpretation) : undefined;
+      if (verification) {
+        this.metrics.modelRequests += 1;
+        const checked = await modelClient.request([{ role: 'user', parts: [{ text: verification.prompt }] }],
+          'Confira se cada regra indicada tem fundamento no relato. Não acrescente fatos nem conclua a OS.',
+          512, { responseSchema: verification.schema, validateText: (text) => verification.parse(text) !== null });
+        attempts.push(...(checked.attempts ?? []));
+        interpretation = checked.status === 'ok' && checked.text ? verification.parse(checked.text) ?? undefined : undefined;
+        if (!interpretation) return { provider: checked.provider, modelAttempts: attempts,
+          fallbackReason: checked.status === 'rate_limited' ? 'rate_limited'
+            : checked.status === 'ok' ? 'invalid_response' : 'api_error' };
+      }
       return {
         interpretation,
         provider: response.provider,
         fallbackReason: interpretation ? undefined : 'invalid_response',
-        modelAttempts: response.attempts ?? [],
+        modelAttempts: attempts,
       };
     })().finally(() => {
       this.semanticInFlight.delete(cacheKey);

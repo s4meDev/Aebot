@@ -8,30 +8,43 @@ Ordem de execução: interface → IPC validado → `AnalysisService` → `Local
 
 Desde 28/09, o orquestrador entrega `SemanticEvaluationInput` a `RuleEngine.evaluateFacts`: relato original, serviço selecionado e mapeamentos com citações. O motor revalida essa entrada e `RuleRetriever.retrieveMappedRules` avalia somente as regras apontadas e suas combinações previstas na base, sem reconstruir texto para pesquisar todo o catálogo novamente. Exceções e condições obrigatórias são conferidas no relato original, inclusive nas regras agregadoras. O resultado, o ranking e a formatação continuam compartilhados com `evaluatePrompt`.
 
-Limite desta etapa: o contrato ainda associa fatos a regras, não é uma ficha independente com todas as evidências presentes/ausentes/não informadas. `canonicalPrompt` permanece no interpretador por compatibilidade, mas não é mais usado para decidir. K09/K10 registram esse avanço parcial no [Kanban](docs/KANBAN.md); não foi criado um segundo motor ou outra base.
+O contrato local ganhou estados de evidência (`present`, `absent`, `uncertain`, `not_mentioned`) para grupos inequívocos cadastrados em `factGroup` e `relatedEvidence`. O catálogo desses grupos considera todas as regras atômicas do serviço, sem eliminar uma evidência só porque a pergunta usou outras palavras. Apenas ausências sustentadas são convertidas em mapeamentos; os outros estados não criam uma falta. Grupos ambíguos e regras fora desse catálogo continuam no contrato anterior. Isso ainda não é uma ficha independente completa: presença e dúvida não viajam como inventário próprio até o motor. `canonicalPrompt` permanece por compatibilidade, sem decidir a análise. K09/K10 registram esse avanço parcial no [Kanban](docs/KANBAN.md).
 
 Arquivos do desktop, na ordem de responsabilidade:
 
 - `desktop/main.ts`: janela, validação do remetente IPC, coordenação das análises e diálogos de importação/exportação.
 - `desktop/preload.ts`: ponte limitada entre interface isolada e processo principal; não expõe Node nem IPC genérico.
 - `src/desktop/contracts.ts`: operações e estado do aplicativo local.
-- `desktop/ModelRuntime.ts`: processo llama.cpp oculto, porta aleatória em 127.0.0.1, credencial temporária, prontidão e encerramento.
+- `desktop/ModelRuntime.ts`: processo llama.cpp oculto, porta aleatória em 127.0.0.1 e credencial temporária. Distingue processo encerrado, autenticação recusada, runtime sem resposta e modelo ainda carregando. Se o pedido de encerramento falhar, preserva a referência e não inicia outro processo. Sinal enviado não equivale a confirmação de saída do Windows.
 - `desktop/ModelIntegrity.ts`: confere tamanho e SHA-256 do modelo antes de iniciar a inferência.
 - `desktop/LocalModelClient.ts`: requisição local com JSON restrito, timeout e validação; não tem contingência externa.
-- `src/ai/LocalInterpretation.ts`: divide a pergunta em trechos literais numerados, limita IDs de regras no schema local e reconstrói as citações antes da validação semântica compartilhada. Não decide a OS.
+- `src/ai/LocalInterpretation.ts`: escolhe o contrato local; usa a extração por evidências quando disponível e mantém o protocolo por IDs para os outros casos. Mantém todas as regras classificatórias atômicas do serviço disponíveis, além das orientações recuperadas; a busca lexical não pode esconder uma conclusão cadastrada. Divide o relato em trechos numerados e reconstrói citações literais antes da validação. Não decide a OS.
+- `src/ai/EvidenceInterpretation.ts`: deriva o catálogo dos dados, solicita estados e trechos ao modelo, recusa campos/grupos desconhecidos e converte ausências válidas para o contrato semântico compartilhado. A gramática exige referência para estados relatados e lista vazia para `not_mentioned`; o parser revalida o significado. Não contém etapas ou IDs de um serviço fixados no código.
+- `src/ai/LocalMappingVerification.ts`: prioriza conceitos explícitos dos dados quando classificatórias concorrem sobre um fato simples; preserva coordenações e paráfrases sem âncora literal. Se ainda houver várias associações acionáveis, a segunda chamada local confirma ou exclui IDs já indicados, sem criar fatos ou conclusões. Exclusões retiram a narrativa que poderia depender delas. Falha da conferência impede usar a interpretação e preserva a contingência do motor. Acrescenta latência e não substitui revisão operacional.
 - `desktop/RuleRelease.ts`: pacote de regras com responsável, vigência, versão e histórico descritivo; reutiliza o schema oficial.
 - `desktop/LocalData.ts`: escrita atômica, métricas sem conversas e feedback voluntário local.
 - `src/components/DesktopSettings.tsx`: situação da IA, importação e exportação, sem pedir chave ou endereço.
-- `desktop/evaluate.ts`: compara o modelo real ao corpus técnico; mantém homologação operacional como pendente.
-- `desktop/EvaluationSummary.ts`: resume divergências, consumo informado e latência separada por casos com e sem chamadas à IA. É usado no avaliador técnico, não na decisão de uma OS.
-- As avaliações sintéticas são salvas após cada caso em `desktop-release/evaluations/`; `local-evaluation.json` aponta para a rodada mais recente. São artefatos de teste, não conversas dos analistas.
+- `desktop/evaluate.ts`: compara o modelo real ao corpus técnico; registra início antes de carregar o runtime, progresso e falhas sem copiar exceções brutas. `--inspect-facts` mostra somente interpretações do corpus sintético; não existe na telemetria do aplicativo. Mantém homologação operacional como pendente.
+- `desktop/EvaluationSummary.ts`: valida o progresso e resume divergências, consumo informado e latência separada por casos com e sem chamadas à IA. Uma rodada concluída pode ter divergências; uma falha sem casos não é aprovação.
+- As avaliações sintéticas são salvas desde o início e após cada caso em `desktop-release/evaluations/`; `local-evaluation.json` contém a rodada mais recente, inclusive quando falhou ao iniciar. São artefatos de teste, não conversas dos analistas. Uma interrupção abrupta pode deixar estado `starting` ou `running`, sempre incompleto.
+- `desktop/__tests__/ModelRuntime.test.ts`: limites do orçamento experimental de raciocínio.
+- `desktop/__tests__/ModelRuntimeLifecycle.test.ts`: inicialização, cancelamento, autenticação e falhas do processo simuladas; não mede inferência.
+- `desktop/__tests__/EvaluationSummary.test.ts`: cálculos de métricas e coerência do progresso.
+- `desktop/__tests__/EvaluationLifecycle.test.ts`: falha antes da inferência, preservação de resultados parciais e conclusão com divergências, sem iniciar executáveis reais.
+- `src/ai/__tests__/LocalInterpretation.test.ts`: extração de evidências, contrato alternativo e integração dos mapeamentos com o motor.
+- `src/ai/__tests__/LocalMappingVerification.test.ts`: filtragem, narrativa incompatível, campos desconhecidos e falha segura da segunda chamada, com cliente simulado.
 - `scripts/build-desktop.mjs`: compila renderer, processo principal e preload separadamente.
-- `scripts/prepare-desktop-assets.mjs`: baixa runtime/modelo de fontes oficiais com revisão e SHA-256 fixados.
+- `scripts/prepare-desktop-assets.mjs`: baixa runtime/modelo das fontes fixadas no lock, confere SHA-256 e extrai o ZIP plano com o tar do Windows. Usa pastas por versão e preserva a anterior. O runtime atual é a distribuição assinada da Unsloth, fork do llama.cpp.
 - `scripts/verify-desktop-assets.mjs`: bloqueia o instalador se faltarem arquivos, hashes ou licenças.
+- `scripts/check-desktop-security.mjs`: comando `desktop:doctor`, diagnóstico somente de leitura; retorna pendência quando faltam assinaturas ou não é possível consultar.
+- `scripts/runtime-security.mjs`: valida pasta versionada, entradas do ZIP, inventário exato e contrato do diagnóstico. Exige EXEs/DLLs com assinatura válida na distribuição; não confunde eventos históricos com bloqueio atual.
+- `scripts/inspect-runtime-security.ps1`: consulta Authenticode, estado do Smart App Control e eventos 3077 filtrados. Respeita a Execution Policy, não modifica o Windows e não executa o runtime.
+- `scripts/verify-signed-runtime.mjs`: hook após assinatura; verifica a cópia empacotada, preserva hashes de origem em `signature-provenance.json` e registra hashes dos binários assinados. Não altera os arquivos originais baixados.
+- `scripts/__tests__/runtime-security.test.mjs` e `signed-runtime-hook.test.mjs`: contratos de diagnóstico, bloqueio de distribuição e proteção do inventário; certificados e gravações são simulados.
 - `scripts/finalize-desktop-package.mjs`: coloca a cópia do modelo ao lado do Setup, gera hashes e instruções de distribuição.
 - `desktop/installer.nsh`: exige o modelo ao lado do Setup e o copia para a instalação, sem download.
-- `desktop-resources/assets-lock.json`: identidade reproduzível dos artefatos, sem colocar pesos/binaries no Git.
-- `electron-builder.json`: instalador Windows x64 com runtime e licenças; modelo auxiliar externo ao Setup, sem exigir Node no notebook do analista.
+- `desktop-resources/assets-lock.json`: versão, publicador, pasta e licença do runtime, mais identidade e hashes dos artefatos. Somente a pasta selecionada entra no pacote; pesos e binários ficam fora do Git.
+- `electron-builder.json`: instalador Windows x64 com runtime e licenças; exige assinatura, inclui DLLs e chama a conferência após assinatura. Credencial real ainda depende da TI. Modelo auxiliar externo ao Setup, sem exigir Node no notebook do analista.
 
 Os arquivos de regras instalados em `%APPDATA%/AEBOT` prevalecem sobre a base embarcada apenas se válidos e atuais. Uma importação substitui o motor e seu cache juntos. A interface recarrega o catálogo e limpa o caso para não misturar versões. O pacote anterior fica disponível em `.previous` para recuperação pela TI.
 

@@ -38,6 +38,19 @@ function client(sourceId: unknown, group?: string): StructuredModelClient {
 }
 
 describe('ficha local de evidências', () => {
+  it('a gramática impede ausência sem referência e menção omitida com referência', () => {
+    const schema = local.schema as { properties: { evidence: { properties: Record<string, {
+      anyOf: Array<{ properties: { state: { enum: string[] }; sourceIds: { minItems?: number; maxItems: number } } }>
+    }> } } };
+    for (const observation of Object.values(schema.properties.evidence.properties)) {
+      const omitted = observation.anyOf.find((branch) => branch.properties.state.enum.includes('not_mentioned'))!;
+      const reported = observation.anyOf.find((branch) => branch.properties.state.enum.includes('absent'))!;
+      expect(omitted.properties.state.enum).toEqual(['not_mentioned']);
+      expect(omitted.properties.sourceIds.maxItems).toBe(0);
+      expect(reported.properties.sourceIds.minItems).toBe(1);
+      expect(reported.properties.state.enum).not.toContain('not_mentioned');
+    }
+  });
   it('vincula ausência ao trecho correto sem o modelo escolher a regra', () => {
     const parsed = local.parse(response(1));
     expect(parsed?.mappings[0]).toMatchObject({ ruleId: during.id,
@@ -155,6 +168,46 @@ describe('ficha local de evidências', () => {
   it('não promove um grupo de regra positiva a regra de ausência', () => {
     expect(evidenceCatalog([{ ...during, title: 'Registro válido', description: 'Registro correto',
       conditionKeywords: ['registro correto'] }]).size).toBe(0);
+  });
+
+  it('não esconde uma regra classificatória que perdeu posição na busca lexical', () => {
+    const location = rules.find((rule) => rule.conditionKeywords.includes('local errado'))!;
+    const prompt = 'A equipe consertou no imóvel errado.';
+    const request = createLocalInterpretation(prompt, service, [during], [], {}, rules);
+    const body = JSON.parse(response(0));
+    for (const key of defaultKeys) body.evidence[key] = { state: 'not_mentioned', sourceIds: [] };
+    body.mappings = [{ sourceId: 0, ruleId: location.id, stance: 'asserted' }];
+    expect(request.prompt).toContain(location.id);
+    const parsed = request.parse(JSON.stringify(body));
+    expect(parsed?.mappings[0]).toMatchObject({ ruleId: location.id, sourceQuote: prompt });
+    const aggregate = rules.find((rule) => rule.matchPolicy?.minimumMatchedFactGroups)!;
+    expect(request.prompt).not.toContain(aggregate.id);
+    expect(ruleEngine.evaluateFacts({ serviceId: service.id, query: prompt, mappings: parsed!.mappings }).decision).toBe('Reprovado');
+  });
+
+  it('preserva classificatórias também no protocolo de serviços sem grupos de evidência', () => {
+    const ungrouped = { ...during, id: 'unselected-classification', factGroup: undefined };
+    const request = createLocalInterpretation('Não mostraram a execução.', service, [], [], {}, [ungrouped]);
+    const parsed = request.parse(JSON.stringify({ mappings: [{ sourceId: 0, ruleId: ungrouped.id, stance: 'asserted' }] }));
+    expect(parsed?.mappings[0].ruleId).toBe(ungrouped.id);
+  });
+
+  it('não interpreta incapacidade de leitura como negação da irregularidade', () => {
+    const identification = rules.find((rule) => rule.conditionKeywords.includes('chassi ilegível'))!;
+    for (const prompt of ['Não dá pra ler o chassi nessa foto.', 'Se não dá pra ler o chassi, como fica?']) {
+      const request = createLocalInterpretation(prompt, service, rules);
+      const body = JSON.parse(response(0));
+      for (const key of defaultKeys) body.evidence[key] = { state: 'not_mentioned', sourceIds: [] };
+      body.mappings = [{ sourceId: 0, ruleId: identification.id, stance: 'negated_or_present' }];
+      const parsed = request.parse(JSON.stringify(body));
+      expect(parsed?.mappings[0].stance).toBe(prompt.startsWith('Se') ? 'hypothetical' : 'asserted');
+      expect(ruleEngine.evaluateFacts({ serviceId: service.id, query: prompt, mappings: parsed!.mappings }).decision).toBe('Não Conforme');
+    }
+    const positive = createLocalInterpretation('Dá pra ler o chassi nessa foto.', service, rules);
+    const body = JSON.parse(response(0));
+    for (const key of defaultKeys) body.evidence[key] = { state: 'not_mentioned', sourceIds: [] };
+    body.mappings = [{ sourceId: 0, ruleId: identification.id, stance: 'asserted' }];
+    expect(positive.parse(JSON.stringify(body))?.mappings[0].stance).toBe('negated_or_present');
   });
 
   it('funciona com grupos arbitrários vindos dos dados, sem nomes de etapas no código', () => {

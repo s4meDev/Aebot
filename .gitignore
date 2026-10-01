@@ -2,6 +2,7 @@ node_modules/
 desktop-dist/
 desktop-release/
 desktop-resources/runtime/
+desktop-resources/runtime-*/
 desktop-resources/models/
 desktop-resources/licenses/
 desktop-resources/*.zip

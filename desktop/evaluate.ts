@@ -3,7 +3,7 @@ import { availableParallelism, cpus, freemem, totalmem } from 'node:os';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { summarizeEvaluation } from './EvaluationSummary';
+import { evaluationProgress, type EvaluationRowMetrics, type EvaluationRunStatus } from './EvaluationSummary';
 import assetsLock from '../desktop-resources/assets-lock.json';
 import packageInfo from '../package.json';
 import { atomicJson } from './LocalData';
@@ -27,12 +27,44 @@ const pilot = [...cases.filter((item) => item.serviceId === 'reparo-cavalete'),
   ...pilotCases.map((item) => ({ ...item, serviceId: 'reparo-cavalete' }))];
 const limit = limitArg ? Number(limitArg.split('=')[1]) : pilot.length;
 if (!Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(offset) || offset < 0 || offset >= pilot.length) throw new Error('Limite ou início inválido.');
+const selectedCases = pilot.slice(offset, offset + limit);
+const rows: Array<EvaluationRowMetrics & Record<string, unknown>> = [];
+const startedAt = new Date().toISOString();
+const archiveFile = `desktop-release/evaluations/${startedAt.replace(/[:.]/g, '-')}.json`;
+const startupStarted = Date.now();
+let startupMs: number | null = null;
+let phase: 'startup' | 'evaluation' = 'startup';
+const modelClient = new LocalModelClient(runtime.connection, { thinking: process.argv.includes('--thinking'), reasoningBudget });
+// Registra configuração técnica, nunca usuário, nome do computador ou conversas reais.
+const environment = { platform: process.platform, arch: process.arch, node: process.version,
+  cpu: cpus()[0]?.model ?? 'desconhecida', logicalCpus: availableParallelism(),
+  totalMemoryBytes: totalmem(), freeMemoryBytesBeforeStartup: freemem(),
+  freeMemoryBytesAfterStartup: null as number | null };
+const corpusSha256 = createHash('sha256').update(JSON.stringify(selectedCases)).digest('hex');
+// O bundle inclui o motor e a base usados: distingue builds da mesma versão.
+const evaluatorSha256 = createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex');
+async function checkpoint(status: EvaluationRunStatus, failure?: { phase: typeof phase; message: string }) {
+  const report = {
+    generatedAt: new Date().toISOString(), startedAt, model: 'Qwen3-4B-Q4_K_M', offset,
+    appVersion: packageInfo.version, runtimeVersion: assetsLock.runtime.version,
+    modelSha256: assetsLock.model.sha256, corpusSha256, evaluatorSha256, environment, startupMs,
+    ...evaluationProgress(rows, selectedCases.length, status), failure,
+    profile: modelClient.cacheKey, ruleVersion: ruleEngine.getRuleStoreVersion(), operationalApproval: 'pending',
+    note: '100 casos técnicos propostos (66 regressões existentes e 34 cenários do piloto). Validação da referência operacional ainda necessária.', rows,
+  };
+  await atomicJson(archiveFile, report);
+  await atomicJson('desktop-release/local-evaluation.json', report);
+}
 try {
-  const startupStarted = Date.now();
+  // Substitui o relatório "mais recente" antes de abrir o runtime. Se o processo
+  // for interrompido, a rodada fica incompleta, sem parecer um sucesso antigo.
+  await checkpoint('starting');
   await runtime.start();
+  startupMs = Date.now() - startupStarted;
   if (runtime.state !== 'ready') throw new Error(runtime.message);
-  const startupMs = Date.now() - startupStarted;
-  const modelClient = new LocalModelClient(runtime.connection, { thinking: process.argv.includes('--thinking'), reasoningBudget });
+  environment.freeMemoryBytesAfterStartup = freemem();
+  phase = 'evaluation';
+  await checkpoint('running');
   // Diagnóstico opt-in exclusivo deste corpus sintético. Não imprime resposta
   // natural, raciocínio ou credenciais e não faz parte do aplicativo do analista.
   const diagnosticClient: StructuredModelClient = {
@@ -53,17 +85,6 @@ try {
   };
   const service = new AebotAnalysisService({ modelClient: diagnosticClient,
     humanizeDeterministicResponses: false });
-  const rows = [];
-  const startedAt = new Date().toISOString();
-  const archiveFile = `desktop-release/evaluations/${startedAt.replace(/[:.]/g, '-')}.json`;
-  const selectedCases = pilot.slice(offset, offset + limit);
-  // Registra a configuração, não o nome do computador, usuário ou conversas reais.
-  const environment = { platform: process.platform, arch: process.arch, node: process.version,
-    cpu: cpus()[0]?.model ?? 'desconhecida', logicalCpus: availableParallelism(),
-    totalMemoryBytes: totalmem(), freeMemoryBytesAfterStartup: freemem() };
-  const corpusSha256 = createHash('sha256').update(JSON.stringify(selectedCases)).digest('hex');
-  // O bundle inclui o motor e a base usados: distingue builds da mesma versão.
-  const evaluatorSha256 = createHash('sha256').update(await readFile(fileURLToPath(import.meta.url))).digest('hex');
   for (const [index, test] of selectedCases.entries()) {
     const started = Date.now();
     const history: AiMessage[] = [];
@@ -83,9 +104,16 @@ try {
     const expectedGroups = 'expectedFactGroups' in test ? test.expectedFactGroups : undefined;
     const factsMatch = !expectedGroups || expectedGroups.length === factGroups.length &&
       expectedGroups.every((group) => factGroups.includes(group));
+    // Acertar o rótulo usando uma classificatória indevida também é divergência.
+    // Orientações consultadas não precisam desaparecer para essa conferência.
+    const classifyingRuleIds = result.evaluation.matchedRules.filter((rule) => rule.severity !== null).map((rule) => rule.id);
+    const expectedRuleIds = 'expectedClassifyingRuleIds' in test ? test.expectedClassifyingRuleIds : undefined;
+    const rulesMatch = !expectedRuleIds || expectedRuleIds.length === classifyingRuleIds.length &&
+      expectedRuleIds.every((id) => classifyingRuleIds.includes(id));
     const row = { caseIndex: offset + index, case: test.name, expected: test.decision, actual: result.decision,
-      passed: result.decision === test.decision && factsMatch,
+      passed: result.decision === test.decision && factsMatch && rulesMatch,
       factGroups, expectedFactGroups: expectedGroups,
+      classifyingRuleIds, expectedClassifyingRuleIds: expectedRuleIds,
       unsafeApproval: result.decision === 'Conforme' && test.decision !== 'Conforme',
       missedRejection: test.decision === 'Reprovado' && result.decision !== 'Reprovado',
       durationMs: Date.now() - started, provider: result.provider,
@@ -98,18 +126,14 @@ try {
     rows.push(row);
     console.log(`${index + 1}/${selectedCases.length}: ${row.passed ? 'OK' : 'DIVERGÊNCIA'} · ${row.durationMs} ms · ${row.provider}`);
     // Salva cada caso concluído: uma pausa não perde a rodada nem apaga as anteriores.
-    const report = {
-      generatedAt: new Date().toISOString(), startedAt, model: 'Qwen3-4B-Q4_K_M', offset,
-      appVersion: packageInfo.version, runtimeVersion: assetsLock.runtime.version,
-      modelSha256: assetsLock.model.sha256, corpusSha256, evaluatorSha256, environment, startupMs,
-      summary: summarizeEvaluation(rows),
-      profile: modelClient.cacheKey,
-      completed: rows.length === selectedCases.length, expectedCases: selectedCases.length,
-      ruleVersion: service.status().ruleStoreVersion, operationalApproval: 'pending',
-      note: '100 casos técnicos propostos (66 regressões existentes e 34 cenários do piloto). Validação da referência operacional ainda necessária.', rows,
-    };
-    await atomicJson(archiveFile, report);
-    await atomicJson('desktop-release/local-evaluation.json', report);
+    await checkpoint(rows.length === selectedCases.length ? 'completed' : 'running');
   }
   if (rows.some((row) => !row.passed)) process.exitCode = 1;
+} catch {
+  startupMs ??= Date.now() - startupStarted;
+  // Não inclui a exceção bruta: ela pode carregar prompt ou conteúdo do modelo.
+  const message = phase === 'startup' ? runtime.message : 'A avaliação foi interrompida por uma falha técnica. Confira os casos concluídos.';
+  await checkpoint('failed', { phase, message });
+  console.error(`Avaliação não concluída (${phase}): ${message}`);
+  process.exitCode = 1;
 } finally { runtime.stop(); }

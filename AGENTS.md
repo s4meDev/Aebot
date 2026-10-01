@@ -8,6 +8,10 @@
 - Regras agregadoras com `minimumMatchedFactGroups` são calculadas pelo motor, nunca escolhidas livremente pelo modelo. Avaliações de piloto devem conferir também os fatos/regras que sustentam a conclusão, não apenas o rótulo final.
 - Interpretações semânticas entram em `RuleEngine.evaluateFacts`, com serviço, relato e citações revalidados. Não reintroduza avaliação de `canonicalPrompt`: isso pode acionar regras não apontadas. Condições obrigatórias e exceções devem considerar o relato original, inclusive na agregação de fatos.
 - Mantenha os guias de execução e arquitetura alinhados aos comandos reais. O README deve distinguir desktop e perfis legados e preservar os créditos de Pedro Lucas Botelho no final.
+- O avaliador registra a rodada antes de iniciar o runtime: falha de inicialização não pode deixar um relatório antigo parecer atual. Diagnósticos de fatos são exclusivos do corpus sintético, nunca telemetria de conversas.
+- Distribuição Windows exige assinatura confiável do aplicativo e runtime (EXEs e DLLs), não apenas do Setup. Preserve o pacote de origem: assine as cópias empacotadas e registre seus hashes após conferir as assinaturas. Não desative Smart App Control nem contorne a Execution Policy; certificado e liberação dependem da TI.
+- Runtime assinado de publicador externo deve ter origem, versão e SHA-256 fixados no lock e pasta própria por versão. Preserve a anterior e empacote apenas a selecionada; a assinatura do fornecedor não assina o aplicativo AEBOT.
+- A recuperação lexical local pode limitar orientações, mas deve preservar todas as classificatórias atômicas do serviço no catálogo de interpretação. Isso não comprova aplicabilidade; fatos, condições e exceções continuam validados pelo motor, e agregadoras nunca ficam à escolha do modelo.
 
 - O produto é um Assistente de Análise, não um chatbot genérico. Respostas devem ser curtas, objetivas e fundamentadas apenas nas regras cadastradas.
 - As únicas conclusões oficiais são `Conforme`, `Não Conforme` e `Reprovado`. Ausência de regra suficiente produz `decision: null` e validação humana; nunca use decisão padrão para aprovar.

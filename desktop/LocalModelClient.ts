@@ -5,7 +5,7 @@ export class LocalModelClient implements StructuredModelClient {
   readonly provider = 'local' as const;
   readonly providerChain = ['local'] as const;
   readonly modelChain = ['Qwen3-4B-Q4_K_M'] as const;
-  get cacheKey() { return `local:qwen3-4b-q4_k_m:v5:${this.options.thinking ? 'thinking-' + (this.options.reasoningBudget ?? 512) : 'direct'}`; }
+  get cacheKey() { return `local:qwen3-4b-q4_k_m:v12:${this.options.thinking ? 'thinking-' + (this.options.reasoningBudget ?? 512) : 'direct'}`; }
 
   constructor(private readonly connection: () => { url: string; token: string } | null,
     private readonly options: { thinking?: boolean; reasoningBudget?: number } = {}) {}

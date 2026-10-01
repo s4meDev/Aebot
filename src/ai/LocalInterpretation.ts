@@ -6,8 +6,13 @@ import { parseSemanticInterpretation, type SemanticInterpretationOptions } from 
 /** O modelo escolhe um trecho existente. Ele não redige a própria prova do fato. */
 export function createLocalInterpretation(query: string, service: DataService, rules: DataRule[],
   pending: string[] = [], options: SemanticInterpretationOptions = {}, evidenceRules: DataRule[] = rules) {
+  // A busca lexical reduz orientações, mas não pode esconder uma conclusão
+  // cadastrada do modelo. Nenhuma agregadora pode ser escolhida livremente.
+  const interpretationRules = [...new Map([...rules, ...evidenceRules.filter((rule) => rule.severity)]
+    .filter((rule) => !rule.matchPolicy?.minimumMatchedFactGroups)
+    .map((rule) => [rule.id, rule])).values()];
   // Grupos declarados nos dados usam estado de evidência; os demais serviços mantêm o contrato por regra.
-  const evidenceRequest = createEvidenceInterpretation(query, service, rules, pending, options, evidenceRules);
+  const evidenceRequest = createEvidenceInterpretation(query, service, interpretationRules, pending, options, evidenceRules);
   if (evidenceRequest) return evidenceRequest;
   const sources = splitTextClauses(query);
   const schema: Record<string, unknown> = {
@@ -17,7 +22,7 @@ export function createLocalInterpretation(query: string, service: DataService, r
         type: 'object', required: ['sourceId', 'ruleId', 'stance'], additionalProperties: false,
         properties: {
           sourceId: { type: 'integer', minimum: 0, maximum: Math.max(0, sources.length - 1) },
-          ruleId: { type: 'string', ...(rules.length ? { enum: rules.map((rule) => rule.id) } : {}) },
+          ruleId: { type: 'string', ...(interpretationRules.length ? { enum: interpretationRules.map((rule) => rule.id) } : {}) },
           stance: { type: 'string', enum: ['asserted', 'hypothetical', 'informational', 'negated_or_present'] },
         },
       } },
@@ -33,7 +38,7 @@ Não precisa listar evidências presentes. Não presuma peças trocadas, adicion
 Se faltar informação essencial, converse e faça uma pergunta curta. Se não houver regra aplicável, mappings é [].
 Responda em JSON: {"mappings":[{"sourceId":0,"ruleId":"ID do catálogo","stance":"asserted"}],"conversation":{"answer":"até quatro frases curtas e fundamentadas","question":"pergunta necessária ou vazio"}}.
 Informação pendente: ${pending.join('; ') || 'nenhuma'}.
-Regras: ${JSON.stringify(rules.map((rule) => ({ id: rule.id, title: rule.title, description: rule.description,
+Regras: ${JSON.stringify(interpretationRules.map((rule) => ({ id: rule.id, title: rule.title, description: rule.description,
     evidence: rule.relatedEvidence ?? [], decision: rule.severity ?? null,
     guidance: rule.guidance ?? rule.message, missingInformation: rule.missingInformation ?? [] })))}
 Trechos do analista: ${JSON.stringify(sources.map((text, sourceId) => ({ sourceId, text })))}`;
@@ -55,7 +60,7 @@ Trechos do analista: ${JSON.stringify(sources.map((text, sourceId) => ({ sourceI
         return { sourceQuote: sources[id], ruleId: mapping.ruleId, stance: mapping.stance };
       });
       return parseSemanticInterpretation(JSON.stringify({ mappings, conversation: response.conversation }),
-        query, rules, options);
+        query, interpretationRules, options);
     } catch { return null; }
   };
   return { prompt, schema, parse };

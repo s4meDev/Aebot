@@ -16,6 +16,7 @@ O aplicativo e o instalador estão implementados para testes supervisionados. **
 | Cadastrar ou corrigir regras | [Como editar as regras](docs/COMO-EDITAR-REGRAS.md) |
 | Saber o que falta antes de distribuir | [Plano de validação do desktop](docs/PLANO-DE-VALIDACAO-DESKTOP.md) |
 | Comparar o planejamento da gestão com o código | [Kanban de implantação](docs/KANBAN.md) |
+| Resolver bloqueio do Windows e preparar assinatura | [Assinatura e liberação](docs/ASSINATURA-E-LIBERACAO-WINDOWS.md) |
 
 ## Rota atual: desktop offline
 
@@ -40,7 +41,7 @@ npm.cmd run desktop:package
 
 O resultado fica em `desktop-release`. Entregue juntos `AEBOT-<versão>-Setup.exe`, `Qwen3-4B-Q4_K_M.gguf`, `SHA256SUMS.txt` e `LEIA-ME.txt`. O analista mantém os arquivos na mesma pasta e executa o Setup; o modelo é copiado automaticamente. Essa separação evita o limite de 2 GB do instalador e não exige internet. Não distribua somente o EXE nem a pasta `win-unpacked`, destinada à preparação técnica.
 
-O instalador ainda não possui assinatura corporativa; a distribuição depende de aprovação da TI. `npm.cmd` evita o bloqueio de `npm.ps1` sem alterar a Execution Policy. Não desative controles da empresa para executar o projeto.
+O empacotamento agora exige assinatura e confere as DLLs do runtime antes de montar o Setup. Ainda falta configurar o certificado ou serviço aprovado pela TI; o instalador antigo não foi assinado retroativamente. Veja [assinatura e liberação](docs/ASSINATURA-E-LIBERACAO-WINDOWS.md). `npm.cmd` evita o bloqueio de `npm.ps1` sem alterar a Execution Policy; o diagnóstico PowerShell separado também precisa de execução autorizada. Não desative controles da empresa para executar o projeto.
 
 **Atenção aos comandos:** `desktop:start` abre o aplicativo completo; `dev` abre apenas a interface no navegador; `build` gera a extensão Chrome legada, não o instalador Windows.
 
@@ -48,7 +49,7 @@ Nas configurações do aplicativo é possível verificar a IA, reiniciá-la, imp
 
 Consulte [Guia do desktop e piloto](docs/DESKTOP-LOCAL.md) e [decisão de arquitetura](docs/ADR-001-DESKTOP-LOCAL.md). A qualidade semântica e a velocidade precisam ser homologadas no notebook corporativo; o piloto começa com 5 a 10 analistas e pode chegar a 60 após validação.
 
-O [relatório de evolução atual](docs/STATUS-DESKTOP-2026-09-28.md) registra a entrada direta dos fatos interpretados no motor, os testes e os próximos passos. As avaliações de [25/09](docs/STATUS-DESKTOP-2026-09-25.md) e [22/09](docs/STATUS-DESKTOP-2026-09-22.md) permanecem como histórico. Build e testes de código aprovados não significam IA homologada.
+O [relatório de evolução atual](docs/STATUS-DESKTOP-2026-10-01.md) registra a retomada da inferência e os próximos passos. Substituí o runtime por uma distribuição assinada da Unsloth, com versão e SHA-256 fixados: o Qwen carregou sem alterar a segurança do Windows. Corrigi citações omitidas, corte do catálogo e interpretação de negações; associações múltiplas ganharam conferência local. Os testes agora podem reprovar regras indevidas mesmo com conclusão correta. A qualidade e a velocidade ainda precisam de homologação; o próprio aplicativo e seu Setup dependem de certificado para uma nova distribuição. Os relatórios de [29/09](docs/STATUS-DESKTOP-2026-09-29.md), [28/09](docs/STATUS-DESKTOP-2026-09-28.md), [25/09](docs/STATUS-DESKTOP-2026-09-25.md) e [22/09](docs/STATUS-DESKTOP-2026-09-22.md) permanecem como histórico.
 
 ## O que o sistema faz
 
@@ -82,7 +83,7 @@ Pergunta do analista
 
 O motor de regras escolhe a decisão. A inteligência artificial é opcional e serve para conectar linguagem informal aos termos cadastrados e organizar a explicação; ela não pode criar regras nem alterar a conclusão calculada.
 
-Quando a IA é necessária, ela aponta a regra candidata e o trecho que sustenta a interpretação. O motor recebe esses dados diretamente em `evaluateFacts`, confere o serviço, as condições e as exceções, e combina os fatos quando a base permitir. Não transforma mais a interpretação em uma nova pergunta para procurar outras regras. O contrato ainda relaciona fatos a regras; uma ficha independente de evidências continua como evolução planejada.
+Quando a IA é necessária, ela identifica evidências e cita os trechos que sustentam a interpretação. Para os grupos compatíveis da base, o contrato local distingue presente, ausente, duvidoso e não mencionado; não mencionar uma etapa não comprova sua ausência. Os demais fatos continuam relacionados às regras candidatas. O motor recebe os mapeamentos validados em `evaluateFacts`, confere serviço, condições e exceções e combina os fatos quando a base permitir. Não transforma a interpretação em uma nova pergunta para procurar outras regras. Essa extração é parcial: ainda não existe uma ficha independente cobrindo todo o catálogo, e a qualidade do modelo continua em validação.
 
 ## Capacidades preservadas e perfil online legado
 
@@ -164,6 +165,7 @@ Em outro terminal, execute `npm run server:check`. As configurações privadas f
 | --- | --- |
 | `npm run desktop:start` | Compila e abre o aplicativo Windows offline |
 | `npm run desktop:smoke` | Verifica o aplicativo real com dados sintéticos e perfil separado |
+| `npm run desktop:doctor` | Consulta assinaturas e bloqueios do Windows sem iniciar a IA; exige execução autorizada do script PowerShell |
 | `npm run desktop:evaluate` | Executa o corpus técnico com o modelo real; não homologa o produto |
 | `npm run desktop:package` | Gera Setup e arquivos offline para testes supervisionados |
 | `npm test` | Executa os testes automatizados regulares |
@@ -219,7 +221,9 @@ Nunca adicione chaves em variáveis `VITE_*`, pois elas seriam incorporadas ao p
 
 ## Limitações conhecidas
 
+- o runtime assinado já iniciou e executou o Qwen; faltam certificado do AEBOT e autorização da verificação PowerShell para gerar e validar um novo instalador assinado;
 - a IA local ainda apresenta falhas de interpretação e latência alta em alguns casos; faltam o corpus completo revisado e a medição no Latitude corporativo;
+- a rodada final teve 540 testes automatizados aprovados e 1 ignorado; os dois cenários sintéticos finais com Qwen real passaram no critério de conclusão e regras, mas levaram cerca de dois minutos cada e ainda exigem revisão da interpretação;
 - a instalação em máquina limpa, a assinatura/liberação pela TI e o piloto supervisionado continuam pendentes;
 - a maior parte das novas ITs define padrão de execução, não a conclusão oficial; nesses casos o AEBOT orienta e solicita validação sem inventar decisão;
 - seis nomes reconstruídos de rótulos cortados aguardam confirmação em uma captura completa;

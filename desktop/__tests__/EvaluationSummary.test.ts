@@ -1,11 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeEvaluation, type EvaluationRowMetrics } from '../EvaluationSummary';
+import { evaluationProgress, summarizeEvaluation, type EvaluationRowMetrics } from '../EvaluationSummary';
 
 const row = (overrides: Partial<EvaluationRowMetrics> = {}): EvaluationRowMetrics => ({
   passed: true, unsafeApproval: false, missedRejection: false, durationMs: 10, attempts: [], ...overrides,
 });
 
 describe('relatório técnico do piloto', () => {
+  it('registra início e falha sem inventar casos executados', () => {
+    for (const status of ['starting', 'failed'] as const) {
+      expect(evaluationProgress([], 6, status)).toMatchObject({ status, completed: false,
+        expectedCases: 6, summary: { evaluated: 0, passed: 0, modelCalls: 0 } });
+    }
+  });
+  it('mantém resultados parciais sem declarar a rodada completa', () => {
+    expect(evaluationProgress([row()], 6, 'failed')).toMatchObject({ completed: false,
+      summary: { evaluated: 1, passed: 1 } });
+    expect(evaluationProgress([row()], 6, 'running').completed).toBe(false);
+  });
+  it('concluir a execução não significa acertar todos os casos', () => {
+    expect(evaluationProgress([row({ passed: false })], 1, 'completed')).toMatchObject({
+      completed: true, summary: { evaluated: 1, divergences: 1 },
+    });
+  });
+  it('recusa conclusão prematura e contagens inconsistentes', () => {
+    expect(() => evaluationProgress([], 6, 'completed')).toThrow();
+    expect(() => evaluationProgress([row()], 6, 'starting')).toThrow();
+    expect(() => evaluationProgress([row(), row()], 1, 'running')).toThrow();
+    expect(() => evaluationProgress([], 0, 'starting')).toThrow();
+  });
   it('não inventa latência ou consumo em uma rodada vazia', () => {
     const summary = summarizeEvaluation([]);
     expect(summary.evaluated).toBe(0);

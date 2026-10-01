@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { detectSemanticPolarity } from '../SemanticPolarity';
 
 describe('polaridade das evidências', () => {
+  it.each(['dá pra ler', 'dá para identificar', 'consigo ver', 'conseguimos visualizar'])
+    ('distingue capacidade de incapacidade de conferir evidência: %s', (phrase) => {
+      expect(detectSemanticPolarity(`Não ${phrase} a identificação.`)).toBe('absence');
+      expect(detectSemanticPolarity(`${phrase} a identificação.`)).toBe('present');
+    });
   it.each(['aparece', 'apareceu', 'veio', 'fotografaram', 'registraram', 'mediram', 'comprovaram'])
     ('reconhece a presença e a ausência usando o mesmo verbo: %s', (verb) => {
       expect(detectSemanticPolarity(`A evidência ${verb} na OS.`)).toBe('present');

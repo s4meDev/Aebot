@@ -23,9 +23,11 @@ export class ModelRuntime {
   connection = () => this.connectionValue;
 
   async start(): Promise<void> {
-    this.stop();
+    // Não abre um segundo processo se o Windows não deixou encerrar o anterior.
+    if (!this.stop()) return;
     const generation = this.generation;
-    const executable = path.join(this.resources, 'runtime', 'llama-server.exe');
+    // A versão nova fica ao lado da antiga, sem sobrescrever um runtime em uso.
+    const executable = path.join(this.resources, assetsLock.runtime.directory, 'llama-server.exe');
     const model = path.join(this.resources, 'models', 'Qwen3-4B-Q4_K_M.gguf');
     if (!existsSync(executable) || !existsSync(model)) {
       this.message = 'Pacote de IA incompleto. Solicite à TI o instalador com runtime e modelo Qwen.';
@@ -65,17 +67,30 @@ export class ModelRuntime {
       const failed = () => {
         if (generation !== this.generation) return;
         this.connectionValue = null; this.state = 'unavailable';
-        this.message = 'Não foi possível carregar a IA local. Verifique memória e pacote instalado ou tente reiniciar a IA.';
+        this.message = 'O processo de IA local falhou ou encerrou. Solicite à TI a verificação do runtime e de suas dependências.';
       };
       child.once('error', failed);
-      child.once('exit', failed);
+      child.once('exit', (code: number | null) => {
+        failed();
+        // O Windows pode devolver NTSTATUS com ou sem sinal. Esse código confirma
+        // recusa pela política de integridade; reinstalar o mesmo arquivo não a corrige.
+        if (generation === this.generation && code !== null && (code >>> 0) === 0xc0e90002) {
+          this.message = 'O Windows bloqueou um componente da IA por política de segurança (0xC0E90002). Solicite à TI um pacote com assinatura confiável; não desative a proteção.';
+        }
+      });
       const url = `http://127.0.0.1:${port}`;
       const deadline = Date.now() + 120_000;
+      let lastHealthStatus: number | undefined;
       while (Date.now() < deadline && generation === this.generation && this.state === 'starting') {
         try {
           const response = await fetch(`${url}/health`, {
             headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(1500), redirect: 'error',
           });
+          lastHealthStatus = response.status;
+          if ((response.status === 401 || response.status === 403) && generation === this.generation && this.state === 'starting') {
+            if (this.stop()) this.message = 'O runtime local recusou a credencial temporária. Solicite suporte; não desative a autenticação.';
+            return;
+          }
           if (response.ok && generation === this.generation && this.state === 'starting') {
             this.connectionValue = { url, token }; this.state = 'ready';
             this.message = 'Qwen local pronto. As perguntas permanecem neste computador.';
@@ -84,18 +99,39 @@ export class ModelRuntime {
         } catch { /* O carregamento pode demorar em CPU. */ }
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
-      if (generation === this.generation) {
-        this.stop(); this.message = 'O carregamento da IA excedeu dois minutos. Tente reiniciar a IA nas configurações.';
+      if (generation === this.generation && this.state === 'starting') {
+        if (this.stop()) {
+          // Distingue processo sem resposta de modelo que ainda estava carregando.
+          // Não atribui a falha à memória ou ao antivírus sem evidência.
+          this.message = lastHealthStatus === undefined
+            ? 'O runtime de IA não respondeu no endereço local em dois minutos. Solicite à TI a verificação do executável, dependências e acesso ao loopback.'
+            : lastHealthStatus === 503
+              ? 'O runtime respondeu, mas o modelo não terminou de carregar em dois minutos. Verifique os recursos disponíveis com o suporte.'
+              : `O runtime respondeu com HTTP ${lastHealthStatus}, mas não ficou pronto. Solicite suporte.`;
+        }
       }
     } catch {
-      if (generation === this.generation) { this.stop(); this.message = 'Falha ao iniciar o runtime local.'; }
+      if (generation === this.generation && this.stop()) this.message = 'Falha ao iniciar o runtime local.';
     }
   }
 
-  stop(): void {
+  stop(): boolean {
     // Invalida as esperas em andamento antes de encerrar o processo filho.
     this.generation += 1;
     this.connectionValue = null; this.state = 'unavailable';
-    this.child?.kill(); this.child = undefined;
+    const child = this.child;
+    if (!child) return true;
+    if (child.pid !== undefined && child.exitCode === null && child.signalCode === null) {
+      try {
+        if (!child.kill()) throw new Error('Encerramento não confirmado');
+      } catch {
+        // Mantém a referência e bloqueia outro carregamento. Não tenta matar
+        // processos por nome nem usa um comando mais forte para contornar o Windows.
+        this.message = 'Não foi possível encerrar o processo de IA anterior. Solicite suporte antes de reiniciar a IA.';
+        return false;
+      }
+    }
+    this.child = undefined;
+    return true;
   }
 }

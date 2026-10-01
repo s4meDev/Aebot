@@ -8,6 +8,17 @@ export interface EvaluationRowMetrics {
   attempts: AiModelAttempt[];
 }
 
+export type EvaluationRunStatus = 'starting' | 'running' | 'completed' | 'failed';
+
+/** Uma rodada sem casos executados não pode parecer concluída ou aprovada. */
+export function evaluationProgress(rows: EvaluationRowMetrics[], expectedCases: number, status: EvaluationRunStatus) {
+  if (!Number.isSafeInteger(expectedCases) || expectedCases < 1 || rows.length > expectedCases ||
+      status === 'completed' && rows.length !== expectedCases || status === 'starting' && rows.length !== 0) {
+    throw new Error('Progresso inconsistente na avaliação.');
+  }
+  return { status, completed: status === 'completed', expectedCases, summary: summarizeEvaluation(rows) };
+}
+
 function latency(values: number[]) {
   const sorted = [...values].sort((a, b) => a - b);
   // P95 por posição: em amostras pequenas ele pode ser o maior tempo observado.

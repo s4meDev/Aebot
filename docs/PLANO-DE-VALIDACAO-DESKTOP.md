@@ -1,6 +1,6 @@
 # Plano de validação do desktop
 
-Situação revisada em 28/09/2026 após evoluir a entrada de fatos no motor. Este roteiro complementa o [Kanban conferido contra o código](KANBAN.md), que mantém os 16 cartões do Word, as estimativas originais e as diferenças de implementação.
+Situação revisada em 01/10/2026: extração de evidências parcialmente implementada, diagnósticos e registro de avaliações corrigidos. O runtime assinado da Unsloth restabeleceu a medição real: primeira rodada de 12 casos teve 11 acertos e duas saídas inválidas. A geração foi reforçada para exigir citações. Falta assinatura do próprio AEBOT, validação completa da IA e instalação nos notebooks. Este roteiro complementa o [Kanban conferido contra o código](KANBAN.md), que mantém os 16 cartões do Word, as estimativas originais e as diferenças de implementação.
 
 ## O que já existe
 
@@ -16,6 +16,7 @@ Situação revisada em 28/09/2026 após evoluir a entrada de fatos no motor. Est
 | Etapa | Situação | Evidência necessária para concluir |
 | --- | --- | --- |
 | Conferir o Kanban da gestão | Comparação registrada | Consulte `KANBAN.md`; nenhum cartão foi declarado homologado ou implantado. |
+| Restabelecer a inicialização local | Executado com runtime assinado | Qwen carregou e respondeu nesta máquina; confirmar no Latitude e em instalação limpa. Certificado do AEBOT permanece necessário para distribuir o novo Setup. |
 | Evoluir para fatos nativos no motor | Entrada direta implementada; validação em andamento | `evaluateFacts` substitui a reavaliação de texto canônico. Falta ampliar o contrato para uma ficha independente de evidências, mantendo a base única e conferindo divergências do modelo real. |
 | Validar o gabarito de 100 casos | Pendente de referência operacional | Confirmar decisão, fatos, regras e orientação esperada; resolver ambiguidades e hipóteses. |
 | Avaliar o modelo no corpus completo | Em validação por amostras | Rodada completa com versões e perfil identificados, revisão de todas as divergências. |
@@ -32,7 +33,7 @@ Não use apenas o número de decisões corretas. Confira também se o motor usou
 
 Registre separadamente aprovações indevidas, reprovações esperadas não recomendadas, regras aplicadas incorretamente, perguntas repetidas, respostas sem orientação e demora excessiva. Divergências críticas devem ser resolvidas ou explicitamente tratadas pelo responsável antes de liberar o piloto.
 
-Na rodada de [28/09](STATUS-DESKTOP-2026-09-28.md), 10 de 12 casos tiveram o resultado esperado. Duas paráfrases permaneceram sem conclusão, incluindo uma reprovação esperada não recomendada. A prioridade é corrigir a extração semântica e validar casos novos; a entrada direta no motor, por si só, não homologa o Qwen.
+Na primeira rodada de [28/09](STATUS-DESKTOP-2026-09-28.md), 10 de 12 casos tiveram o resultado esperado. Experimentos posteriores no recorte de seis casos chegaram a 5/6 no modo direto e 4/6 com raciocínio limitado a 128 tokens, usando configurações diferentes. Com o runtime assinado, a primeira rodada iniciada em 29/09 atingiu 11/12. São amostras repetidas, sem comparação controlada. O [relatório atual](STATUS-DESKTOP-2026-10-01.md) registra a correção do contrato e a validação seguinte; esses resultados não homologam o corpus inteiro.
 
 O Kanban sugere média de até 20 segundos e concordância acima de 90% no primeiro ciclo, a confirmar com a coordenação. Antes de escalar, exige nenhum erro crítico aberto em regras de Reprovado, gabarito de pelo menos 100 perguntas, três perfis de instalação e suporte definido. A amostra direta de 25/09 teve média geral de cerca de 24 segundos nesta máquina, portanto ainda não demonstra o atendimento à meta de tempo.
 
