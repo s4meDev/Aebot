@@ -20,6 +20,8 @@ O protótipo final foi gerado em `desktop-release/prototipo-2.22.1-2026-10-08T19
 
 A primeira exportação do download detectou um escape inválido na regex enviada ao PowerShell. Preservei a pasta parcial, corrigi a transmissão literal das barras e acrescentei um teste para caminhos absolutos e `..`. A tentativa parcial não é um download distribuível. O exportador confere o conteúdo descompactado do ZIP e os hashes das partes antes de permitir a publicação.
 
+Também conferi o formato real do ZIP gerado pelo .NET do Windows: as entradas usam barras invertidas, enquanto o manifesto mantém barras normais. O leitor aceita as duas representações para localizar a mesma entrada e continua verificando seu conteúdo por SHA-256. A exportação final passou a conferência do conteúdo; as duas tentativas anteriores foram preservadas, sem publicação.
+
 ## Histórico — 2.22.0
 
 Mantive o Qwen3-4B-Instruct-2507 e revisei a base para 2.15.3. A inferência já é nativa em C++; trocar React ou TypeScript não remove a leitura do modelo. Priorizei o gargalo medido e a qualidade das associações, sem fallback de nuvem.

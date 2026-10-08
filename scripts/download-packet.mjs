@@ -100,7 +100,10 @@ try { if (($archive.Entries | Where-Object { $_.Name }).Count -ne [int]$env:AEBO
 foreach ($entry in $archive.Entries) { if ($entry.FullName -match '${zipEntryPathCheck}') { throw 'Caminho ZIP inseguro.' } };
 foreach ($line in (Get-Content -LiteralPath (Join-Path $sourcePath 'SHA256SUMS.txt'))) {
 if ($line -notmatch '^([a-f0-9]{64})  (.+)$') { throw 'Hash de origem invalido.' };
-$expected=$Matches[1]; $entry=$archive.GetEntry($Matches[2]); if (-not $entry) { throw 'Arquivo ausente no ZIP.' };
+$expected=$Matches[1]; $entryName=$Matches[2]; $entry=$archive.GetEntry($entryName);
+# O .NET do Windows pode gravar barras invertidas; o manifesto usa barras normais.
+if (-not $entry) { $entry=$archive.GetEntry($entryName.Replace([char]47,[char]92)) };
+if (-not $entry) { throw 'Arquivo ausente no ZIP.' };
 $stream=$entry.Open(); $algorithm=[Security.Cryptography.SHA256]::Create();
 try { $actual=[BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-','').ToLowerInvariant(); if ($actual -ne $expected) { throw 'Conteudo ZIP divergente.' } }
 finally { $stream.Dispose(); $algorithm.Dispose() }
