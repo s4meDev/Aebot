@@ -17,7 +17,7 @@ for (const entry of ['main', 'preload']) {
   await build({ configFile: false, root, define: publicCatalog, build: {
     ssr: path.join(root, 'desktop', `${entry}.ts`), outDir: output, emptyOutDir: false,
     target: 'node22', rollupOptions: { external: ['electron'],
-      output: { format: 'cjs', entryFileNames: `${entry}.cjs`, inlineDynamicImports: true } },
+      output: { format: 'cjs', entryFileNames: `${entry}.cjs`, codeSplitting: false } },
   } });
 }
 await mkdir(output, { recursive: true });

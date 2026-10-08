@@ -1,6 +1,8 @@
 # Executar e testar o AEBOT
 
-Para o protótipo 2.22.0, `npm.cmd run desktop:prototype` prepara uma pasta completa com EXE, runtime, modelo e catálogo previamente preparado, sem assinatura própria do AEBOT. Leia [o guia portátil](PROTOTIPO-PORTATIL.md) e [as medições de desempenho](DESEMPENHO-IA-LOCAL.md) antes de distribuir. O comando empresarial `desktop:package` mantém assinatura obrigatória.
+Atualização 2.22.1: a segmentação semântica preserva o “nem” de cada item negado e a conferência recebe descrições dos dados. Para preparar os downloads depois de gerar o protótipo, use `npm.cmd run desktop:download -- desktop-release/prototipo-<versão>-<data>/win-unpacked`. O comando aceita somente o pacote da versão atual, verifica hashes, recusa links/arquivos privados e cria uma pasta nova com ZIP64, partes e instruções de montagem. Não faz commit, push nem publicação; essas etapas continuam explícitas. Não use `Compress-Archive` no GGUF grande.
+
+Para o protótipo 2.22.1, `npm.cmd run desktop:prototype` prepara uma pasta completa com EXE, runtime, modelo e catálogo previamente preparado, sem assinatura própria do AEBOT. Leia [o guia portátil](PROTOTIPO-PORTATIL.md) e [as medições de desempenho](DESEMPENHO-IA-LOCAL.md) antes de distribuir. O comando empresarial `desktop:package` mantém assinatura obrigatória.
 
 Este guia é para quem mantém o código no VS Code. Para o analista que recebeu um instalador, siga o [guia do desktop](DESKTOP-LOCAL.md); não é necessário instalar ferramentas de programação.
 
@@ -35,7 +37,7 @@ Neste workspace já preparado, também é possível abrir `Abrir-AEBOT.cmd` pela
 npm.cmd run desktop:start
 ```
 
-Para avaliar Asfalto com IA real: `npm.cmd run desktop:evaluate -- --corpus=asfalto --offset=35 --limit=14 --prepared`. O recorte inclui paráfrases, negativos, continuações e vários fatos. O padrão usa o protocolo curto do aplicativo; `--compact` compara com o anterior. Sem `--prepared`, mede leitura fria sem restauração. O relatório separa carga do modelo, restauração, leitura, geração e tokens em cache, além de conclusão, regras e falhas técnicas. Não confunda inferência real com matching lexical ou primeiro uso com perguntas em cache.
+Para avaliar Asfalto com IA real: `npm.cmd run desktop:evaluate -- --corpus=asfalto --prepared`. O corpus tem 51 casos; o recorte `--offset=35 --limit=16` inclui paráfrases, negativos, continuações e vários fatos. O padrão usa o protocolo curto do aplicativo; `--compact` compara com o anterior. Sem `--prepared`, mede leitura fria sem restauração. O relatório separa carga do modelo, restauração, leitura, geração e tokens em cache, além de conclusão, regras e falhas técnicas. Não confunda inferência real com matching lexical ou primeiro uso com perguntas em cache.
 
 `desktop:catalog:prepare` é tarefa do mantenedor, não do analista. Pode repetir `--service=ID` para preparar outros catálogos; o índice publicado contém apenas a seleção daquela execução. Não recebe pergunta ou histórico. Refaça a preparação antes do build/pacote se mudar o catálogo ou a instrução local. A importação de regras no aplicativo não usa um cache antigo: se o prefixo mudar, faz a leitura normal. Não salve slots do runtime durante um chat.
 

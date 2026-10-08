@@ -1,6 +1,24 @@
 # Tempo de resposta da IA local
 
-## Revisão atual — 2.22.0
+## Correção atual — 2.22.1
+
+Separei cada item de uma coordenação negativa no contrato curto, mantendo o “nem” e a citação literal. Condições, exceções e agregadoras continuam no motor, sobre o relato original. A conferência recebe também título/descrição da regra indicada, sem retirar o catálogo completo. Acrescentei validação de presença para verbos como “vejo” e “vi”: ver o resultado não significa que a foto final esteja ausente.
+
+O cenário crítico passou na repetição isolada v32, mas a rodada ampliada encontrou outra regra indevida na variação “só vejo o resultado”. Preservei a divergência e corrigi a polaridade no v33, sem alterar o gabarito ou a base 2.15.3. As medições 2.22.0 ficam como histórico, não como resultado da versão nova.
+
+### Resultado completo — perfil v33
+
+A rodada `desktop-release/evaluations/2026-10-08T19-31-11-043Z.json` concluiu **51/51 casos**, conferindo também fatos, regras aplicadas e saídas inválidas. Foram 19 casos com IA, 26 chamadas contando conferências e 32 casos determinísticos. Não houve divergência, aprovação indevida, reprovação perdida ou erro técnico do modelo nessa amostra. O gabarito ainda precisa de aceite operacional; esse resultado não garante compreensão de qualquer relato.
+
+O carregamento levou 10,6 s. A mediana dos casos com IA foi 17,7 s; o máximo foi 78,8 s. Os casos determinísticos tiveram mediana de 2 ms, que não representa velocidade do modelo. A máquina usada foi Ryzen 5 5600G com aproximadamente 8 GB; o Latitude de 16 GB ainda não foi medido. A conferência mais contextual melhora esta amostra, mas não comprova redução de latência.
+
+Validação de código: 828 testes aprovados, 1 teste de capacidade separado da suíte regular; TypeScript aprovado. O build desktop deixou de emitir o aviso de `inlineDynamicImports`. O pacote portátil continua sem assinatura própria; a validação de desenvolvimento é separada da abertura do EXE final.
+
+O teste adicional desta versão pela interface e IPC de desenvolvimento também passou (`desktop-release/desktop-smoke.json`, `packaged: false`): inferência real em 27,6 s, Reprovado com a regra final correta e renderer sem Node. Esse teste não substitui a medição dos 51 casos ou a conferência do executável empacotado. Os builds MV3, Node e Worker dry-run, a auditoria da base e o teste separado de 3.000 avaliações passaram.
+
+O protótipo final foi gerado em `desktop-release/prototipo-2.22.1-2026-10-08T19-49-16-448Z/win-unpacked`, com hashes conferidos. A tentativa explícita de iniciar `AEBOT-Prototipo.exe --aebot-package-check` foi bloqueada pelo Controle de Aplicativo do Windows, antes de executar o teste. Não há novo relatório empacotado aprovado: o relatório anterior não valida esta versão. Não alterei proteções ou assinatura para contornar a recusa. A entrega é um pré-lançamento para teste supervisionado, não uma instalação empresarial liberada.
+
+## Histórico — 2.22.0
 
 Mantive o Qwen3-4B-Instruct-2507 e revisei a base para 2.15.3. A inferência já é nativa em C++; trocar React ou TypeScript não remove a leitura do modelo. Priorizei o gargalo medido e a qualidade das associações, sem fallback de nuvem.
 

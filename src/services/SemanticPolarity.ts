@@ -14,7 +14,7 @@ const NEGATED_ABSENCE = [
 
 // Usa os mesmos verbos nas duas formas: reconhecer "não aparece" também
 // exige reconhecer "aparece", para não aceitar uma falta inventada pelo modelo.
-const EVIDENCE_VERBS = 'tem|teve|mostrou|mostraram|apresentou|apresentaram|aparece|apareceu|veio|registrou|registraram|mediu|mediram|aferiu|aferiram|comprovou|comprovaram|incluiu|lancou|colocou|fotografou|fotografaram|mandou|mandaram|enviou|enviaram';
+const EVIDENCE_VERBS = 'tem|teve|mostrou|mostraram|apresentou|apresentaram|aparece|apareceu|veio|registrou|registraram|mediu|mediram|aferiu|aferiram|comprovou|comprovaram|incluiu|lancou|colocou|fotografou|fotografaram|mandou|mandaram|enviou|enviaram|vejo|vemos|vi|vimos|enxergo|enxergamos|visualizo|visualizamos';
 // Não conseguir ler ou identificar uma evidência relata uma limitação,
 // não a negação do problema. A mesma construção positiva confirma acesso.
 const PERCEPTION = '(?:ver|ler|identificar|visualizar|enxergar|comprovar|conferir|verificar|saber)';

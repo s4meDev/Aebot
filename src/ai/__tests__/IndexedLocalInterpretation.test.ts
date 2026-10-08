@@ -13,6 +13,18 @@ const request = (query: string) => createLocalInterpretation(query, service, rul
 afterEach(() => vi.unstubAllGlobals());
 
 describe('protocolo local por índices', () => {
+  it('só vejo o resultado não comprova falta da etapa final', () => {
+    const query = 'Sem registro de como estava no começo nem da equipe aplicando o revestimento. Só vejo o resultado pronto.';
+    const parsed = request(query).parse(JSON.stringify({ m: [
+      { s: 0, r: 'RULE-ASF-FOTO-ANTES-01', t: 0 },
+      { s: 1, r: 'RULE-ASF-FOTO-DURANTE-01', t: 0 },
+      { s: 2, r: 'RULE-ASF-FOTO-DEPOIS-01', t: 0 },
+    ] }));
+    expect(parsed?.mappings[2].stance).toBe('negated_or_present');
+    const evaluation = ruleEngine.evaluateFacts({ serviceId: service.id, query, mappings: parsed!.mappings });
+    expect(evaluation.decision).toBe('Reprovado');
+    expect(evaluation.matchedRules.map(rule => rule.id)).not.toContain('RULE-ASF-FOTO-DEPOIS-01');
+  });
   it('não transforma uma origem explicitamente informada em falta de origem', () => {
     const query = 'A OS de origem é repavimentação concreto.';
     const parsed = request(query).parse(JSON.stringify({ m: [{ s: 0, r: 'RULE-ASF-ORIGEM-01', t: 0 }] }));
@@ -30,17 +42,17 @@ describe('protocolo local por índices', () => {
     expect(result.evaluation.matchedRules.map(rule => rule.id)).toContain('RULE-ASF-ORIGEM-VCG-01');
     expect(call).not.toHaveBeenCalled();
   });
-  it('preserva a oração negada para conferir dois fatos independentes', () => {
+  it('separa dois fatos negados sem perder o nem da segunda citação', () => {
     const query = 'Não há foto da fase inicial nem de quando aplicaram a massa. Só enviaram uma imagem do asfalto concluído.';
     const local = request(query);
     const parsed = local.parse(JSON.stringify({ m: [
       { s: 0, r: 'RULE-ASF-FOTO-ANTES-01', t: 0 },
-      { s: 0, r: 'RULE-ASF-FOTO-DURANTE-01', t: 0 },
-      { s: 1, r: 'RULE-ASF-FOTO-DEPOIS-01', t: 0 },
+      { s: 1, r: 'RULE-ASF-FOTO-DURANTE-01', t: 0 },
+      { s: 2, r: 'RULE-ASF-FOTO-DEPOIS-01', t: 0 },
     ] }));
     expect(parsed?.mappings.map(mapping => mapping.sourceQuote)).toEqual([
-      'Não há foto da fase inicial nem de quando aplicaram a massa.',
-      'Não há foto da fase inicial nem de quando aplicaram a massa.',
+      'Não há foto da fase inicial',
+      'nem de quando aplicaram a massa.',
       'Só enviaram uma imagem do asfalto concluído.',
     ]);
     expect(parsed?.mappings.map(mapping => mapping.stance)).toEqual(['asserted', 'asserted', 'negated_or_present']);

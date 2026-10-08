@@ -16,7 +16,7 @@ export class LocalModelClient implements StructuredModelClient {
   readonly providerChain = ['local'] as const;
   get modelChain() { return [this.options.modelName ?? assetsLock.model.name.replace(/\.gguf$/, '')]; }
   get localInterpretationProtocol() { return this.options.indexed !== false ? 'indexed' as const : 'compact' as const; }
-  get cacheKey() { return `local:${this.modelChain[0]}:${this.options.modelSha256 ?? assetsLock.model.sha256}:v31:${this.localInterpretationProtocol}-prefix:kv-q8:auto-context:no-warmup:${this.options.thinking ? 'thinking-' + (this.options.reasoningBudget ?? 512) : 'direct'}:temperature-${this.options.temperature ?? (this.options.thinking ? 0.6 : 0.7)}`; }
+  get cacheKey() { return `local:${this.modelChain[0]}:${this.options.modelSha256 ?? assetsLock.model.sha256}:v33:${this.localInterpretationProtocol}-prefix:kv-q8:auto-context:no-warmup:${this.options.thinking ? 'thinking-' + (this.options.reasoningBudget ?? 512) : 'direct'}:temperature-${this.options.temperature ?? (this.options.thinking ? 0.6 : 0.7)}`; }
 
   constructor(private readonly connection: () => { url: string; token: string } | null,
     private readonly options: { thinking?: boolean; reasoningBudget?: number; modelName?: string; modelSha256?: string; temperature?: number;

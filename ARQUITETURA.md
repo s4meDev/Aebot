@@ -14,6 +14,8 @@ Na revisão 2.21.0, o cliente local usa o contrato curto `indexed`: trechos nume
 
 Arquivos do desktop, na ordem de responsabilidade:
 
+Atualização 2.22.1: `src/ai/LocalSources.ts` separa itens negados mantendo citações literais e o “nem”. Isso não altera o matching lexical nem cria fatos. A conferência local recebe também título e descrição da regra indicada, além do catálogo completo. `scripts/download-packet.mjs` confere o pacote, gera ZIP64 e partes de 1 GiB, com montagem verificável por SHA-256. Não publica automaticamente, não inclui perfil do analista e não altera proteções. Os testes ficam em `LocalSources.test.ts` e `download-packet.test.mjs`.
+
 - `desktop/main.ts`: janela, validação do remetente IPC, coordenação das análises e diálogos de importação/exportação.
 - `desktop/preload.ts`: ponte limitada entre interface isolada e processo principal; não expõe Node nem IPC genérico.
 - `src/desktop/contracts.ts`: operações e estado do aplicativo local.

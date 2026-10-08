@@ -8,7 +8,7 @@ O AEBOT está migrando para um aplicativo Windows com IA local e funcionamento o
 
 O aplicativo e o instalador estão implementados para testes supervisionados. **A qualidade da IA local ainda não está homologada para distribuição ampla.** Testes de código aprovados não garantem que o modelo interprete corretamente qualquer relato.
 
-O foco do protótipo atual é **Repavimentação Asfalto**, nas duas faixas de área. O código está na versão **2.22.0**, com base **2.15.3**. O [protótipo portátil](docs/PROTOTIPO-PORTATIL.md) leva EXE, runtime, modelo e leitura preparada do catálogo, sem configuração para o analista. A primeira análise caiu de 154 para cerca de 15 segundos na comparação inicial; na rodada completa, a primeira chamada à IA levou 19 segundos, além da abertura. **48 de 49 casos passaram; há uma reprovação não reconhecida e um pico de 83 segundos. O novo EXE foi bloqueado pelo Controle de Aplicativo do Windows.** Ainda não está liberado para distribuição ampla. Consulte [as medições e limites atuais](docs/DESEMPENHO-IA-LOCAL.md). O [relatório anterior de 08/10](docs/STATUS-DESKTOP-2026-10-08.md) permanece como histórico. Veja também [os casos de Asfalto](docs/PROTOTIPO-ASFALTO.md). `Abrir-AEBOT.cmd` é um atalho de desenvolvimento, não a distribuição.
+O foco do protótipo atual é **Repavimentação Asfalto**, nas duas faixas de área. O código está na versão **2.22.1**, com base **2.15.3**. Corrigi faltas ligadas por “nem” e a interpretação de evidência final presente. A rodada real passou **51/51 casos**, conferindo conclusões e regras. A mediana com IA foi 17,7 segundos e o máximo 78,8 segundos nesta máquina de 8 GB; a velocidade ainda precisa melhorar. O [protótipo portátil](docs/PROTOTIPO-PORTATIL.md) leva EXE, runtime, modelo e catálogo preparado, sem configuração para o analista. Baixe a entrega completa no [pré-lançamento 2.22.1](https://github.com/s4meDev/Aebot/releases/tag/v2.22.1-prototipo) e siga [o guia do Latitude](docs/INSTALAR-NO-LATITUDE.md). O aplicativo não tem assinatura própria e pode ser bloqueado pelo Controle de Aplicativo do Windows. Não está homologado para distribuição ampla. Consulte [medições e limites atuais](docs/DESEMPENHO-IA-LOCAL.md). Os relatórios anteriores permanecem como histórico. `Abrir-AEBOT.cmd` é um atalho de desenvolvimento, não a distribuição.
 
 | Preciso de… | Onde encontrar |
 | --- | --- |
@@ -177,6 +177,7 @@ Em outro terminal, execute `npm run server:check`. As configurações privadas f
 | `npm run desktop:signing:check` | Confere se existe configuração de assinatura; não valida o certificado nem assina arquivos |
 | `npm run desktop:package` | Gera Setup e arquivos offline para testes supervisionados |
 | `npm run desktop:prototype` | Gera pasta portátil completa, sem assinatura própria do AEBOT; não altera o perfil empresarial |
+| `npm run desktop:download -- desktop-release/prototipo-<versão>-<data>/win-unpacked` | Confere o protótipo atual e gera ZIP64, partes de download, hashes e montador |
 | `npm test` | Executa os testes automatizados regulares |
 | `npm run test:capacity` | Executa isoladamente o teste de 3.000 avaliações |
 | `npm run typecheck` | Verifica o TypeScript da extensão, Node e Worker |

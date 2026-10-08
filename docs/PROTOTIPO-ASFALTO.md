@@ -1,6 +1,6 @@
 # Protótipo local — Repavimentação Asfalto
 
-Atualização de 08/10/2026: aplicativo 2.22.0, base 2.15.3. Priorizei as duas opções de Asfalto do catálogo, usando as regras enviadas por Pedro Lucas Botelho em `Repavimentação Asfalto atualizado.txt`. O aplicativo usa o Qwen3-4B-Instruct-2507 local e pode restaurar a leitura preparada do catálogo, sem salvar conversas. Não envia o chat à nuvem. Para testar fora do workspace, use a [pasta portátil completa](PROTOTIPO-PORTATIL.md), sem Node ou cadastro de chave.
+Atualização de 08/10/2026: aplicativo 2.22.1, base 2.15.3. Priorizei as duas opções de Asfalto do catálogo, usando as regras enviadas por Pedro Lucas Botelho em `Repavimentação Asfalto atualizado.txt`. O aplicativo usa o Qwen3-4B-Instruct-2507 local e pode restaurar a leitura preparada do catálogo, sem salvar conversas. Não envia o chat à nuvem. A revisão separa faltas coordenadas mantendo o “nem” e confere evidência vista versus ausente. Para testar fora do workspace, use a [pasta portátil completa](PROTOTIPO-PORTATIL.md), sem Node ou cadastro de chave.
 
 ## Abrir e testar neste computador
 
@@ -45,14 +45,14 @@ As regras estão somente em `src/data/rulesStore.json`, versão **2.15.3**. Os 2
 
 `decisionPolicy: most_severe_applicable` é um campo validado do serviço. Sua ausência mantém o ranking anterior. Não há ramificação “se for Asfalto” no motor.
 
-`src/data/asphaltPilotCases.json` contém 49 cenários sintéticos: 35 lexicais e 14 cenários reservados à avaliação da IA/conversa. Conferem evidência presente, ausência negada, dupla negação, perguntas, etapas combinadas e continuação com equipe interna/terceirizada. Os testes unitários não fingem que o matching lexical resolve as paráfrases. O avaliador verifica também IDs classificatórios e falhas técnicas, além da conclusão; isso ainda não substitui a revisão operacional de fatos e orientação.
+`src/data/asphaltPilotCases.json` contém 51 cenários sintéticos: 35 casos básicos e 16 reservados à avaliação da IA/conversa. Alguns casos básicos também chamam o modelo; não anuncie 51 inferências. Conferem evidência presente, ausência negada, dupla negação, perguntas, etapas combinadas, duas novas variações de faltas coordenadas e continuação com equipe interna/terceirizada. Os testes unitários não fingem que o matching lexical resolve as paráfrases. O avaliador verifica também IDs classificatórios e falhas técnicas, além da conclusão; isso ainda não substitui a revisão operacional de fatos e orientação.
 
 ```powershell
 npm.cmd test
 npm.cmd run typecheck
 npm.cmd run desktop:smoke
 npm.cmd run desktop:catalog:prepare -- --service=repavimentacao-asfalto-ate-1m2
-npm.cmd run desktop:evaluate -- --corpus=asfalto --offset=35 --limit=14 --prepared --inspect-facts
+npm.cmd run desktop:evaluate -- --corpus=asfalto --prepared --inspect-facts
 ```
 
 O smoke confere IPC, isolamento e combinação de fotos no serviço certo, sem carregar o Qwen. A avaliação real carrega o Qwen, registra a rodada desde o início e salva resultados em `desktop-release/evaluations`. Diagnósticos são exclusivos do corpus sintético; conversas dos analistas não são persistidas.

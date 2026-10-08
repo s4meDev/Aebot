@@ -1,5 +1,9 @@
 # Kanban de implantação do AEBOT local
 
+Atualização 2.22.1: corrigi as faltas coordenadas e a presença explícita do resultado final. A inferência real passou 51/51 casos de Asfalto, incluindo regras aplicadas, sem alterar o gabarito. Os 828 testes regulares passaram. K09/K13/K14 continuam em validação: a mediana com IA foi 17,7 s e o máximo 78,8 s nesta máquina de 8 GB; falta medir no Latitude, homologar o gabarito e validar execução autorizada do portátil. O pacote agora pode ser entregue em partes verificadas por SHA-256.
+
+Os registros 2.22.0 abaixo são históricos, não o resultado da versão atual.
+
 Atualização 2.22.0: implementei preparação isolada e restauração validada do catálogo de Asfalto, sem gravar chats; a primeira comparação passou nove cenários e reduziu a primeira análise para cerca de 15 s, além do carregamento do modelo. Ampliei os casos de linguagem e corrigi dupla negação/conferência por citação. K09/K13 seguem em validação: inferência em poucos segundos para qualquer pergunta, notebook corporativo e homologação continuam pendentes. Veja [desempenho atual](DESEMPENHO-IA-LOCAL.md).
 
 Fechamento técnico desta revisão: 804 testes passaram e 1 foi ignorado; tipos e builds aprovados. O corpus completo de Asfalto passou em 48/49 casos, com uma reprovação não reconhecida em relato de duas etapas ausentes. Primeira chamada à IA: 19,1 s; maior tempo: 83 s. O teste de desenvolvimento com inferência real pela ponte passou em 20,8 s, mas o EXE novo foi bloqueado pelo Controle de Aplicativo. K09/K13/K14 permanecem abertos; não há distribuição homologada.

@@ -2,11 +2,13 @@
 
 Atualização de 08/10/2026. Preparei este perfil para testar o AEBOT por uma pasta completa, sem depender do VS Code, Node, chave de IA, servidor online ou instalador. É um protótipo, não uma entrega homologada para todos os analistas.
 
-Versão 2.22.0, base 2.15.3, Qwen3-4B-Instruct-2507 Q4_K_M. O pacote inclui leitura preparada do catálogo de Asfalto; o analista não executa essa preparação. A comparação inicial reduziu a primeira análise de 154 para 15 segundos, além de 10 segundos para carregar o modelo. Relatos com conferência extra ainda demoram. Veja [as medições e divergências atuais](DESEMPENHO-IA-LOCAL.md); não há garantia de poucos segundos ou zero erros.
+Versão 2.22.1, base 2.15.3, Qwen3-4B-Instruct-2507 Q4_K_M. O pacote inclui leitura preparada do catálogo de Asfalto; o analista não executa essa preparação. Corrigi as faltas coordenadas e a presença final que eram confundidas. Veja [as medições atuais](DESEMPENHO-IA-LOCAL.md); relatos com conferência extra ainda demoram, sem garantia de poucos segundos ou zero erros.
 
-A pasta final desta revisão está em `desktop-release/prototipo-2.22.0-2026-10-08T18-52-43-897Z/win-unpacked`. Preservei a 2.21.0 e as preparações anteriores. **Não está validada para distribuição:** a tentativa de abrir o pacote 2.22.0 anterior desta revisão foi bloqueada pelo Controle de Aplicativo nesta máquina; a abertura do pacote final continua pendente. O build e os hashes passaram, mas isso não substitui abrir o executável e homologar o modelo. Não use o Setup antigo como se fosse esta versão.
+A entrega está no [pré-lançamento 2.22.1](https://github.com/s4meDev/Aebot/releases/tag/v2.22.1-prototipo), em partes do mesmo ZIP com hashes e montador. Baixe todas as partes e siga [o guia do Latitude](INSTALAR-NO-LATITUDE.md). Preservei pacotes anteriores. O build e os hashes não substituem abrir o executável e homologar o modelo; uma tentativa da versão anterior foi bloqueada pelo Controle de Aplicativo. Não use o Setup antigo como se fosse esta versão.
 
-O corpus completo passou em 48/49 casos; ainda há um relato de duas etapas ausentes retornando Não Conforme em vez de Reprovado. Na rodada final, a primeira chamada à IA levou 19,1 s, com outros 8,3 s para carregar o modelo; um caso chegou a 83 s. O teste separado de desenvolvimento pela interface e IPC passou em 20,8 s. Não anuncio essa versão como pronta para uso sem supervisão.
+O pacote local desta versão está em `desktop-release/prototipo-2.22.1-2026-10-08T19-49-16-448Z/win-unpacked`. A tentativa de abertura da 2.22.1 também foi bloqueada pelo Controle de Aplicativo, antes de iniciar o teste empacotado. A execução no Latitude continua pendente de conferência e autorização; não há desbloqueio automático.
+
+O corpus real completo passou em 51/51 casos, conferindo regras e conclusões, incluindo o relato crítico de duas etapas ausentes. A mediana dos casos com IA foi 17,7 s, o máximo 78,8 s e o carregamento separado 10,6 s na máquina de 8 GB. Esses resultados não homologam perguntas imprevisíveis nem medem o Latitude. Não anuncio essa versão como pronta para uso sem supervisão.
 
 ## Para quem vai testar
 

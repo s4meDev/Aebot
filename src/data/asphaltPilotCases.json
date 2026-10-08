@@ -427,5 +427,21 @@
     "decision": "Reprovado",
     "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01", "RULE-ASF-FOTO-DURANTE-01", "RULE-ASF-FOTOS-COMBINADAS-01"],
     "requiresSemantic": true
+  },
+  {
+    "name": "duas etapas sem registro com aplicação do revestimento",
+    "serviceId": "repavimentacao-asfalto-acima-1m2",
+    "query": "Sem registro de como estava no começo nem da equipe aplicando o revestimento. Só vejo o resultado pronto.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01", "RULE-ASF-FOTO-DURANTE-01", "RULE-ASF-FOTOS-COMBINADAS-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "duas etapas sem imagens em outro relato",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Não registraram a vala antes do trabalho nem o serviço sendo feito. Enviaram apenas foto de tudo pronto.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01", "RULE-ASF-FOTO-DURANTE-01", "RULE-ASF-FOTOS-COMBINADAS-01"],
+    "requiresSemantic": true
   }
 ]
