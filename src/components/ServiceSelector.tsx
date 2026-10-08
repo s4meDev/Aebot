@@ -61,10 +61,9 @@ export const ServiceSelector: React.FC<ServiceSelectorProps> = ({
         }
       }}
     >
-      <span className="selector-index" aria-hidden="true">01</span>
       <div className="selector-content">
         <span id="service-selector-label" className="selector-label">
-          Serviço em análise
+          Serviço da OS
         </span>
         <button
           ref={triggerRef}

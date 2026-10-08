@@ -19,6 +19,14 @@ function response(overrides: Record<string, unknown> = {}): string {
 }
 
 describe('SemanticInterpreter', () => {
+  it('mantém citações diferentes da mesma regra para conferência e elimina só repetição idêntica', () => {
+    const quotes = ['Não apresentou evidência da execução.', 'Não registrou o trabalho em andamento.'];
+    const mappings = [quotes[0], quotes[1], quotes[0]].map(sourceQuote => ({
+      ruleId: duringRule.id, sourceQuote, canonicalExpression: 'sem foto durante', stance: 'asserted',
+    }));
+    const result = parseSemanticInterpretation(JSON.stringify({ mappings }), quotes.join(' '), rules);
+    expect(result?.mappings.map(mapping => mapping.sourceQuote)).toEqual(quotes);
+  });
   it.each(['Precisa mesmo de foto antes de começar?', 'Qual é a regra da foto antes'])
     ('preserva consulta mesmo quando o modelo afirma ocorrência: %s', (query) => {
       const before = rules.find((rule) => rule.conditionKeywords.includes('sem foto antes'))!;
@@ -190,7 +198,7 @@ describe('SemanticInterpreter', () => {
     expect(result?.mappings[0].ruleId).toBe(duringRule.id);
   });
 
-  it('preserva hipótese e pergunta informativa no prompt canônico', () => {
+  it('não deixa o modelo transformar ausência relatada em hipótese ou consulta', () => {
     const hypothetical = parseSemanticInterpretation(
       response({ stance: 'hypothetical' }),
       'Não apareceu o momento do torque.',
@@ -202,8 +210,16 @@ describe('SemanticInterpreter', () => {
       rules
     );
 
-    expect(hypothetical?.canonicalPrompt).toBe('se sem foto durante');
-    expect(informational?.canonicalPrompt).toBe('qual e a regra de sem foto durante');
+    expect(hypothetical?.mappings[0].stance).toBe('asserted');
+    expect(informational?.mappings[0].stance).toBe('asserted');
+  });
+
+  it('preserva a interpretação de intenção quando o texto não afirma um fato', () => {
+    const query = 'Estou pensando na evidência da execução.';
+    for (const stance of ['hypothetical', 'informational']) {
+      const parsed = parseSemanticInterpretation(response({ sourceQuote: query, stance }), query, rules);
+      expect(parsed?.mappings[0].stance).toBe(stance);
+    }
   });
 
   it('corrige stance contraditório quando o trecho afirma ausência', () => {

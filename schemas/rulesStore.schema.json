@@ -65,6 +65,7 @@
         "insights": { "$ref": "#/$defs/stringList" },
         "suggestedQuestions": { "$ref": "#/$defs/stringList" },
         "analysisStatus": { "enum": ["active", "rules_pending"] },
+        "decisionPolicy": { "enum": ["ranked", "most_severe_applicable"], "description": "Ordem de decisão entre regras realmente aplicáveis. Ausente preserva o ranking atual." },
         "parameterization": { "$ref": "#/$defs/parameterization" },
         "catalogNameStatus": { "enum": ["confirmed", "needs_confirmation"] },
         "sourceLabel": { "$ref": "#/$defs/nonEmptyString" }
@@ -129,6 +130,7 @@
         "positiveSignals": { "$ref": "#/$defs/stringList" },
         "negativeSignals": { "$ref": "#/$defs/stringList" },
         "mandatoryConditions": { "$ref": "#/$defs/stringList" },
+        "mandatoryConditionGroups": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/conditionGroup" }, "description": "Todos os grupos são obrigatórios; basta uma expressão de cada grupo no relato original." },
         "exceptions": { "$ref": "#/$defs/stringList" },
         "examples": { "$ref": "#/$defs/stringList" },
         "guidance": { "$ref": "#/$defs/nonEmptyString" },

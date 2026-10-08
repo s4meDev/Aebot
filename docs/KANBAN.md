@@ -1,8 +1,18 @@
 # Kanban de implantação do AEBOT local
 
-Conferência inicial em 25/09/2026 dos documentos enviados por Pedro Lucas Botelho; progresso técnico atualizado em 01/10. Este quadro mantém os 16 cartões sugeridos no Word e acrescenta evidência técnica, lacunas e dependências. Não declara aprovação da coordenação nem implantação nos notebooks.
+Atualização 2.22.0: implementei preparação isolada e restauração validada do catálogo de Asfalto, sem gravar chats; a primeira comparação passou nove cenários e reduziu a primeira análise para cerca de 15 s, além do carregamento do modelo. Ampliei os casos de linguagem e corrigi dupla negação/conferência por citação. K09/K13 seguem em validação: inferência em poucos segundos para qualquer pergunta, notebook corporativo e homologação continuam pendentes. Veja [desempenho atual](DESEMPENHO-IA-LOCAL.md).
+
+Fechamento técnico desta revisão: 804 testes passaram e 1 foi ignorado; tipos e builds aprovados. O corpus completo de Asfalto passou em 48/49 casos, com uma reprovação não reconhecida em relato de duas etapas ausentes. Primeira chamada à IA: 19,1 s; maior tempo: 83 s. O teste de desenvolvimento com inferência real pela ponte passou em 20,8 s, mas o EXE novo foi bloqueado pelo Controle de Aplicativo. K09/K13/K14 permanecem abertos; não há distribuição homologada.
+
+Atualização de 08/10: perfil portátil sem certificado próprio preparado para teste supervisionado, interface redesenhada e comparação real entre três modelos. Isso avança K05/K07/K13, mas não conclui K14 nem libera implantação. Guia em [protótipo portátil](PROTOTIPO-PORTATIL.md); qualidade e latência ainda exigem medição no notebook de destino.
+
+Conferência inicial em 25/09/2026 dos documentos enviados por Pedro Lucas Botelho; progresso técnico atualizado em 07/10. Este quadro mantém os 16 cartões sugeridos no Word e acrescenta evidência técnica, lacunas e dependências. Não declara aprovação da coordenação nem implantação nos notebooks.
+
+Atualização de 07/10: priorizei o [protótipo de Repavimentação Asfalto](PROTOTIPO-ASFALTO.md), com regras, corpus próprio, contexto obrigatório e atalho local. A revisão 2.19.0 usa protocolo compacto e perfil de memória adaptado. As três paráfrases passaram no v15, após falhas dos perfis anteriores; a primeira levou cerca de 165 segundos. K09/K10/K13 permanecem em validação. Não há aceite de IA, instalador novo assinado ou implantação. Resultados na [revisão atual](STATUS-DESKTOP-2026-10-07-OTIMIZACAO.md); a [primeira etapa de 07/10](STATUS-DESKTOP-2026-10-07.md) permanece como histórico.
 
 ## Fontes e limites da conferência
+
+Atualização de desempenho em 08/10: o perfil 2.21.0 reduz o JSON e reutiliza o catálogo em RAM. Nove cenários passaram no v24; a conferência compacta passou em dois relatos combinados no v25. Perguntas simples quentes: aproximadamente 6–11 s; primeira leitura: 154–166 s; duas falhas com conferência: 42 s. K09/K13/K14 continuam sem homologação: poucos segundos em qualquer pergunta ainda não estão comprovados. Veja [medições e próximos passos](DESEMPENHO-IA-LOCAL.md).
 
 - `AEBOT_Kanban_Implantacao_IA_Local-1.docx`: conteúdo completo, tabelas e rodapé lidos. Sem comentários ou alterações controladas. A renderização visual não estava disponível nesta máquina.
 - `AEBOT_Rota_Desktop_IA_Local_Coordenacao-1.pptx`: conteúdo dos 14 slides e notas lido; SHA-256 idêntico ao da apresentação anterior, portanto não traz uma rota diferente.
@@ -40,7 +50,7 @@ Os prazos abaixo são estimativas originais do Word, em dias úteis, não novas 
 
 | ID e cartão | Etiqueta | Prazo original | Estado verificado | Evidência e o que falta |
 | --- | --- | --- | --- | --- |
-| K09 Extração estruturada | IA local | 5 dias | Em execução, entrega parcial | `EvidenceInterpretation.ts` distingue estados dos grupos do catálogo completo; gerações precisam citar os trechos. Classificatórias atômicas são preservadas e associações múltiplas têm conferência local. Falta inventário independente completo, validação do modelo e redução da latência. |
+| K09 Extração estruturada | IA local | 5 dias | Em execução, entrega parcial | Protocolo compacto do cliente local preserva todas as classificatórias atômicas e reconstrói citações dos trechos numerados. O contrato por evidências permanece como referência. Associações múltiplas têm conferência local. Falta inventário independente completo, validação do modelo e redução da latência. |
 | K10 Refatorar RuleEngine | Regras | 5 dias | Em validação, entrega parcial | `evaluateFacts` recebe os mapeamentos validados diretamente, sem reconstruir uma frase para procurar regras. Testes cobrem isolamento, citações, condições e agregação. Falta a ficha independente prevista em K09 e a validação completa do modelo. |
 | K11 Versionar regras | Governança | 3 dias | Em validação | Base versionada, `RuleRelease.ts` com responsável, vigência e alteração; importação preserva a versão anterior. Falta formalizar o responsável operacional e o canal confiável de distribuição. |
 | K12 Criar log local | Governança | 2 dias | Backlog com decisão pendente | `LocalData.ts` salva contagens e feedback voluntário, não uma trilha persistente por análise. O anexo propõe pergunta/fatos; a política atual proíbe persistir conversas. Definir campos, finalidade, retenção e acesso antes de implementar algo além das métricas atuais. |
@@ -49,7 +59,7 @@ Os prazos abaixo são estimativas originais do Word, em dias úteis, não novas 
 
 | ID e cartão | Etiqueta | Prazo original | Estado verificado | Evidência e o que falta |
 | --- | --- | --- | --- | --- |
-| K13 Testes automatizados | Qualidade | 5 dias | Em validação | Rodada final: 540 testes passaram e 1 foi ignorado. No perfil v12, os casos 89–90 passaram 2/2 conferindo também as classificatórias; polaridade e expressão extraídas ainda têm imprecisões. Resultados anteriores, limites e validações no [relatório de 01/10](STATUS-DESKTOP-2026-10-01.md); corpus completo do perfil final e gabarito operacional pendentes. |
+| K13 Testes automatizados | Qualidade | 5 dias | Em validação | Revisão de 07/10: 676 testes passaram e 1 foi ignorado. Três paráfrases passaram com Qwen v15, incluindo IDs classificatórios; latências de 164,5, 24,2 e 36,9 segundos. Essa amostra não homologa o corpus completo, a orientação ou o desempenho. Evidências na [revisão atual](STATUS-DESKTOP-2026-10-07-OTIMIZACAO.md). |
 | K14 Teste com analistas | Implantação | 10 dias | Backlog | Previsto para 5–10 pessoas. Depende de gabarito, qualidade, instalação e liberação da TI; não há evidência de piloto desktop concluído. |
 | K15 Ajustes pós-piloto | Qualidade | 5 dias | Backlog | Depende de observações do piloto. Correções técnicas atuais não contam como conclusão deste cartão. |
 | K16 Plano de rollout | Implantação | 3 dias | Pronto para fazer | Guias e pacote existem. Faltam responsáveis, três perfis de notebook, distribuição, suporte e recuperação definidos antes de planejar 60 instalações. |
@@ -73,7 +83,7 @@ Na amostra direta de seis casos de 25/09, a média geral foi aproximadamente 24 
 
 ## Próxima sequência proposta
 
-Prioridade técnica em 01/10: conferir fatos, polaridade e orientação, além dos IDs; reduzir a latência medida de aproximadamente dois minutos nos casos finais e validar no Latitude. O runtime assinado já está operacional. Em paralelo, definir certificado do AEBOT e autorizar a conferência com a TI conforme o [guia de liberação](ASSINATURA-E-LIBERACAO-WINDOWS.md). Experimentos anteriores perderam uma reprovação esperada; uma amostra nova sem esse erro não encerra a validação do corpus completo.
+Prioridade técnica em 07/10: ampliar a avaliação de fatos, polaridade e orientação, além dos IDs; medir primeira resposta e respostas seguintes no Latitude. O runtime assinado já está operacional, mas a latência da primeira resposta continua alta. Em paralelo, configurar credencial de assinatura do AEBOT e autorizar a conferência com a TI conforme o [guia de liberação](ASSINATURA-E-LIBERACAO-WINDOWS.md). A amostra nova sem divergências não encerra a validação do corpus completo.
 
 1. Revisar o gabarito com a referência operacional, incluindo hipóteses, presença versus ausência e respostas curtas a perguntas pendentes.
 2. Validar a entrada direta implementada e definir, a partir das lacunas observadas, a ficha independente de evidências. Não alterar a base de negócio só para encaixar frases do corpus.

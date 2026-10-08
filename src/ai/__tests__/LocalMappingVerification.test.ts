@@ -13,6 +13,28 @@ const interpretation: SemanticInterpretation = { mappings: [first, second].map((
 })), canonicalPrompt: 'Texto técnico', conversation: { answer: 'Narrativa anterior.' } };
 
 describe('conferência local de associações múltiplas', () => {
+  it('confere citações separadas da mesma regra e não deixa uma presença indevida cancelar a falta', () => {
+    const input: SemanticInterpretation = { mappings: [
+      { ...interpretation.mappings[0], sourceQuote: 'Evidência de outro momento presente.', stance: 'negated_or_present' },
+      { ...interpretation.mappings[0], sourceQuote: 'A evidência necessária não foi apresentada.', stance: 'asserted' },
+    ], canonicalPrompt: null };
+    const request = createLocalMappingVerification('Relato sintético.', service, rules, input, true)!;
+    expect(request.schema.required).toEqual(['0', '1']);
+    expect(request.prompt).toContain('negated_or_present');
+    expect(request.parse('{"0":false,"1":true}')?.mappings).toEqual([input.mappings[1]]);
+    expect(request.parse('{"0":true,"1":false}')?.mappings).toEqual([input.mappings[0]]);
+  });
+  it('reutiliza catálogo de sistema com chaves curtas sem aceitar confirmação livre', () => {
+    const short = createLocalMappingVerification('Relato sintético.', service, rules, interpretation, true)!;
+    const full = createLocalMappingVerification('Relato sintético.', service, rules, interpretation)!;
+    expect(short.prompt.length).toBeLessThan(full.prompt.length);
+    expect(short.prompt).toContain(first.id);
+    expect(short.prompt).not.toContain(first.description);
+    expect(short.parse('{"0":true,"1":false}')?.mappings.map((mapping) => mapping.ruleId)).toEqual([first.id]);
+    for (const value of ['{"0":true}', '{"0":true,"1":"true"}', '{"0":true,"1":false,"2":true}']) {
+      expect(short.parse(value)).toBeNull();
+    }
+  });
   it('usa conceitos dos dados para descartar associação vaga num fato simples', () => {
     const catalog = [{ ...first, relatedEvidence: ['documento de apoio'] }, { ...second, relatedEvidence: ['local da intervenção'] }];
     const input = { ...interpretation, mappings: interpretation.mappings.map((mapping) => ({ ...mapping, sourceQuote: 'Não apresentaram o documento de apoio.' })) };

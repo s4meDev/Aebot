@@ -46,6 +46,7 @@ describe('inicialização e diagnóstico do runtime', () => {
     expect(health.mock.calls[0][1].headers.Authorization).toBe(`Bearer ${token}`);
     expect(mocks.spawn.mock.calls[0][0]).toBe(path.join('recursos', assetsLock.runtime.directory, 'llama-server.exe'));
     const options = mocks.spawn.mock.calls[0][2];
+    expect(mocks.spawn.mock.calls[0][1]).toContain('--no-warmup');
     expect(options.env.LLAMA_API_KEY).toBe(token);
     expect(options).toMatchObject({ shell: false, windowsHide: true, stdio: 'ignore' });
     expect(runtime.stop()).toBe(true);

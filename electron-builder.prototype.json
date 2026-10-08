@@ -1,0 +1,12 @@
+{
+  "appId": "br.com.aebot.prototype",
+  "productName": "AEBOT Protótipo",
+  "files": ["desktop-dist/ui/**/*", "desktop-dist/main.cjs", "desktop-dist/preload.cjs", "desktop-dist/build-info.json", "package.json"],
+  "extraMetadata": { "main": "desktop-dist/main.cjs", "aebotDistributionProfile": "prototype" },
+  "extraResources": [{ "from": "desktop-resources", "to": "local-ai", "filter": ["runtime-b11160-mix-a6922cc/**/*", "assets-lock.json", "licenses/**/*"] }],
+  "asar": true,
+  "npmRebuild": false,
+  "afterPack": "scripts/package-public-catalog.mjs",
+  "forceCodeSigning": false,
+  "win": { "target": "dir", "executableName": "AEBOT-Prototipo", "signAndEditExecutable": false }
+}

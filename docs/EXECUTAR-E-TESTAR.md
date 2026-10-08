@@ -1,5 +1,7 @@
 # Executar e testar o AEBOT
 
+Para o protótipo 2.22.0, `npm.cmd run desktop:prototype` prepara uma pasta completa com EXE, runtime, modelo e catálogo previamente preparado, sem assinatura própria do AEBOT. Leia [o guia portátil](PROTOTIPO-PORTATIL.md) e [as medições de desempenho](DESEMPENHO-IA-LOCAL.md) antes de distribuir. O comando empresarial `desktop:package` mantém assinatura obrigatória.
+
 Este guia é para quem mantém o código no VS Code. Para o analista que recebeu um instalador, siga o [guia do desktop](DESKTOP-LOCAL.md); não é necessário instalar ferramentas de programação.
 
 ## 1. Preparar a máquina de desenvolvimento
@@ -14,6 +16,7 @@ npm.cmd --version
 git status --short
 npm.cmd ci
 npm.cmd run desktop:assets
+npm.cmd run desktop:catalog:prepare -- --service=repavimentacao-asfalto-ate-1m2
 ```
 
 `npm.cmd ci` instala as versões do `package-lock.json` e substitui a pasta de dependências instalada. Não altera o código do projeto. Faça isso ao preparar uma cópia limpa ou quando as dependências mudarem; não precisa repetir a cada abertura.
@@ -26,9 +29,15 @@ Use `npm.cmd`, e não mude a Execution Policy para `Unrestricted` apenas para ex
 
 ## 2. Abrir o aplicativo completo
 
+Neste workspace já preparado, também é possível abrir `Abrir-AEBOT.cmd` pela pasta do projeto. Ele usa o executável Electron existente e o build já compilado, sem reinstalar dependências. Não é instalador nem pacote autônomo. O recorte atual é [Repavimentação Asfalto](PROTOTIPO-ASFALTO.md); selecione o serviço conforme a OS.
+
 ```powershell
 npm.cmd run desktop:start
 ```
+
+Para avaliar Asfalto com IA real: `npm.cmd run desktop:evaluate -- --corpus=asfalto --offset=35 --limit=14 --prepared`. O recorte inclui paráfrases, negativos, continuações e vários fatos. O padrão usa o protocolo curto do aplicativo; `--compact` compara com o anterior. Sem `--prepared`, mede leitura fria sem restauração. O relatório separa carga do modelo, restauração, leitura, geração e tokens em cache, além de conclusão, regras e falhas técnicas. Não confunda inferência real com matching lexical ou primeiro uso com perguntas em cache.
+
+`desktop:catalog:prepare` é tarefa do mantenedor, não do analista. Pode repetir `--service=ID` para preparar outros catálogos; o índice publicado contém apenas a seleção daquela execução. Não recebe pergunta ou histórico. Refaça a preparação antes do build/pacote se mudar o catálogo ou a instrução local. A importação de regras no aplicativo não usa um cache antigo: se o prefixo mudar, faz a leitura normal. Não salve slots do runtime durante um chat.
 
 O comando verifica o TypeScript do desktop, compila os arquivos e abre o Electron. Aguarde o carregamento da IA nas configurações. Selecione o serviço e use perguntas sintéticas, sem dados pessoais, nesta fase.
 
@@ -37,6 +46,10 @@ Não há recarga automática do código nesse comando. Feche a janela e execute 
 Em desenvolvimento, o aplicativo normal utiliza o perfil AEBOT do usuário do Windows. Não use essa execução para importar pacotes de teste sobre uma base pessoal importante sem preservar seus dados. O comando `desktop:smoke` usa um perfil separado.
 
 ## 3. Verificar o código antes da entrega
+
+Para conferir também uma paráfrase com IA real pela ponte do aplicativo, execute `npm.cmd run desktop:smoke -- --aebot-smoke-semantic`. O resultado fica em `desktop-release/desktop-smoke.json`, com `packaged: false`; não valida o EXE distribuído. Nesta revisão passou com uma chamada real e 20,8 segundos de análise. O teste normal sem essa flag continua determinístico e não inicia o modelo.
+
+O EXE 2.22.0 gerado foi bloqueado pelo Controle de Aplicativo do Windows. Não altere proteções para abrir; a distribuição exige resolver a assinatura/liberação pelo canal autorizado. Testes de desenvolvimento aprovados não substituem essa etapa nem a homologação da IA.
 
 ```powershell
 npm.cmd test
@@ -86,7 +99,11 @@ O corpus tem 100 casos técnicos propostos de Cavalete. A rodada completa pode d
 
 A rodada é salva em `desktop-release/evaluations/<data>.json` antes de carregar o runtime e a cada caso concluído. `local-evaluation.json` contém a rodada mais recente, inclusive uma falha de inicialização com zero casos. Confira `status` (`starting`, `running`, `completed` ou `failed`), `completed`, `expectedCases` e `failure.phase`. Uma interrupção abrupta pode deixar `starting` ou `running`; não significa conclusão. Casos já salvos são preservados, mas o caso em andamento pode não estar no arquivo. Relatórios anteriores a 29/09 não possuem todos esses campos.
 
-O relatório contém versões, hashes do modelo, do recorte do corpus e do avaliador compilado, CPU/RAM da máquina, tempo de inicialização, divergências, chamadas, tokens reportados e latências. O hash do avaliador distingue alterações de código mesmo antes de mudar a versão do pacote. Não inclui nome do computador, usuário ou conversas reais. A memória livre é uma fotografia antes e depois do carregamento, não o pico de RAM; a medição posterior fica nula quando o runtime não inicia. `--inspect-facts` não imprime resposta natural, raciocínio ou credenciais; use apenas o corpus sintético previsto. Os experimentos não mudam o perfil padrão do aplicativo.
+O relatório contém versões, hashes do modelo, do recorte do corpus e do avaliador compilado, CPU/RAM da máquina, tempo de inicialização, divergências, chamadas, tokens reportados e latências. Também registra `interpretationProtocol` e `runtimeConfiguration`, para conferir o protocolo e o contexto realmente usados. O hash do avaliador distingue alterações de código mesmo antes de mudar a versão do pacote. Não inclui nome do computador, usuário ou conversas reais. A memória livre é uma fotografia antes e depois do carregamento, não o pico de RAM; a medição posterior fica nula quando o runtime não inicia. `--inspect-facts` não imprime resposta natural, raciocínio ou credenciais; use apenas o corpus sintético previsto. Os experimentos não mudam o perfil padrão do aplicativo.
+
+O cliente local padrão usa protocolo curto com IDs legíveis, cache de atenção q8, flash attention e nenhuma reserva de slots antigos em RAM. Em máquinas abaixo de 12 GB, o contexto é 8.192 tokens; nas demais, 16.384. O aplicativo 2.22.0/base 2.15.3 restaura a leitura pública quando houver recurso compatível. Sem `--prepared`, o avaliador mede leitura fria; com a opção, mede o caminho preparado do aplicativo. A carga inicial do modelo fica separada da primeira análise. Compare rodadas com a mesma máquina e configuração; resultados anteriores são históricos.
+
+Para comparar candidatos, prepare somente uma vez com `node scripts/prepare-model-candidate.mjs qwen3instruct` (ou `qwen35`/`qwen35lite`) e avalie com `npm.cmd run desktop:evaluate -- --corpus=asfalto --candidate=qwen3instruct --offset=35 --limit=7 --inspect-facts`. A seleção é técnica e não muda o lock do aplicativo. Não abra o AEBOT ao mesmo tempo da avaliação.
 
 Os tempos dos casos com chamada à IA ficam separados dos casos sem chamada. Isso evita esconder a demora do modelo atrás das respostas rápidas do motor. `medianMs` é o tempo central; `p95Ms` usa a posição correspondente a 95% das medições ordenadas. Em amostras pequenas, pode ser o maior tempo observado, não uma previsão estatística confiável.
 
@@ -99,8 +116,11 @@ Casos podem declarar `expectedClassifyingRuleIds`: nesses casos, uma classificat
 Após validar o código e os arquivos offline, configurar a assinatura real com a TI e autorizar a conferência PowerShell conforme o [guia de liberação](ASSINATURA-E-LIBERACAO-WINDOWS.md):
 
 ```powershell
+npm.cmd run desktop:signing:check
 npm.cmd run desktop:package
 ```
+
+`desktop:signing:check` verifica somente a presença de configuração e a obrigatoriedade da assinatura. Não comprova validade, acesso à chave privada ou identidade do publicador. Sem configuração, o empacotamento para antes de copiar arquivos ou gerar um Setup novo. Com a credencial disponível, o builder e a conferência posterior ainda precisam passar.
 
 Entregue os quatro arquivos indicados no [README](../README.md#rota-atual-desktop-offline). Um hash confere integridade, mas não prova a origem de um pacote se o arquivo de hashes também veio de uma fonte não confiável. Use o canal aprovado pela TI.
 

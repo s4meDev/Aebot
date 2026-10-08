@@ -54,6 +54,7 @@ describe('ServiceCatalogService', () => {
           summary: 'Catálogo atualizado no servidor.',
           insights: ['Diretriz central'],
           ruleCount: 4,
+          decisionPolicy: 'most_severe_applicable',
         }],
       }), { status: 200 })));
 
@@ -62,7 +63,7 @@ describe('ServiceCatalogService', () => {
       type: 'success',
       source: 'backend',
       ruleStoreVersion: '3.0.0',
-      services: [expect.objectContaining({ id: 'servico-central', businessRules: [] })],
+      services: [expect.objectContaining({ id: 'servico-central', businessRules: [], decisionPolicy: 'most_severe_applicable' })],
     });
     expect(storage.get(STORAGE_KEYS.BACKEND_RULE_STORE_VERSION, '')).toBe('3.0.0');
   });

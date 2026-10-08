@@ -3,6 +3,7 @@ import type {
   EvaluationConflict,
   MatchedRule,
   RuleConclusionMeta,
+  ServiceDecisionPolicy,
 } from '../types';
 
 function compareRules(
@@ -28,14 +29,22 @@ function compareRules(
 
 export function resolveConflicts(
   rules: MatchedRule[],
-  conclusions: RuleConclusionMeta[]
+  conclusions: RuleConclusionMeta[],
+  decisionPolicy: ServiceDecisionPolicy = 'ranked'
 ): { rankedRules: MatchedRule[]; primaryRule: MatchedRule | null; conflicts: EvaluationConflict[] } {
   const conclusionPriority = new Map(
     conclusions.map((conclusion) => [conclusion.severity, conclusion.priority])
   );
-  const rankedRules = [...rules].sort((left, right) =>
-    compareRules(left, right, conclusionPriority)
-  );
+  // Só recebe regras que passaram pelos fatos/condições. Não usa essa política
+  // para promover regras apenas relacionadas ao assunto a uma reprovação.
+  const rankedRules = [...rules].sort((left, right) => {
+    if (decisionPolicy === 'most_severe_applicable') {
+      const severity = ((left.severity ? conclusionPriority.get(left.severity) : undefined) ?? Number.MAX_SAFE_INTEGER)
+        - ((right.severity ? conclusionPriority.get(right.severity) : undefined) ?? Number.MAX_SAFE_INTEGER);
+      if (severity) return severity;
+    }
+    return compareRules(left, right, conclusionPriority);
+  });
   const primaryRule = rankedRules[0] ?? null;
   const decisions = [...new Set(
     rankedRules
@@ -51,7 +60,9 @@ export function resolveConflicts(
             decisions,
             winnerRuleId: primaryRule.id,
             resolution:
-              'Prevaleceu a regra mais compatível com os fatos, específica e relevante; prioridade e gravidade foram usadas como desempate.',
+              decisionPolicy === 'most_severe_applicable'
+                ? 'Entre as regras realmente aplicáveis, prevaleceu a conclusão mais grave, conforme a política cadastrada do serviço.'
+                : 'Prevaleceu a regra mais compatível com os fatos, específica e relevante; prioridade e gravidade foram usadas como desempate.',
           },
         ]
       : [];

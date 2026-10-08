@@ -737,12 +737,14 @@ describe('GeminiProvider', () => {
       humanizeDeterministicResponses: false,
     }).generateResponse('', 'interna', service, history);
 
-    expect(modelClient.request).toHaveBeenCalledTimes(1);
+    // O contexto e os grupos cadastrados já resolvem a resposta curta.
+    // Evitar a inferência aqui reduz demora sem mudar a regra da equipe interna.
+    expect(modelClient.request).not.toHaveBeenCalled();
     expect(completed.evaluation.contextApplied).toBe(true);
     expect(completed.decision).toBe('Não Conforme');
     expect(completed.evaluation.primaryRule?.id).toBe('RULE-PAV-AFERICAO-INTERNA-01');
     expect(completed.content).not.toContain('interna ou terceirizada?');
-    expect(completed.content).toContain('Sendo equipe interna');
+    expect(completed.content).toMatch(/retrabalho/i);
     expect(completed.content).not.toContain('Não foi possível recomendar');
   });
 

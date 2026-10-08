@@ -1,9 +1,10 @@
 import { app, BrowserWindow, dialog, ipcMain, session, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { ModelRuntime } from './ModelRuntime';
 import { LocalModelClient } from './LocalModelClient';
+import { PublicCatalogCache } from './PublicCatalogCache';
 import { AebotAnalysisService } from '../src/services/AnalysisService';
 import { RuleEngine } from '../src/services/RuleEngine';
 import { parseAnalyzeRequest } from '../src/api/contracts';
@@ -12,18 +13,25 @@ import type { DesktopStatus } from '../src/desktop/contracts';
 import { atomicJson, LocalData, preservePreviousRules, readJsonFile } from './LocalData';
 import { parseRuleRelease } from './RuleRelease';
 import { smokeDesktop } from './smoke';
+import assetsLock from '../desktop-resources/assets-lock.json';
 
 app.setName('AEBOT');
 const smoke = !app.isPackaged && process.argv.includes('--aebot-smoke');
-if (smoke) {
+const packageCheck = app.isPackaged && process.argv.includes('--aebot-package-check');
+// Inferência sintética em desenvolvimento não equivale a testar o EXE distribuído.
+const semanticSmoke = smoke && process.argv.includes('--aebot-smoke-semantic');
+const realInferenceCheck = packageCheck || semanticSmoke;
+const testing = smoke || packageCheck;
+if (testing) {
   // O teste não disputa o perfil aberto nem altera métricas de um analista.
-  const profile = path.join(app.getAppPath(), 'desktop-release', 'smoke-profile');
+  const profile = packageCheck ? mkdtempSync(path.join(app.getPath('temp'), 'aebot-package-check-'))
+    : path.join(app.getAppPath(), 'desktop-release', 'smoke-profile');
   mkdirSync(profile, { recursive: true });
   app.setPath('userData', profile);
 }
 let runtime: ModelRuntime;
 let window: BrowserWindow | null = null;
-if (!app.requestSingleInstanceLock()) { if (smoke) app.exit(1); else app.quit(); }
+if (!app.requestSingleInstanceLock()) { if (testing) app.exit(1); else app.quit(); }
 else void app.whenReady().then(async () => {
   const resources = app.isPackaged ? path.join(process.resourcesPath, 'local-ai')
     : path.join(app.getAppPath(), 'desktop-resources');
@@ -44,14 +52,16 @@ else void app.whenReady().then(async () => {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') rulesWarning = 'Pacote local inválido ou antigo. Usando a base embarcada; revise com o responsável.';
   }
   runtime = new ModelRuntime(resources);
+  const publicCatalog = new PublicCatalogCache(path.join(resources, 'catalog-cache'), runtime.connection, runtime.resourceProfile);
   const createAnalysis = () => new AebotAnalysisService({
     // Casos já conclusivos não precisam esperar o modelo para reescrever a resposta.
-    modelClient: new LocalModelClient(runtime.connection), humanizeDeterministicResponses: false,
+    modelClient: new LocalModelClient(runtime.connection, { prepareSystemPrefix: instruction => publicCatalog.restore(instruction) }),
+    humanizeDeterministicResponses: false,
   }, engine);
   let analysis = createAnalysis();
   let busy = false;
   const status = (): DesktopStatus => ({ state: runtime.state, message: runtime.message,
-    model: 'Qwen3-4B · Q4_K_M · CPU', ruleVersion: engine.getRuleStoreVersion(), rulesWarning,
+    model: `${assetsLock.model.name.replace(/\.gguf$/, '')} · CPU`, ruleVersion: engine.getRuleStoreVersion(), rulesWarning,
     analyses: data.summary.analyses, modelCalls: data.summary.modelCalls, modelErrors: data.summary.modelErrors,
     averageDurationMs: data.summary.analyses ? Math.round(data.summary.durationMs / data.summary.analyses) : null });
   const indexFile = path.join(app.getAppPath(), 'desktop-dist', 'ui', 'index.html');
@@ -124,18 +134,34 @@ else void app.whenReady().then(async () => {
     // A interface só abre recursos empacotados. A inferência roda fora do renderer.
     callback({ cancel: !details.url.startsWith('file://') && !details.url.startsWith('devtools://') });
   });
-  window = new BrowserWindow({ width: 860, height: 900, minWidth: 420, minHeight: 600, show: !smoke,
+  window = new BrowserWindow({ width: 860, height: 900, minWidth: 420, minHeight: 600, show: !testing,
     backgroundColor: '#090909', title: 'AEBOT · Análise local', autoHideMenuBar: true,
     webPreferences: { preload: path.join(app.getAppPath(), 'desktop-dist', 'preload.cjs'),
+      // A janela oculta do teste precisa renderizar a seleção antes da captura.
+      backgroundThrottling: !testing,
       nodeIntegration: false, contextIsolation: true, sandbox: true, webSecurity: true, spellcheck: false } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
   await window.loadFile(indexFile);
-  if (smoke) await smokeDesktop(window);
+  // QA visual explícito: a captura deve mostrar um frame real, não a tela antiga de carregamento.
+  if (smoke && process.argv.includes('--aebot-smoke-visual')) window.showInactive();
+  if (realInferenceCheck) {
+    // Carrega o GGUF real no teste explícito, sem usar o perfil do analista.
+    // Só packageCheck confere os arquivos da distribuição; desenvolvimento fica identificado no relatório.
+    await atomicJson(`desktop-release/${packageCheck ? 'packaged' : 'desktop'}-smoke.json`, { status: 'starting',
+      packaged: packageCheck, appVersion: app.getVersion(),
+      model: assetsLock.model.name, startedAt: new Date().toISOString() });
+    await runtime.start();
+    if (runtime.state !== 'ready') throw new Error('Runtime do teste não iniciou.');
+  }
+  if (testing) await smokeDesktop(window, () => runtime.stop(), packageCheck, realInferenceCheck);
   else void runtime.start();
-}).catch(() => {
+}).catch(async () => {
   runtime?.stop();
-  if (!smoke) dialog.showErrorBox('AEBOT não iniciou', 'Não foi possível abrir o aplicativo. Solicite à TI a conferência da instalação.');
+  if (realInferenceCheck) await atomicJson(`desktop-release/${packageCheck ? 'packaged' : 'desktop'}-smoke.json`, {
+    status: 'failed', packaged: packageCheck,
+    testedAt: new Date().toISOString(), message: 'Inicialização ou conferência do aplicativo falhou.' }).catch(() => undefined);
+  if (!testing) dialog.showErrorBox('AEBOT não iniciou', 'Não foi possível abrir o aplicativo. Solicite à TI a conferência da instalação.');
   app.exit(1);
 });
 app.on('second-instance', () => { window?.restore(); window?.focus(); });

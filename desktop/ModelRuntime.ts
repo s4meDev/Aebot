@@ -3,11 +3,20 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:net';
-import { availableParallelism } from 'node:os';
+import { availableParallelism, totalmem } from 'node:os';
 import assetsLock from '../desktop-resources/assets-lock.json';
 import { verifyModelIntegrity } from './ModelIntegrity';
 
+/** Em 8 GB, uma janela menor evita reservar memória de atenção que não será usada. */
+export function runtimeResourceProfile(memoryBytes: number) {
+  if (!Number.isFinite(memoryBytes) || memoryBytes <= 0) throw new Error('Memória física inválida.');
+  return Object.freeze({ contextTokens: memoryBytes < 12 * 1024 ** 3 ? 8192 : 16384, kvCache: 'q8_0',
+    flashAttention: 'on', cacheRamMiB: 0, batchTokens: 512, microBatchTokens: 128, warmup: false });
+}
+
 export class ModelRuntime {
+  /** Configuração fixa e registrada nas avaliações, para comparar memória e latência. */
+  readonly resourceProfile: ReturnType<typeof runtimeResourceProfile>;
   private child?: ChildProcess;
   private connectionValue: { url: string; token: string } | null = null;
   // Impede que uma inicialização antiga publique conexão depois de um reinício.
@@ -15,7 +24,12 @@ export class ModelRuntime {
   state: 'starting' | 'ready' | 'unavailable' = 'unavailable';
   message = 'IA local ainda não iniciada.';
 
-  constructor(private readonly resources: string, private readonly reasoningBudget = 512) {
+  constructor(private readonly resources: string, private readonly reasoningBudget = 512, memoryBytes = totalmem(),
+    private readonly modelAsset: { name: string; sha256: string; size: number } = assetsLock.model,
+    private readonly slotDirectory = path.join(resources, 'catalog-cache')) {
+    if (!/^[\w.-]+\.gguf$/.test(modelAsset.name) || !/^[a-f0-9]{64}$/.test(modelAsset.sha256) ||
+        !Number.isSafeInteger(modelAsset.size) || modelAsset.size <= 0) throw new Error('Identidade do modelo inválida.');
+    this.resourceProfile = runtimeResourceProfile(memoryBytes);
     if (!Number.isSafeInteger(reasoningBudget) || reasoningBudget < 32 || reasoningBudget > 512) {
       throw new Error('O orçamento de raciocínio deve estar entre 32 e 512 tokens.');
     }
@@ -28,7 +42,7 @@ export class ModelRuntime {
     const generation = this.generation;
     // A versão nova fica ao lado da antiga, sem sobrescrever um runtime em uso.
     const executable = path.join(this.resources, assetsLock.runtime.directory, 'llama-server.exe');
-    const model = path.join(this.resources, 'models', 'Qwen3-4B-Q4_K_M.gguf');
+    const model = path.join(this.resources, 'models', this.modelAsset.name);
     if (!existsSync(executable) || !existsSync(model)) {
       this.message = 'Pacote de IA incompleto. Solicite à TI o instalador com runtime e modelo Qwen.';
       return;
@@ -36,7 +50,7 @@ export class ModelRuntime {
     this.state = 'starting';
     this.message = 'Conferindo o modelo e carregando a IA neste computador…';
     try {
-      try { await verifyModelIntegrity(model, assetsLock.model); }
+      try { await verifyModelIntegrity(model, this.modelAsset); }
       catch {
         if (generation === this.generation) {
           this.state = 'unavailable';
@@ -57,7 +71,17 @@ export class ModelRuntime {
       const token = randomBytes(32).toString('hex');
       // A porta é privada deste processo; não é o backend online legado.
       const child = spawn(executable, ['--model', model, '--host', '127.0.0.1', '--port', String(port),
-        '--ctx-size', '16384', '--parallel', '1', '--threads', String(Math.max(1, Math.min(6, availableParallelism() - 2))),
+        '--ctx-size', String(this.resourceProfile.contextTokens), '--no-context-shift', '--no-warmup',
+        // Não roda benchmark sintético na abertura. A leitura pública preparada
+        // pode ser restaurada depois, sem salvar perguntas do analista.
+        '--parallel', '1', '--threads', String(Math.max(1, Math.min(6, availableParallelism() - 2))),
+        // Reduz a memória da atenção. Relato longo demais deve falhar, não ser cortado silenciosamente.
+        // Sem cache de slots antigos: não duplicar prompts grandes na RAM do notebook.
+        '--flash-attn', this.resourceProfile.flashAttention,
+        '--cache-type-k', this.resourceProfile.kvCache, '--cache-type-v', this.resourceProfile.kvCache,
+        '--cache-ram', String(this.resourceProfile.cacheRamMiB),
+        '--batch-size', String(this.resourceProfile.batchTokens), '--ubatch-size', String(this.resourceProfile.microBatchTokens),
+        ...(existsSync(this.slotDirectory) ? ['--slot-save-path', path.resolve(this.slotDirectory)] : []),
         '--n-gpu-layers', '0', '--no-webui', '--jinja', '--log-disable',
         '--reasoning-format', 'deepseek', '--reasoning-budget', String(this.reasoningBudget)], {
         windowsHide: true, stdio: 'ignore', shell: false,

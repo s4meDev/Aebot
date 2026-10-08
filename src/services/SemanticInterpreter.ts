@@ -198,7 +198,11 @@ export function parseSemanticInterpretation(
       // A IA não pode transformar uma consulta ou hipótese explícita em relato real.
       // Usa a pergunta completa: a citação escolhida pode ter omitido o "?" ou "se".
       let stance: SemanticMappingStance = queryIntent === 'pergunta_informativa' ? 'informational'
-        : queryIntent === 'hipotese' ? 'hypothetical' : source.stance as SemanticMappingStance;
+        : queryIntent === 'hipotese' ? 'hypothetical'
+          : queryIntent === 'relato_afirmativo' && source.stance !== 'negated_or_present'
+            ? 'asserted' : source.stance as SemanticMappingStance;
+      // O modelo pode entender uma intenção ambígua, mas não transformar um
+      // fato explicitamente relatado em uma consulta e apagar sua consequência.
       if (stance !== 'hypothetical' && stance !== 'informational') {
         if (sourcePolarity === 'absence') stance = 'asserted';
         if (sourcePolarity === 'present' && rulePolarity === 'absence') {
@@ -216,7 +220,9 @@ export function parseSemanticInterpretation(
 
     const uniqueMappings = [...new Map(
       mappings.map((mapping) => [
-        `${mapping.ruleId}:${mapping.canonicalExpression}:${mapping.stance}`,
+        // Só elimina a repetição da MESMA citação. Duas frases diferentes
+        // precisam continuar separadas para a conferência de cada fato.
+        `${mapping.ruleId}:${mapping.canonicalExpression}:${mapping.stance}:${mapping.sourceQuote}`,
         mapping,
       ])
     ).values()];

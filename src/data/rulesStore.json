@@ -1,5 +1,5 @@
 {
-  "version": "2.14.0",
+  "version": "2.15.3",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -297,17 +297,21 @@
     {
       "id": "repavimentacao-asfalto-acima-1m2",
       "name": "Repavimentação - Asfalto Acima de 1m²",
+      "decisionPolicy": "most_severe_applicable",
+      "suggestedQuestions": ["Sem foto antes e durante, como fica?", "A OS não tem origem. O que corrigir?", "A trena impede conferir a metragem. Pode aprovar?", "Não tem aferição. A equipe muda a conclusão?"],
       "category": "Parametrização Operacional",
       "summary": "Recomposição de pavimento asfáltico em área superior a 1 m².",
-      "insights": ["A análise deve conferir necessidade, base, emulsão, massa, espessura, compactação, medição e finalização."],
+      "insights": ["Confira antes, durante e depois; antes + durante ausentes ou depois ausente reprovam.", "Verifique a origem no Field/SCAE; sem origem, registre Não Conforme e confira a troca para 318033.", "Não confunda aferição da origem com a do serviço atual; VCG altera a pontuação da origem.", "Confira local, material, medição, acabamento, duplicidade, formulário, adicionais e segurança."],
       "analysisStatus": "active"
     },
     {
       "id": "repavimentacao-asfalto-ate-1m2",
       "name": "Repavimentação - Asfalto Até 1m²",
+      "decisionPolicy": "most_severe_applicable",
+      "suggestedQuestions": ["Sem foto depois da execução.", "A medição não bate com as fotos.", "O serviço já foi feito em outra OS no Field.", "Faltou lançar o adicional posterior necessário."],
       "category": "Parametrização Operacional",
       "summary": "Recomposição de pavimento asfáltico em área de até 1 m².",
-      "insights": ["A análise deve conferir necessidade, base, emulsão, massa, espessura, compactação, medição e finalização."],
+      "insights": ["Confira antes, durante e depois; antes + durante ausentes ou depois ausente reprovam.", "Verifique a origem no Field/SCAE; sem origem, registre Não Conforme e confira a troca para 318033.", "Não confunda aferição da origem com a do serviço atual; VCG altera a pontuação da origem.", "Confira local, material, medição, acabamento, duplicidade, formulário, adicionais e segurança."],
       "analysisStatus": "active"
     },
     {
@@ -2223,6 +2227,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-CONTEXTO-01",
+      "negativeSignals": ["OS de origem", "ordem de serviço de origem"],
       "serviceId": "reaterro-valas-asfalto",
       "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra","repavimentacao-asfalto-acima-1m2","repavimentacao-asfalto-ate-1m2","repavimentacao-bloco-paralelo","repavimentacao-calcada","repavimentacao-ceramica","repavimentacao-concreto","repavimentacao-muro-alvenaria"],
       "title": "Tipo de equipe necessário quando falta aferição da vala",
@@ -2233,7 +2238,7 @@
       "relatedEvidence": ["aferição da vala","comprimento da vala","largura da vala","medição da vala"],
       "conditionKeywords": ["falta aferição da vala","faltou aferição da vala","sem aferição da vala","não mostrou a aferição da vala","não aferiram a vala","vala sem medição"],
       "equivalentExpressions": ["não mediram a vala","não mostrou comprimento e largura da vala","não tem foto aferindo a vala","faltou medir a vala"],
-      "exceptions": ["equipe interna","equipe própria","funcionário da empresa","equipe terceirizada","equipe terceira","empreiteira","contratada","adicional executado","desdobro executado"],
+      "exceptions": ["equipe interna","equipe própria","funcionário da empresa","equipe terceirizada","equipe terceira","empreiteira","contratada","interna","terceirizada","adicional executado","desdobro executado"],
       "examples": ["A OS de repavimentação está sem aferição da vala. O que faço?"],
       "message": "A falta de aferição foi identificada, mas a ação muda conforme o vínculo da equipe executora.",
       "guidance": "Informe o tipo de equipe antes de concluir: equipe interna gera Não Conforme com retrabalho; equipe terceirizada gera Reprovação.",
@@ -2242,6 +2247,8 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-INTERNA-01",
+      "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio","interna"]}],
+      "negativeSignals": ["OS de origem", "ordem de serviço de origem"],
       "serviceId": "reaterro-valas-asfalto",
       "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra","repavimentacao-asfalto-acima-1m2","repavimentacao-asfalto-ate-1m2","repavimentacao-bloco-paralelo","repavimentacao-calcada","repavimentacao-ceramica","repavimentacao-concreto","repavimentacao-muro-alvenaria"],
       "title": "Falta de aferição em serviço original executado por equipe interna",
@@ -2258,7 +2265,7 @@
         "minimumGroups": {
           "count": 2,
           "groups": [
-            {"label": "equipe interna", "expressions": ["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio"]},
+            {"label": "equipe interna", "expressions": ["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio","interna"]},
             {"label": "aferição ausente", "expressions": ["sem aferição","sem mostrar a aferição","falta aferição","faltou aferição","não mostrou a aferição","não aferiu","não aferiram","não mediu a vala","faltou medir a vala","vala sem medição"]}
           ]
         }
@@ -2270,6 +2277,8 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-TERCEIRA-01",
+      "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe terceirizada","equipe terceira","terceirizada","empreiteira","contratada"]}],
+      "negativeSignals": ["OS de origem", "ordem de serviço de origem"],
       "serviceId": "reaterro-valas-asfalto",
       "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra","repavimentacao-asfalto-acima-1m2","repavimentacao-asfalto-ate-1m2","repavimentacao-bloco-paralelo","repavimentacao-calcada","repavimentacao-ceramica","repavimentacao-concreto","repavimentacao-muro-alvenaria"],
       "title": "Falta de aferição em serviço original executado por equipe terceirizada",
@@ -2327,6 +2336,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-ADICIONAL-INTERNA-01",
+      "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio","interna"]},{"label":"posição do serviço confirmada","expressions":["adicional executado","desdobro executado","no executado"]},{"label":"serviço de pavimento confirmado","expressions":["reaterro","repavimentação"]}],
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
       "title": "Adicional executado sem aferição por equipe interna",
@@ -2357,6 +2367,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-ADICIONAL-TERCEIRA-01",
+      "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe terceirizada","equipe terceira","terceirizada","empreiteira","contratada"]},{"label":"posição do serviço confirmada","expressions":["adicional executado","desdobro executado","no executado"]},{"label":"serviço de pavimento confirmado","expressions":["reaterro","repavimentação"]}],
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
       "title": "Adicional executado sem aferição por equipe terceirizada",
@@ -2384,6 +2395,759 @@
       "message": "O adicional executado pela equipe terceirizada não possui aferição e precisa ser transferido para execução posterior.",
       "guidance": "Registre Não Conforme, remova o Reaterro ou a Repavimentação do Adicional Executado e lance o mesmo serviço no Adicional Posterior para execução futura com aferição.",
       "sourceReferences": ["Regra de análise informada pelo responsável do projeto em 31/08/2026"]
+    },
+    {
+      "id": "RULE-ASF-FOTO-ANTES-01",
+      "examples": ["sem foto antes"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Falta de foto antes da repavimentação",
+      "description": "As fotos antes mostram a condição inicial da vala ou do local, antes de começar o trabalho. Se esse estado inicial não foi registrado, pontue qualidade fotográfica.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "sem foto antes",
+        "faltou foto antes",
+        "não apresentou foto antes"
+      ],
+      "message": "A ausência de foto antes deve ser pontuada por qualidade fotográfica.",
+      "guidance": "Registre Não Conforme por Qualidade Fotográfica: falta da foto antes.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "factGroup": "asfalto-antes-ausente",
+      "relatedEvidence": [
+        "foto antes",
+        "foto antes da execução"
+      ],
+      "positiveSignals": [
+        "sem",
+        "falta",
+        "faltou",
+        "ausente",
+        "não mostrou",
+        "não apresentou"
+      ],
+      "negativeSignals": [
+        "foto antes apresentada",
+        "foto antes presente",
+        "não faltou foto antes",
+        "não falta foto antes"
+      ],
+      "equivalentExpressions": [
+        "não tem foto antes",
+        "não mostrou foto antes"
+      ]
+    },
+    {
+      "id": "RULE-ASF-FOTO-DURANTE-01",
+      "examples": ["sem foto durante"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Falta de foto durante da repavimentação",
+      "description": "A foto durante comprova o trabalho acontecendo, como a aplicação do material de pavimentação. Sem esse registro da execução em andamento, pontue qualidade fotográfica.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "sem foto durante",
+        "faltou foto durante",
+        "não apresentou foto durante"
+      ],
+      "message": "A ausência de foto durante deve ser pontuada por qualidade fotográfica.",
+      "guidance": "Registre Não Conforme por Qualidade Fotográfica: falta da foto durante.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "factGroup": "asfalto-durante-ausente",
+      "relatedEvidence": [
+        "foto durante",
+        "foto durante da execução"
+      ],
+      "positiveSignals": [
+        "sem",
+        "falta",
+        "faltou",
+        "ausente",
+        "não mostrou",
+        "não apresentou"
+      ],
+      "negativeSignals": [
+        "foto durante apresentada",
+        "foto durante presente",
+        "não faltou foto durante",
+        "não falta foto durante"
+      ],
+      "equivalentExpressions": [
+        "não tem foto durante",
+        "não mostrou foto durante"
+      ]
+    },
+    {
+      "id": "RULE-ASF-FOTO-DEPOIS-01",
+      "examples": ["sem foto depois"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Falta de foto depois da repavimentação",
+      "description": "As fotos depois mostram como o pavimento ficou pronto, após terminar o trabalho. Sem registro desse estado final, o resultado da execução não foi comprovado.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "sem foto depois",
+        "faltou foto depois",
+        "não apresentou foto depois",
+        "faltar foto depois"
+      ],
+      "message": "A ausência de foto depois impede comprovar o resultado final.",
+      "guidance": "Reprove por não evidenciar a execução do serviço.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "factGroup": "asfalto-depois-ausente",
+      "relatedEvidence": [
+        "foto depois",
+        "foto depois da execução",
+        "resultado final",
+        "foto final"
+      ],
+      "positiveSignals": [
+        "sem",
+        "falta",
+        "faltou",
+        "ausente",
+        "não mostrou",
+        "não apresentou"
+      ],
+      "negativeSignals": [
+        "foto depois apresentada",
+        "foto depois presente",
+        "não faltou foto depois",
+        "não falta foto depois"
+      ],
+      "equivalentExpressions": [
+        "não tem foto depois",
+        "não mostrou foto depois"
+      ]
+    },
+    {
+      "id": "RULE-ASF-FOTOS-COMBINADAS-01",
+      "examples": ["sem foto antes e durante"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Ausência de antes e durante da repavimentação",
+      "description": "Sem fotos antes e durante, não foi evidenciada a execução do serviço.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "sem foto antes e durante",
+        "sem foto antes nem durante"
+      ],
+      "message": "Sem fotos antes e durante, não foi evidenciada a execução do serviço.",
+      "guidance": "Reprove por Não evidenciou a execução do serviço.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "matchPolicy": {
+        "minimumMatchedFactGroups": {
+          "count": 2,
+          "groups": [
+            "asfalto-antes-ausente",
+            "asfalto-durante-ausente"
+          ]
+        }
+      }
+    },
+    {
+      "id": "RULE-ASF-FOTO-QUALIDADE-01",
+      "examples": ["fotos tremidas"],
+      "positiveSignals": ["tremidas", "embaçadas", "borradas", "sem nitidez"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Má qualidade fotográfica",
+      "description": "Fotos tremidas ou sem nitidez devem ser pontuadas por qualidade fotográfica.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "fotos tremidas",
+        "fotos sem nitidez",
+        "fotos de má qualidade",
+        "foto embaçada"
+      ],
+      "message": "Fotos tremidas ou sem nitidez devem ser pontuadas por qualidade fotográfica.",
+      "guidance": "Registre Não Conforme por fotos que não estão nítidas/fotos tremidas; confira se outra falha impede comprovar a execução.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "qualidade fotográfica",
+        "nitidez"
+      ],
+      "equivalentExpressions": [
+        "fotos borradas",
+        "fotos estão tremidas",
+        "fotos não estão nítidas"
+      ]
+    },
+    {
+    "id": "RULE-ASF-ORIGEM-01",
+    "mandatoryConditionGroups": [
+      {
+        "label": "vínculo de origem relatado",
+        "expressions": ["origem", "originária", "vinculada", "vínculo", "referência", "ordem que gerou", "solicitação que gerou"]
+      }
+    ],
+      "examples": ["sem OS de origem"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Repavimentação sem OS de origem",
+      "description": "A Repavimentação Asfalto sem OS de origem correspondente recebe Não Conforme.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "sem OS de origem",
+        "não tem OS de origem",
+        "não possui OS de origem",
+        "não tem ordem de serviço de origem"
+      ],
+      "message": "A Repavimentação Asfalto sem OS de origem correspondente recebe Não Conforme.",
+      "guidance": "Verifique a origem no SCAE e no Field, registre Pavimento sem OS de origem e realize a troca para o código 318033. Confirme a opção no sistema; o AEBOT não executa a troca.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "OS de origem",
+        "ordem de serviço de origem"
+      ],
+      "equivalentExpressions": [
+        "pavimento sem origem",
+        "faltou a OS de origem"
+      ]
+    },
+    {
+      "id": "RULE-ASF-ORIGEM-AFERICAO-CONTEXTO-01",
+      "examples": ["sem aferição na OS de origem"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Frente necessária para falta de aferição na origem",
+      "description": "A falta de aferição na OS de origem depende da frente: VCG não pontua essa falta.",
+      "priority": 3,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "sem aferição na OS de origem",
+        "falta de aferição na OS de origem",
+        "origem sem aferição",
+        "OS de origem não tem aferição"
+      ],
+      "message": "A falta de aferição na OS de origem depende da frente: VCG não pontua essa falta.",
+      "guidance": "Confirme a frente antes de pontuar. A regra se refere ao Reaterro de Vala Asfalto ou à Repavimentação Concreto que antecedeu o asfalto, não à aferição do serviço atual.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "aferição na OS de origem",
+        "origem sem aferição"
+      ],
+      "exceptions": [
+        "VCG",
+        "frente manutenção",
+        "frente comercial",
+        "não é VCG"
+      ],
+      "missingInformation": [
+        "A frente desse serviço é VCG, Manutenção ou Comercial?"
+      ]
+    },
+    {
+      "id": "RULE-ASF-ORIGEM-AFERICAO-01",
+      "examples": ["Sem aferição na OS de origem, frente manutenção."],
+      "mandatoryConditionGroups": [{"label":"origem identificada","expressions":["OS de origem","origem sem aferição"]},{"label":"frente confirmada fora de VCG","expressions":["frente manutenção","frente comercial"]}],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Falta de aferição na origem fora de VCG",
+      "description": "Falta de aferição na OS de origem antecedente, fora de VCG, recebe Não Conforme.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [],
+      "message": "Falta de aferição na OS de origem antecedente, fora de VCG, recebe Não Conforme.",
+      "guidance": "Registre Não Conforme por Falta de Aferição (OS de Origem). Não confunda com falta de aferição do asfalto atual.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "aferição na OS de origem"
+      ],
+      "exceptions": [
+        "VCG"
+      ],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {
+              "label": "aferição da origem ausente",
+              "expressions": [
+                "sem aferição na OS de origem",
+                "falta de aferição na OS de origem",
+                "origem sem aferição",
+                "OS de origem não tem aferição"
+              ]
+            },
+            {
+              "label": "frente fora de VCG",
+              "expressions": [
+                "frente manutenção",
+                "frente comercial",
+                "fora de VCG"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "RULE-ASF-ORIGEM-VCG-01",
+      "examples": ["Sem aferição na OS de origem, frente VCG."],
+      "mandatoryConditionGroups": [{"label":"frente VCG confirmada","expressions":["frente VCG","é VCG"]}],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "VCG não pontua falta de aferição na origem",
+      "description": "Em VCG, não pontue a falta de aferição da OS de origem, pois essa frente não possui a OS de origem.",
+      "priority": 3,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [],
+      "message": "Em VCG, não pontue a falta de aferição da OS de origem, pois essa frente não possui a OS de origem.",
+      "guidance": "Não pontue Falta de Aferição (OS de Origem) em VCG. Isso não aprova automaticamente a OS nem dispensa a aferição do serviço atual.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "matchPolicy": {
+        "minimumGroups": {
+          "count": 2,
+          "groups": [
+            {
+              "label": "origem sem aferição",
+              "expressions": [
+                "sem aferição na OS de origem",
+                "falta de aferição na OS de origem",
+                "origem sem aferição",
+                "OS de origem não tem aferição"
+              ]
+            },
+            {
+              "label": "frente VCG",
+              "expressions": [
+                "frente VCG",
+                "é VCG"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "RULE-ASF-MEDICAO-01",
+      "examples": ["medição incoerente"],
+      "positiveSignals": ["incoerente", "não bate", "não corresponde"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Medição incoerente",
+      "description": "A medição informada não corresponde ao serviço executado ou às evidências.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "medição incoerente",
+        "medição não corresponde ao serviço",
+        "metragem não bate com as fotos",
+        "medida diferente das evidências"
+      ],
+      "message": "A medição informada não corresponde ao serviço executado ou às evidências.",
+      "guidance": "Registre Não Conforme por Medição incoerente e confira a metragem efetivamente comprovada.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "medição",
+        "metragem",
+        "área medida"
+      ]
+    },
+    {
+      "id": "RULE-ASF-TRENA-01",
+      "mandatoryConditionGroups": [{"label":"impedimento de conferir a medição relatado","expressions":["impossibilita verificar","impede verificar","não permite conferir","não consigo conferir","ninguém consegue saber","ninguém consegue ver","não é possível conferir","não dá para conferir","não dá pra conferir"]}],
+      "examples": ["trena impossibilita verificar a metragem"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Trena impede verificar a metragem",
+      "description": "A aferição com trena que impossibilita verificar a metragem real equivale a falta de aferição.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "trena impossibilita verificar a metragem",
+        "trena não permite conferir a metragem",
+        "trena impede verificar a metragem"
+      ],
+      "message": "A aferição com trena que impossibilita verificar a metragem real equivale a falta de aferição.",
+      "guidance": "Reprove por Sem aferição quando o uso da trena impedir conferir a metragem real. A mera menção de trena não comprova essa falha.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "trena",
+        "metragem real"
+      ],
+      "exceptions": [
+        "trena permite conferir a metragem",
+        "medição legível com trena"
+      ]
+    },
+    {
+      "id": "RULE-ASF-LOCAL-01",
+      "examples": ["vala incorreta"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Execução no local ou vala incorreta",
+      "description": "A execução não corresponde à vala ou ao local correto da OS e sua origem.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "vala incorreta",
+        "vala errada",
+        "local incorreto",
+        "local errado",
+        "executaram em outro local"
+      ],
+      "message": "A execução não corresponde à vala ou ao local correto da OS e sua origem.",
+      "guidance": "Reprove por Local Incorreto e registre a divergência entre local/vala executada e a OS analisada.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "local da execução",
+        "vala correta"
+      ],
+      "negativeSignals": [
+        "local correto",
+        "vala correta"
+      ]
+    },
+    {
+      "id": "RULE-ASF-MATERIAL-01",
+      "examples": ["fez concreto na OS de asfalto"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Reaterro ou concreto encerrado como asfalto",
+      "description": "Usar a OS de Asfalto para executar reaterro ou concreto corresponde a material/execução incorreto.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "fez concreto na OS de asfalto",
+        "executou reaterro na OS de asfalto",
+        "material incorreto no asfalto",
+        "encerrou concreto como asfalto"
+      ],
+      "message": "Usar a OS de Asfalto para executar reaterro ou concreto corresponde a material/execução incorreto.",
+      "guidance": "Reprove por Deveria ter encerrado como Exoc. Não interprete o concreto da OS de origem como material incorreto no asfalto atual.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "equivalentExpressions": [
+        "usou OS de asfalto para fazer concreto",
+        "usou OS de asfalto para fazer reaterro"
+      ]
+    },
+    {
+      "id": "RULE-ASF-ACABAMENTO-01",
+      "examples": ["qualidade inapropriada da repavimentação"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Qualidade final inapropriada",
+      "description": "O acabamento ou a qualidade visual final da repavimentação não atende ao padrão.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "qualidade inapropriada da repavimentação",
+        "acabamento inadequado",
+        "repavimentação mal realizada",
+        "acabamento final fora do padrão"
+      ],
+      "message": "O acabamento ou a qualidade visual final da repavimentação não atende ao padrão.",
+      "guidance": "Reprove por Qualidade inapropriada e registre a falha visível no acabamento final.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "acabamento final",
+        "qualidade da execução"
+      ],
+      "negativeSignals": [
+        "acabamento adequado",
+        "acabamento correto"
+      ]
+    },
+    {
+      "id": "RULE-ASF-DUPLICIDADE-01",
+      "examples": ["serviço já executado em outra OS no Field"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Serviço já executado em outra OS",
+      "description": "O Field ou o SCAE comprova que o mesmo serviço já foi executado em outra OS.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "serviço já executado em outra OS no Field",
+        "serviço já executado em outra OS no SCAE",
+        "duplicidade confirmada no Field",
+        "duplicidade confirmada no SCAE"
+      ],
+      "message": "O Field ou o SCAE comprova que o mesmo serviço já foi executado em outra OS.",
+      "guidance": "Reprove e oriente o cancelamento por Duplicidade após conferir no Field/SCAE. Cancelamento é uma ação operacional, não outra conclusão oficial.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "equivalentExpressions": [
+        "Field mostra que o serviço já foi feito em outra OS",
+        "SCAE mostra que o serviço já foi feito em outra OS"
+      ]
+    },
+    {
+      "id": "RULE-ASF-TROCA-IMPOSSIVEL-01",
+      "examples": ["Execução incompatível sem opção de troca."],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2"],
+      "title": "Execução incompatível sem opção adequada de troca",
+      "description": "A execução não corresponde ao código da OS e não existe opção de Troca de Serviço que a represente corretamente.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": ["não há possibilidade de troca para o serviço correto", "execução incompatível sem opção de troca", "serviço executado sem código adequado na troca"],
+      "message": "Não há possibilidade de troca para adequar o código à execução; a OS deve ser reprovada.",
+      "guidance": "Reprove e oriente o cancelamento por Não há possibilidade de troca de serviço. Confirme a indisponibilidade no sistema; não selecione um código incorreto. O AEBOT apenas orienta, não cancela a OS.",
+      "sourceReferences": ["Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"]
+    },
+    {
+      "id": "RULE-ASF-TROCA-01",
+      "examples": ["código incompatível com troca disponível"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Código incompatível com troca disponível",
+      "description": "O código da OS não corresponde à execução e existe opção adequada para troca.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "código incompatível com troca disponível",
+        "serviço diferente com opção de troca",
+        "precisa trocar o serviço e existe opção correta"
+      ],
+      "message": "O código da OS não corresponde à execução e existe opção adequada para troca.",
+      "guidance": "Realize a Troca de Serviço para adequar à execução no local correto e registre Não Conforme por Troca de Serviço. Sem opção correta, aplique a regra de impossibilidade de troca.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "troca de serviço"
+      ],
+      "exceptions": [
+        "sem possibilidade de troca",
+        "não há possibilidade de troca",
+        "não tem opção de troca"
+      ]
+    },
+    {
+      "id": "RULE-ASF-FORMULARIO-01",
+      "examples": ["formulário preenchido incorretamente"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Formulário preenchido incorretamente",
+      "description": "O formulário relacionado à repavimentação foi preenchido incorretamente.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "formulário preenchido incorretamente",
+        "preenchimento incorreto do formulário",
+        "formulário errado",
+        "preenchimento indevido"
+      ],
+      "message": "O formulário relacionado à repavimentação foi preenchido incorretamente.",
+      "guidance": "Corrija o formulário com base nas evidências e registre Não Conforme por Preenchimento indevido.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ]
+    },
+    {
+      "id": "RULE-ASF-DESDOBRO-INDEVIDO-01",
+      "examples": ["desdobro indevido"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Serviço incorreto no adicional",
+      "description": "O serviço informado no Adicional Executado ou Posterior é diferente do necessário.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "desdobro indevido",
+        "adicional executado incorreto",
+        "adicional posterior incorreto",
+        "serviço errado no adicional"
+      ],
+      "message": "O serviço informado no Adicional Executado ou Posterior é diferente do necessário.",
+      "guidance": "Troque ou corrija o adicional para o serviço necessário, fundamentado na execução/necessidade comprovada; registre Não Conforme por Desdobro Indevido.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ]
+    },
+    {
+    "id": "RULE-ASF-DESDOBRO-EXCESSO-01",
+    "mandatoryConditionGroups": [
+      {
+        "label": "parametrização de adicional relatada",
+        "expressions": ["adicional", "desdobro", "serviço extra", "serviços extras"]
+      }
+    ],
+      "examples": ["excesso de desdobro"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Adicional desnecessário",
+      "description": "Foi incluído um adicional sem necessidade, ou além dos serviços suficientes.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "excesso de desdobro",
+        "adicional desnecessário",
+        "desdobro desnecessário",
+        "serviço a mais no adicional sem necessidade"
+      ],
+      "message": "Foi incluído um adicional sem necessidade, ou além dos serviços suficientes.",
+      "guidance": "Retire o adicional desnecessário e registre Não Conforme por Excesso de Desdobro. Confira a necessidade nas evidências.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ]
+    },
+    {
+      "id": "RULE-ASF-EHS-01",
+      "examples": ["irregularidade EHS"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Irregularidade de segurança",
+      "description": "A equipe não cumpriu as recomendações de segurança aplicáveis.",
+      "severity": "Não Conforme",
+      "priority": 2,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "irregularidade EHS",
+        "sem sinalização",
+        "sem proteção pessoal",
+        "sem barreiras de segurança",
+        "EPI inadequado",
+        "sinalização inadequada"
+      ],
+      "message": "A equipe não cumpriu as recomendações de segurança aplicáveis.",
+      "guidance": "Registre Não Conforme por Irregularidade EHS e descreva a medida de segurança descumprida.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "segurança",
+        "sinalização",
+        "proteção pessoal"
+      ]
+    },
+    {
+    "id": "RULE-ASF-CONFORME-01",
+    "mandatoryConditionGroups": [
+      {
+        "label": "conferência completa declarada",
+        "expressions": ["todos os critérios", "verificação completa", "conferência completa", "critérios aplicáveis conferidos"]
+      },
+      {
+        "label": "ausência de irregularidades declarada",
+        "expressions": ["sem irregularidades", "não há irregularidades", "não encontrou irregularidades", "não encontrei irregularidades", "nenhuma irregularidade"]
+      }
+    ],
+      "examples": ["conferi todos os critérios aplicáveis da repavimentação e não há irregularidades"],
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": [
+        "repavimentacao-asfalto-acima-1m2"
+      ],
+      "title": "Verificação completa sem irregularidades",
+      "description": "O analista declarou que conferiu todos os critérios aplicáveis da repavimentação e não encontrou irregularidades.",
+      "severity": "Conforme",
+      "priority": 3,
+      "category": "Repavimentação Asfalto",
+      "conditionKeywords": [
+        "conferi todos os critérios aplicáveis da repavimentação e não há irregularidades",
+        "todos os critérios da repavimentação conferidos sem irregularidades"
+      ],
+      "message": "O analista declarou que conferiu todos os critérios aplicáveis da repavimentação e não encontrou irregularidades.",
+      "guidance": "Recomende Conforme somente após conferir os critérios aplicáveis: etapas, local, origem/exceções, aferição, medição, material, acabamento, duplicidade, código, formulário, adicionais e segurança. Qualquer falha aplicável prevalece.",
+      "sourceReferences": [
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+      ],
+      "relatedEvidence": [
+        "verificação completa"
+      ],
+      "negativeSignals": [
+        "faltou",
+        "sem foto",
+        "sem aferição",
+        "medição incoerente",
+        "local incorreto",
+        "duplicidade"
+      ]
     }
   ]
 }

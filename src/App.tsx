@@ -90,7 +90,7 @@ export default function App() {
   }
 
   return (
-    <div className="sidepanel-shell">
+    <div className={`sidepanel-shell ${desktopBridge() ? 'desktop-workspace' : ''}`}>
       <header className="app-header">
         <div className="brand-group">
           <div className="brand-logo" aria-hidden="true">
@@ -99,7 +99,7 @@ export default function App() {
           </div>
           <div className="brand-copy">
             <h1 className="app-title">AEBOT</h1>
-            <p className="app-subtitle">Análise operacional</p>
+            <p className="app-subtitle">Assistente de análise</p>
           </div>
         </div>
 
@@ -118,6 +118,7 @@ export default function App() {
       </header>
 
       <main className="main-content">
+        <aside className="workspace-sidebar" aria-label="Serviço e base de conhecimento">
         <section className="workspace-context" aria-label="Contexto da análise">
           <ServiceSelector
             services={services}
@@ -137,11 +138,14 @@ export default function App() {
             )}
           </div>
         </section>
-
+        {selectedService && <ServiceDetails service={selectedService} services={services} />}
+        <p className="workspace-privacy">{desktopBridge() ? 'Tudo neste computador. Conversas não são salvas.' : 'Orientações baseadas nas regras do serviço.'}</p>
+        </aside>
+        <div className="workspace-chat">
         {selectedService ? (
           <>
-            <ServiceDetails service={selectedService} services={services} />
             <ChatPanel
+              key={`${selectedService.id}:${configurationRevision}`}
               service={selectedService}
               context={chatContext}
               configurationRevision={configurationRevision}
@@ -150,11 +154,11 @@ export default function App() {
         ) : (
           <div className="empty-state">Nenhum serviço selecionado.</div>
         )}
+        </div>
       </main>
 
       <footer className="app-footer">
-        <span>Decisões fundamentadas em regras</span>
-        <span aria-hidden="true">●</span>
+        <span>AEBOT · Apoio à análise, com conferência humana</span>
       </footer>
 
       {desktopBridge() ? <DesktopSettings isOpen={isConfigOpen}

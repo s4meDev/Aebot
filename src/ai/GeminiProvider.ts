@@ -520,7 +520,8 @@ export class GeminiProvider implements AiProvider {
       const localRequest = modelClient.provider === 'local' ? createLocalInterpretation(
         // A ficha precisa das alternativas do serviço, inclusive evidências presentes.
         // A busca por faltas pode cortá-las e induzir o modelo a confundir os grupos.
-        query, service, selection.rules, clarificationQuestions, { allowSingleTokenQuote: clarificationApplied }, atomicRules
+        query, service, selection.rules, clarificationQuestions, { allowSingleTokenQuote: clarificationApplied }, atomicRules,
+        modelClient.localInterpretationProtocol
       ) : undefined;
       const parseInterpretation = localRequest?.parse ?? ((text: string) => parseSemanticInterpretation(
         text, query, selection.rules, { allowSingleTokenQuote: clarificationApplied }
@@ -533,9 +534,9 @@ export class GeminiProvider implements AiProvider {
       );
       this.metrics.modelRequests += 1;
       const response = await modelClient.request(
-        buildGeminiContents(history, currentPrompt, semanticPrompt),
+        buildGeminiContents(history, currentPrompt, localRequest?.inputPrompt ?? semanticPrompt),
         modelClient.provider === 'local'
-          ? 'Extraia fielmente os fatos do relato e preencha o JSON solicitado. Distinga evidências presentes, ausentes e não informadas, citando os trechos corretos. A decisão pertence ao motor de regras.'
+          ? localRequest?.systemInstruction ?? 'Extraia fielmente os fatos do relato e preencha o JSON solicitado. Distinga evidências presentes, ausentes e não informadas, citando os trechos corretos. A decisão pertence ao motor de regras.'
           : 'Converse como um Analista Sênior: compreenda livremente a linguagem, seja breve e use somente o catálogo fornecido para regras e conclusões oficiais.',
         1536,
         {
@@ -555,11 +556,14 @@ export class GeminiProvider implements AiProvider {
       if (modelClient.provider === 'local' && interpretation) interpretation = preferExplicitLocalEvidence(interpretation, atomicRules);
       const attempts = [...(response.attempts ?? [])];
       const verification = modelClient.provider === 'local' && interpretation
-        ? createLocalMappingVerification(query, service, atomicRules, interpretation) : undefined;
+        ? createLocalMappingVerification(query, service, atomicRules, interpretation,
+          modelClient.localInterpretationProtocol === 'indexed') : undefined;
       if (verification) {
         this.metrics.modelRequests += 1;
         const checked = await modelClient.request([{ role: 'user', parts: [{ text: verification.prompt }] }],
-          'Confira se cada regra indicada tem fundamento no relato. Não acrescente fatos nem conclua a OS.',
+          localRequest?.systemInstruction
+            ? `${localRequest.systemInstruction}\nNesta chamada de conferência, substitua o formato anterior pelo JSON de booleanos solicitado. Não acrescente fatos nem conclua a OS.`
+            : 'Confira se cada regra indicada tem fundamento no relato. Não acrescente fatos nem conclua a OS.',
           512, { responseSchema: verification.schema, validateText: (text) => verification.parse(text) !== null });
         attempts.push(...(checked.attempts ?? []));
         interpretation = checked.status === 'ok' && checked.text ? verification.parse(checked.text) ?? undefined : undefined;
@@ -614,6 +618,19 @@ export class GeminiProvider implements AiProvider {
       ? undefined
       : 'no_api_key';
     const modelAttempts: NonNullable<AiProviderResponse['modelAttempts']> = [];
+
+    // Fato explícito já coberto por orientação da base não precisa de outra
+    // inferência para repetir a resposta ou a pergunta de contexto faltante.
+    // Correspondência apenas temática continua passando pela interpretação.
+    const knownGuidance = modelClient?.provider === 'local' &&
+      this.configuration.humanizeDeterministicResponses === false &&
+      rawBaseEvaluation.outcome === 'advisory' &&
+      rawBaseEvaluation.primaryRule?.severity === null &&
+      rawBaseEvaluation.primaryRule.factMatchQuality >= 0.8;
+    if (knownGuidance) {
+      return { provider: 'simulated', content: formatEvaluationResponse(evaluation),
+        decision: null, evaluation, modelAttempts };
+    }
 
     // A IA interpreta a linguagem e já produz uma resposta curta. O motor apenas
     // valida a regra e a conclusão oficial antes de liberar o texto ao analista.

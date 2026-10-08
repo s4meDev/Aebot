@@ -49,7 +49,10 @@ if (existingRuntime) {
   execFileSync(tar, ['-xkf', archive, '-C', destination], { windowsHide: true, stdio: 'inherit', timeout: 30_000 });
 }
 await download(lock.model.url, path.join(root, 'models', lock.model.name), lock.model.sha256);
-await download(`https://huggingface.co/Qwen/Qwen3-4B-GGUF/raw/${lock.model.revision}/LICENSE`, path.join(root, 'licenses', 'Qwen-Apache-2.0.txt'));
+const modelLicense = lock.model.licenseFile ?? 'Qwen-Apache-2.0.txt';
+if (!/^[\w.-]+\.txt$/.test(modelLicense)) throw new Error('Nome de licença do modelo inválido.');
+await download(lock.model.licenseUrl ?? `https://huggingface.co/Qwen/Qwen3-4B-GGUF/raw/${lock.model.revision}/LICENSE`,
+  path.join(root, 'licenses', modelLicense), lock.model.licenseSha256);
 // A licença vem do próprio ZIP já conferido, não de uma URL montada para outro publicador.
 if (!/^[\w.-]+\.txt$/.test(lock.runtime.licenseFile)) throw new Error('Nome de licença inválido.');
 await writeFile(path.join(root, 'licenses', lock.runtime.licenseFile), await readFile(path.join(root, runtimeDirectory, 'LICENSE')));

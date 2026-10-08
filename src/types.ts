@@ -21,6 +21,7 @@ export type InsufficiencyReason =
 export type ServiceAnalysisStatus = 'active' | 'rules_pending';
 export type CatalogNameStatus = 'confirmed' | 'needs_confirmation';
 export type RuleAttentionLevel = 'normal' | 'attention' | 'critical';
+export type ServiceDecisionPolicy = 'ranked' | 'most_severe_applicable';
 
 /** Relações permitidas no sistema. Adicional também pode ser chamado de desdobro. */
 export interface ServiceParameterization {
@@ -78,6 +79,8 @@ export interface DataRule {
   /** Sinais que negam ou excepcionam a ocorrência. */
   negativeSignals?: string[];
   mandatoryConditions?: string[];
+  /** Cada grupo exige ao menos uma expressão no relato; a IA não pode inventar esse contexto. */
+  mandatoryConditionGroups?: RuleConditionGroup[];
   exceptions?: string[];
   examples?: string[];
   guidance?: string;
@@ -105,6 +108,8 @@ export interface DataService {
   suggestedQuestions?: string[];
   /** Impede análise oficial enquanto as regras próprias do serviço não foram cadastradas. */
   analysisStatus?: ServiceAnalysisStatus;
+  /** Só usa gravidade primeiro quando a base do serviço exigir isso; não torna match fraco aplicável. */
+  decisionPolicy?: ServiceDecisionPolicy;
   /** Opções configuradas para este serviço quando ele é a OS original. */
   parameterization?: ServiceParameterization;
   /** A captura pode cortar o final do nome; isso fica explícito até a confirmação. */

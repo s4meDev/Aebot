@@ -4,6 +4,20 @@ As regras de negócio ficam em um único arquivo: `src/data/rulesStore.json`. O 
 
 ## Antes de começar
 
+O recorte novo de Asfalto está em [Protótipo de Asfalto](PROTOTIPO-ASFALTO.md). A base atual é 2.15.1; os cadastros `RULE-ASF-*` são compartilhados por `applicableServiceIds`, não copiados entre as áreas. A revisão 2.15.1 exige impedimento relatado para a regra de trena: usar trena, sozinho, não comprova falha. Condições obrigatórias continuam verificadas no texto original, mesmo na interpretação semântica; novas formas de escrever precisam de regressão, não de liberação irrestrita do modelo.
+
+No cadastro do serviço, `decisionPolicy: "most_severe_applicable"` faz a conclusão mais grave prevalecer entre regras realmente aplicáveis. Sem esse campo, o ranking anterior é preservado. Isso não aprova por padrão nem transforma apenas um tema relacionado em reprovação.
+
+Quando a regra depende de contexto, use `mandatoryConditionGroups`. Todos os grupos são obrigatórios, mas basta uma expressão de cada grupo no relato original. A IA não pode preencher um grupo que o analista não informou. Exemplo:
+
+```json
+"mandatoryConditionGroups": [
+  { "label": "tipo de equipe confirmado", "expressions": ["equipe interna", "equipe própria", "interna"] }
+]
+```
+
+Esse exemplo exige o contexto; não decide a classificação por si só. Mantenha a pergunta em `missingInformation` na orientação que coleta o dado. Não torne todos os contextos obrigatórios: só aqueles que alteram a regra aplicável.
+
 Abra o projeto no VS Code. O arquivo possui validação e sugestões automáticas por meio de `schemas/rulesStore.schema.json`.
 
 Uma regra pode ser:
@@ -79,14 +93,16 @@ Uma orientação que seja realmente igual para **todos os serviços ativos** pod
 
 Prefira frases completas. Termos soltos como “foto”, “antes” ou “ausência” não devem provar uma irregularidade.
 
-## Validar antes de publicar
+## Validar e atualizar o desktop
 
-Execute:
+Depois de editar, incremente a versão da base e acrescente casos ao corpus correspondente. Execute:
 
 ```powershell
-npm run rules:format
-npm run rules:check
-npm run build:production
+npm.cmd run rules:format
+npm.cmd run rules:check
+npm.cmd run desktop:smoke
 ```
 
-Depois incremente a versão da base, publique o Worker e recarregue a extensão. Uma regra só está pronta quando possui exemplos positivos e negativos no corpus de regressão.
+Para um pacote de atualização local, use `npm.cmd run desktop:rules -- --owner="Nome do responsável" --changes="Descrição da revisão aprovada"`. O pacote exige versão superior, responsável, vigência e descrição da revisão. Distribua pelo canal confiável definido com a TI; o nome do responsável declarado não é assinatura digital. A importação em Configurações preserva a versão anterior. Veja [Executar e testar](EXECUTAR-E-TESTAR.md). Uma regra só está pronta quando possui exemplos positivos e negativos no corpus e aceite operacional.
+
+No perfil online **legado**, a publicação é diferente: valide `npm.cmd run build:production`, publique o Worker somente com autorização e atualize a extensão. Isso não atualiza o desktop offline.

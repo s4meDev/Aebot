@@ -1,0 +1,431 @@
+[
+  {
+    "name": "antes",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem foto antes.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-ANTES-01"
+    ]
+  },
+  {
+    "name": "durante",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem foto durante.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-DURANTE-01"
+    ]
+  },
+  {
+    "name": "antes e durante",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem foto antes nem durante.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-ANTES-01",
+      "RULE-ASF-FOTO-DURANTE-01",
+      "RULE-ASF-FOTOS-COMBINADAS-01"
+    ]
+  },
+  {
+    "name": "depois",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem foto depois.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-DEPOIS-01"
+    ]
+  },
+  {
+    "name": "escopo da presença",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Tem foto durante e depois, faltou foto antes.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-ANTES-01"
+    ]
+  },
+  {
+    "name": "qualidade da foto",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "As fotos estão tremidas.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-QUALIDADE-01"
+    ]
+  },
+  {
+    "name": "origem ausente",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Não tem OS de origem.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-ORIGEM-01"
+    ]
+  },
+  {
+    "name": "origem sem aferição e frente ausente",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem aferição na OS de origem.",
+    "decision": null,
+    "expectedClassifyingRuleIds": []
+  },
+  {
+    "name": "origem em manutenção",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem aferição na OS de origem, frente manutenção.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-ORIGEM-AFERICAO-01"
+    ]
+  },
+  {
+    "name": "origem em VCG",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem aferição na OS de origem, é VCG.",
+    "decision": null,
+    "expectedClassifyingRuleIds": []
+  },
+  {
+    "name": "aferição interna",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Equipe interna sem aferição da vala.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-PAV-AFERICAO-INTERNA-01"
+    ]
+  },
+  {
+    "name": "aferição terceira",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Equipe terceirizada sem aferição da vala.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-PAV-AFERICAO-TERCEIRA-01"
+    ]
+  },
+  {
+    "name": "aferição sem equipe",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem aferição da vala.",
+    "decision": null,
+    "expectedClassifyingRuleIds": []
+  },
+  {
+    "name": "medição incoerente",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "A medição é incoerente.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-MEDICAO-01"
+    ]
+  },
+  {
+    "name": "trena impeditiva",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "A trena impede verificar a metragem.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-TRENA-01"
+    ]
+  },
+  {
+    "name": "trena apenas mencionada",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Usaram trena.",
+    "decision": null,
+    "expectedAppliedRuleIds": [],
+    "allowedSemanticRuleIds": ["RULE-ASF-TRENA-01"]
+  },
+  {
+    "name": "trena legível",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "A trena permite conferir a metragem.",
+    "decision": null,
+    "expectedAppliedRuleIds": [],
+    "allowedSemanticRuleIds": ["RULE-ASF-TRENA-01", "RULE-ASF-MEDICAO-01"]
+  },
+  {
+    "name": "vala errada",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Fizeram na vala errada.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-LOCAL-01"
+    ]
+  },
+  {
+    "name": "material incorreto",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Fez concreto na OS de asfalto.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-MATERIAL-01"
+    ]
+  },
+  {
+    "name": "concreto da origem não é material atual",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "A OS de origem é repavimentação concreto.",
+    "decision": null,
+    "expectedAppliedRuleIds": [],
+    "allowedSemanticRuleIds": ["RULE-ASF-ORIGEM-01"]
+  },
+  {
+    "name": "acabamento",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Acabamento inadequado.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-ACABAMENTO-01"
+    ]
+  },
+  {
+    "name": "duplicidade",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Duplicidade confirmada no Field.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-DUPLICIDADE-01"
+    ]
+  },
+  {
+    "name": "troca disponível",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Código incompatível com troca disponível.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-TROCA-01"
+    ]
+  },
+  {
+    "name": "formulário",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Formulário preenchido incorretamente.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FORMULARIO-01"
+    ]
+  },
+  {
+    "name": "posterior faltante",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Faltou adicional posterior necessário.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-PARAM-GERAL-01"
+    ]
+  },
+  {
+    "name": "desdobro indevido",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Desdobro indevido.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-DESDOBRO-INDEVIDO-01"
+    ]
+  },
+  {
+    "name": "excesso",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Adicional desnecessário.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-DESDOBRO-EXCESSO-01"
+    ]
+  },
+  {
+    "name": "segurança",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem sinalização.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-EHS-01"
+    ]
+  },
+  {
+    "name": "conferência completa",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Conferi todos os critérios aplicáveis da repavimentação e não há irregularidades.",
+    "decision": "Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-CONFORME-01"
+    ]
+  },
+  {
+    "name": "sem base não aprova",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "A equipe chegou cedo.",
+    "decision": null,
+    "expectedClassifyingRuleIds": []
+  },
+  {
+    "name": "conflito confirmado",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Formulário preenchido incorretamente e sem foto depois.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FORMULARIO-01",
+      "RULE-ASF-FOTO-DEPOIS-01"
+    ]
+  },
+  {
+    "name": "declaração de aprovação contradita",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Todos os critérios da repavimentação conferidos sem irregularidades. Sem foto depois.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-DEPOIS-01"
+    ]
+  },
+  {
+    "name": "hipótese",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Se faltar foto depois, reprova?",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-DEPOIS-01"
+    ]
+  },
+  {
+    "name": "consulta não relata ocorrência",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Qual é a regra da foto antes?",
+    "decision": null,
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-FOTO-ANTES-01"
+    ]
+  },
+  {
+    "name": "caixa e acento",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "MEDIÇÃO INCOERENTE!!!",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": [
+      "RULE-ASF-MEDICAO-01"
+    ]
+  },
+  {
+    "name": "paráfrase do resultado final",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Não enviaram nenhuma imagem de como ficou depois que terminaram de asfaltar.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-DEPOIS-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "paráfrase de duplicidade comprovada",
+    "serviceId": "repavimentacao-asfalto-acima-1m2",
+    "query": "Conferi no SCAE e vi que esse mesmo trecho de asfalto já tinha sido feito e encerrado em outra ordem.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-DUPLICIDADE-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "paráfrase da trena impeditiva",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Usaram trena, só que pelas imagens ninguém consegue saber o tamanho real do pedaço asfaltado.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-TRENA-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "presença de resultado não vira ausência",
+    "expectedAppliedRuleIds": [],
+    "allowedSemanticRuleIds": ["RULE-ASF-FOTO-DEPOIS-01"],
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Mandaram imagens de como ficou o asfalto pronto. Dá para enxergar o resultado final.",
+    "decision": null,
+    "expectedClassifyingRuleIds": [],
+    "requiresSemantic": true
+  },
+  {
+    "name": "nenhuma duplicidade confirmada",
+    "expectedAppliedRuleIds": [],
+    "allowedSemanticRuleIds": ["RULE-ASF-DUPLICIDADE-01"],
+    "serviceId": "repavimentacao-asfalto-acima-1m2",
+    "query": "Consultei no Field e confirmei que não existe outra ordem encerrada para esse mesmo trecho.",
+    "decision": null,
+    "expectedClassifyingRuleIds": [],
+    "requiresSemantic": true
+  },
+  {
+    "name": "aferição interna continua devolutiva",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "previous": "Sem aferição da vala.",
+    "query": "interna",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": ["RULE-PAV-AFERICAO-INTERNA-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "aferição terceirizada continua devolutiva",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "previous": "Sem aferição da vala.",
+    "query": "terceirizada",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-PAV-AFERICAO-TERCEIRA-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "presença final não apaga falta da execução em paráfrase",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Mandaram imagens de como ficou o asfalto pronto. Mas não registraram nada enquanto espalhavam o material na vala.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-DURANTE-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "duas falhas independentes em paráfrases",
+    "serviceId": "repavimentacao-asfalto-acima-1m2",
+    "query": "Não enviaram imagens de como ficou depois que terminaram de asfaltar. Conferi no SCAE e vi que esse mesmo trecho de asfalto já tinha sido feito e encerrado em outra ordem.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-DEPOIS-01", "RULE-ASF-DUPLICIDADE-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "resultado presente junto de fase inicial ausente",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Tem imagem do pavimento pronto, mas nenhuma mostrando o estado da vala quando chegaram.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "valor informado diferente do trecho fotografado",
+    "serviceId": "repavimentacao-asfalto-acima-1m2",
+    "query": "O número informado no relatório não corresponde ao tamanho do trecho que aparece nas imagens.",
+    "decision": "Não Conforme",
+    "expectedClassifyingRuleIds": ["RULE-ASF-MEDICAO-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "negação da falta do resultado",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "A foto final existe e está nítida. Não está faltando registro do resultado.",
+    "decision": null,
+    "expectedClassifyingRuleIds": [],
+    "expectedAppliedRuleIds": [],
+    "allowedSemanticRuleIds": ["RULE-ASF-FOTO-DEPOIS-01", "RULE-ASF-FOTO-QUALIDADE-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "consulta sobre duplicidade não comprova duplicidade",
+    "serviceId": "repavimentacao-asfalto-acima-1m2",
+    "query": "Qual evidência preciso conferir para saber se esse trecho já foi atendido em outra ordem?",
+    "decision": null,
+    "expectedClassifyingRuleIds": [],
+    "expectedAppliedRuleIds": [],
+    "allowedSemanticRuleIds": ["RULE-ASF-DUPLICIDADE-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "etapas ausentes em palavras diferentes com resultado presente",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Não há foto da fase inicial nem de quando aplicaram a massa. Só enviaram uma imagem do asfalto concluído.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01", "RULE-ASF-FOTO-DURANTE-01", "RULE-ASF-FOTOS-COMBINADAS-01"],
+    "requiresSemantic": true
+  }
+]

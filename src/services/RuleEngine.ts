@@ -270,7 +270,8 @@ export class RuleEngine {
     // 4. Apenas regras aplicáveis entram no ranking e no desempate final.
     const { rankedRules, primaryRule, conflicts } = resolveConflicts(
       decisionCandidates,
-      this.getConclusions()
+      this.getConclusions(),
+      service.decisionPolicy
     );
 
     if (!primaryRule || !primaryRule.severity) {

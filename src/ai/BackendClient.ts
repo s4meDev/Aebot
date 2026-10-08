@@ -164,6 +164,7 @@ function parseCatalog(value: unknown): BackendCatalog | null {
       !isStringList(service.insights) ||
       (service.suggestedQuestions !== undefined && !isStringList(service.suggestedQuestions)) ||
       (service.analysisStatus !== undefined && !['active', 'rules_pending'].includes(String(service.analysisStatus))) ||
+      (service.decisionPolicy !== undefined && !['ranked', 'most_severe_applicable'].includes(String(service.decisionPolicy))) ||
       (service.catalogNameStatus !== undefined && !['confirmed', 'needs_confirmation'].includes(String(service.catalogNameStatus))) ||
       (service.sourceLabel !== undefined && typeof service.sourceLabel !== 'string') ||
       parameterization === null ||
@@ -179,6 +180,7 @@ function parseCatalog(value: unknown): BackendCatalog | null {
       insights: service.insights,
       suggestedQuestions: service.suggestedQuestions as string[] | undefined,
       analysisStatus: service.analysisStatus as DataService['analysisStatus'],
+      decisionPolicy: service.decisionPolicy as DataService['decisionPolicy'],
       parameterization,
       catalogNameStatus: service.catalogNameStatus as DataService['catalogNameStatus'],
       sourceLabel: service.sourceLabel as string | undefined,

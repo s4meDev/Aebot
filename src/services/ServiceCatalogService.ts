@@ -68,6 +68,7 @@ export class ServiceCatalogService {
       insights: service.insights,
       suggestedQuestions: service.suggestedQuestions,
       analysisStatus: service.analysisStatus,
+      decisionPolicy: service.decisionPolicy,
       parameterization: service.parameterization,
       catalogNameStatus: service.catalogNameStatus,
       sourceLabel: service.sourceLabel,

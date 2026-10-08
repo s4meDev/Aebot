@@ -1,12 +1,32 @@
 # Assinatura e liberação do AEBOT no Windows
 
-## Situação atual — 01/10/2026
+## O que isso significa, sem complicar
+
+**Atualização de 08/10:** existe um [perfil portátil de protótipo](PROTOTIPO-PORTATIL.md), solicitado para teste sem certificado próprio. Ele não altera a exigência do Setup empresarial descrita abaixo. Não comprova liberação em outra máquina e não orienta contornar bloqueios. O procedimento AUTOFORMS permite comparar pasta/atalho, não demonstrar que assinatura ou políticas serão iguais nos dois aplicativos.
+
+A assinatura é uma identificação digital do publicador do programa. O Windows confere quem assinou e se o executável foi alterado. Não é uma autorização verbal da TI, não melhora a inteligência do Qwen e não acelera o chat. Um Setup novo só leva as correções do código às máquinas; ele não corrige o modelo por ser um instalador.
+
+Sua autorização permite preparar e testar o pacote. Para assiná-lo, falta uma credencial técnica: certificado de **assinatura de código** com chave privada acessível pelo ambiente de publicação, ou serviço de assinatura compatível. Certificado HTTPS do site e certificado comum de documento não substituem isso.
+
+Em 07/10, consultei os repositórios pessoais do usuário e da máquina: não encontrei certificado de assinatura de código com chave privada. Também não encontrei nomes de variáveis `CSC_*`/`WIN_CSC_*` configuradas. Não li nem publiquei valores de credenciais.
+
+### O que pedir à TI
+
+> Preciso assinar o aplicativo Windows AEBOT e seu instalador. Vocês já têm certificado de assinatura de código ou serviço de assinatura confiável? Preciso que configurem essa credencial no ambiente de publicação, confirmem o publicador e autorizem o diagnóstico PowerShell de leitura. Não é necessário desativar a proteção do Windows. O runtime llama.cpp já tem assinatura do fornecedor.
+
+Se a empresa já tiver a credencial, a TI deve configurá-la no ambiente aprovado. Se não tiver, precisa definir como obtê-la; não posso fabricar uma identidade confiável nem afirmar que será gratuito. Para Smart App Control, a Microsoft exige emissor confiável: [orientação oficial de assinatura](https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/code-signing-for-smart-app-control). Certificado autoassinado não resolve esse requisito.
+
+Não envie arquivo PFX, senha, token do dispositivo ou chave privada no chat. Um PFX autorizado pode ser disponibilizado fora do repositório e referenciado pelo `WIN_CSC_LINK`, com a senha em `WIN_CSC_KEY_PASSWORD` no ambiente de publicação seguro. Certificado em dispositivo/serviço exige integração própria da TI; não é substituído por uma variável fictícia. Essas variáveis não podem ser `VITE_*`.
+
+Com isso configurado, execute `npm.cmd run desktop:signing:check` e depois `npm.cmd run desktop:package`. A primeira etapa verifica apenas a configuração; validade e assinatura real ainda são conferidas no empacotamento. Sem credencial, o comando para antes de alterar artefatos. Até lá, o protótipo 2.19.0 abre localmente com `Abrir-AEBOT.cmd`; não distribua o Setup antigo como se contivesse as correções novas. Resultados atuais na [revisão de desempenho e assinatura](STATUS-DESKTOP-2026-10-07-OTIMIZACAO.md).
+
+## Runtime já liberado — referência de 01/10/2026
 
 Resolvi a execução local usando a [distribuição Unsloth do llama.cpp b11160-mix-a6922cc](https://github.com/unslothai/llama.cpp/releases/tag/b11160-mix-a6922cc), Windows x64 CPU. O ZIP foi conferido pelo SHA-256 `f657b4ec554ce2c03a82b615f0e4821c10aea7c7281e46a3f09dbfcd65263123`. Os 52 EXEs/DLLs apresentaram assinatura Authenticode válida: Unsloth AI Inc., com a biblioteca OpenMP assinada pela Microsoft. O comando de versão respondeu e o Qwen executou 12 casos com as proteções mantidas.
 
 O lock seleciona `runtime-b11160-mix-a6922cc`, instalada ao lado da pasta antiga, preservada. O pacote inclui somente a versão selecionada. O preparo confere o ZIP, extrai com o tar do Windows e recusa inventário alterado; a licença MIT vem do ZIP verificado.
 
-A assinatura do fornecedor resolve a confiança desses binários. O executável AEBOT e o novo Setup ainda precisam do certificado do publicador. A geração completa com esse certificado e a verificação PowerShell autorizada continuam pendentes. Os resultados da IA estão no [relatório atual](STATUS-DESKTOP-2026-10-01.md).
+A assinatura do fornecedor resolve a confiança desses binários. O executável AEBOT e o novo Setup ainda precisam do certificado do publicador. A geração completa com esse certificado e a verificação PowerShell autorizada continuam pendentes. A evolução de Asfalto está no [relatório de 07/10](STATUS-DESKTOP-2026-10-07.md); os resultados de [01/10](STATUS-DESKTOP-2026-10-01.md) permanecem como histórico.
 
 ## Histórico do bloqueio em 29/09/2026
 
@@ -58,6 +78,7 @@ Depois de definir a assinatura, a identidade do publicador e autorizar a verific
 npm.cmd test
 npm.cmd run typecheck
 npm.cmd run desktop:build
+npm.cmd run desktop:signing:check
 npm.cmd run desktop:package
 ```
 

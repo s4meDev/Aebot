@@ -1,5 +1,7 @@
 # Guia do desktop e do piloto
 
+Atualização de 08/10/2026: há também um [protótipo portátil](PROTOTIPO-PORTATIL.md) para abrir por EXE sem instalar ferramentas. O foco atual é Repavimentação Asfalto. As instruções de Setup abaixo se referem à rota empresarial assinada, não à pasta portátil de teste.
+
 Antes de distribuir, leia o [estado da validação e pendências](STATUS-DESKTOP-2026-09-29.md) e a [liberação no Windows](ASSINATURA-E-LIBERACAO-WINDOWS.md). O pacote é um protótipo para testes supervisionados, não uma homologação de qualidade da IA.
 
 Para executar no VS Code ou diagnosticar comandos, use [Executar e testar](EXECUTAR-E-TESTAR.md). A sequência das próximas entregas está no [plano de validação](PLANO-DE-VALIDACAO-DESKTOP.md).

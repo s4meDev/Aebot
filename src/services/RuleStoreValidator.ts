@@ -8,11 +8,13 @@ import type {
   RuleMatchPolicy,
   RuleStoreSchema,
   ServiceAnalysisStatus,
+  ServiceDecisionPolicy,
   ServiceParameterization,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.14.0';
+export const CURRENT_RULE_STORE_VERSION = '2.15.3';
 const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
+const DECISION_POLICIES: ServiceDecisionPolicy[] = ['ranked', 'most_severe_applicable'];
 const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];
 const RULE_ATTENTION_LEVELS: RuleAttentionLevel[] = ['normal', 'attention', 'critical'];
 const OFFICIAL_DECISIONS: DecisionType[] = ['Conforme', 'Não Conforme', 'Reprovado'];
@@ -257,6 +259,16 @@ function parseMatchPolicy(
   return { allOf, minimumGroups, minimumMatchedFactGroups };
 }
 
+function parseMandatoryGroups(value: unknown, path: string, issues: string[]) {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || !value.length) {
+    issues.push(`${path} deve conter ao menos um grupo`);
+    return undefined;
+  }
+  // Reutiliza a validação de labels, expressões e campos desconhecidos.
+  return parseMatchPolicy({ minimumGroups: { count: value.length, groups: value } }, path, issues)?.minimumGroups?.groups;
+}
+
 function migrateLegacyStore(value: unknown): unknown {
   const source = record(value);
   if (!source || typeof source.version !== 'string' || !source.version.startsWith('1.')) {
@@ -345,7 +357,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           service,
           [
             'id', 'name', 'category', 'summary', 'insights', 'suggestedQuestions',
-            'analysisStatus', 'parameterization', 'catalogNameStatus', 'sourceLabel',
+            'analysisStatus', 'decisionPolicy', 'parameterization', 'catalogNameStatus', 'sourceLabel',
           ],
           path,
           issues
@@ -355,6 +367,11 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           : requiredString(service, 'analysisStatus', path, issues);
         if (!SERVICE_ANALYSIS_STATUSES.includes(analysisStatus as ServiceAnalysisStatus)) {
           issues.push(`${path}.analysisStatus inválido`);
+        }
+        const decisionPolicy = service.decisionPolicy === undefined
+          ? 'ranked' : requiredString(service, 'decisionPolicy', path, issues);
+        if (!DECISION_POLICIES.includes(decisionPolicy as ServiceDecisionPolicy)) {
+          issues.push(`${path}.decisionPolicy inválida`);
         }
         const catalogNameStatus = service.catalogNameStatus === undefined
           ? 'confirmed'
@@ -380,6 +397,8 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           analysisStatus: SERVICE_ANALYSIS_STATUSES.includes(analysisStatus as ServiceAnalysisStatus)
             ? analysisStatus as ServiceAnalysisStatus
             : 'active',
+          decisionPolicy: DECISION_POLICIES.includes(decisionPolicy as ServiceDecisionPolicy)
+            ? decisionPolicy as ServiceDecisionPolicy : 'ranked',
           parameterization: parseParameterization(
             service.parameterization,
             `${path}.parameterization`,
@@ -431,7 +450,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
             'id', 'serviceId', 'applicableServiceIds', 'appliesToAllActiveServices', 'title', 'description',
             'severity', 'priority', 'conditionKeywords', 'message',
             'equivalentExpressions', 'positiveSignals', 'negativeSignals',
-            'mandatoryConditions', 'exceptions', 'examples', 'guidance', 'category',
+            'mandatoryConditions', 'mandatoryConditionGroups', 'exceptions', 'examples', 'guidance', 'category',
             'relatedEvidence', 'topicKeywords', 'sourceReferences', 'factGroup',
             'attentionLevel', 'matchPolicy', 'missingInformation',
           ],
@@ -475,6 +494,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           positiveSignals: stringArray(item.positiveSignals, `${path}.positiveSignals`, issues),
           negativeSignals: stringArray(item.negativeSignals, `${path}.negativeSignals`, issues),
           mandatoryConditions: stringArray(item.mandatoryConditions, `${path}.mandatoryConditions`, issues),
+          mandatoryConditionGroups: parseMandatoryGroups(item.mandatoryConditionGroups, `${path}.mandatoryConditionGroups`, issues),
           exceptions: stringArray(item.exceptions, `${path}.exceptions`, issues),
           examples: stringArray(item.examples, `${path}.examples`, issues),
           guidance: optionalString(item, 'guidance', path, issues),

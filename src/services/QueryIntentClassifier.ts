@@ -31,6 +31,15 @@ const QUESTION_MARKERS = [
   'para que',
 ];
 const FACT_MARKERS = [
+  'conferi',
+  'verifiquei',
+  'observei',
+  'identifiquei',
+  'constatei',
+  'ninguem consegue',
+  'nao e possivel',
+  'nao da para',
+  'nao da pra',
   'ausente',
   'falta',
   'faltam',
@@ -133,8 +142,11 @@ function hasFactBeforeActionQuestion(query: NormalizedText): boolean {
 
 export function classifyQueryIntent(query: NormalizedText): QueryIntent {
   if (!query.value) return 'indefinida';
+  // "Não se consegue ver" usa pronome reflexivo, não descreve um caso imaginado.
   const hasConditionalFact =
-    query.tokens.includes('se') && findExpressions(query, FACT_MARKERS).length > 0;
+    query.tokens.some((token, index) => token === 'se' && (index === 0 ||
+      (query.tokens[index - 1] !== 'nao' && ['a', 'o', 'as', 'os', 'uma', 'um', 'alguem', 'equipe'].includes(query.tokens[index + 1])))) &&
+    findExpressions(query, FACT_MARKERS).length > 0;
   if (findExpressions(query, HYPOTHETICAL_MARKERS).length || hasConditionalFact) return 'hipotese';
 
   const startsAsQuestion = QUESTION_MARKERS.some(

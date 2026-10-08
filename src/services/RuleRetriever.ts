@@ -32,6 +32,9 @@ function satisfiesConstraints(query: NormalizedText, rule: DataRule): boolean {
   const exceptionMatches = findExpressions(query, rule.exceptions);
   const negativeMatches = findExpressions(query, rule.negativeSignals);
   if (exceptionMatches.length || negativeMatches.length) return false;
+  // O mapeamento do modelo não substitui contexto obrigatório ausente.
+  // Dentro do grupo há alternativas; entre grupos, todas precisam existir.
+  if (rule.mandatoryConditionGroups?.some((group) => !findExpressions(query, group.expressions).length)) return false;
   return findExpressions(query, rule.mandatoryConditions).length ===
     (rule.mandatoryConditions?.length ?? 0);
 }

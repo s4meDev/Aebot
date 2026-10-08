@@ -15,7 +15,11 @@ if (!files['llama-server.exe']) throw new Error('Runtime sem manifesto de integr
 for (const [file, expected] of Object.entries(files)) {
   if (path.basename(file) !== file || await hash(path.join(root, runtimeDirectory, file)) !== expected) throw new Error('Runtime corrompido.');
 }
-await stat(path.join(root, 'licenses', 'Qwen-Apache-2.0.txt'));
+const modelLicense = lock.model.licenseFile ?? 'Qwen-Apache-2.0.txt';
+if (!/^[\w.-]+\.txt$/.test(modelLicense)) throw new Error('Nome de licença do modelo inválido.');
+const licensePath = path.join(root, 'licenses', modelLicense);
+await stat(licensePath);
+if (lock.model.licenseSha256 && await hash(licensePath) !== lock.model.licenseSha256) throw new Error('Licença do modelo divergente.');
 if (!/^[\w.-]+\.txt$/.test(lock.runtime.licenseFile)) throw new Error('Nome de licença inválido.');
 await stat(path.join(root, 'licenses', lock.runtime.licenseFile));
 console.log('Pacote offline conferido: Qwen Q4_K_M, runtime Windows x64 e licenças.');

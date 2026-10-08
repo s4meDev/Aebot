@@ -3,6 +3,48 @@ import { LocalModelClient } from '../LocalModelClient';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('Qwen local', () => {
+  it.each([-1, 1.1, NaN, Infinity])('recusa temperatura experimental inválida: %s', temperature => {
+    expect(() => new LocalModelClient(() => null, { temperature })).toThrow('Temperatura experimental inválida');
+  });
+  it('distingue o experimento determinístico sem alterar a temperatura padrão', async () => {
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: '{"m":[]}' } }] })));
+    vi.stubGlobal('fetch', fetcher);
+    const client = new LocalModelClient(() => ({ url: 'http://127.0.0.1:1234', token: 'sintetico' }), { temperature: 0 });
+    await client.request([], 'Catálogo público.', 32);
+    expect(JSON.parse(fetcher.mock.calls[0][1].body).temperature).toBe(0);
+    expect(client.cacheKey).not.toBe(new LocalModelClient(() => null).cacheKey);
+  });
+  it('prepara somente o sistema público antes da inferência, nunca entrega histórico ao cache', async () => {
+    const prepareSystemPrefix = vi.fn().mockResolvedValue(false);
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: '{"m":[]}' } }] })));
+    vi.stubGlobal('fetch', fetcher);
+    const client = new LocalModelClient(() => ({ url: 'http://127.0.0.1:1234', token: 'a' }), { prepareSystemPrefix });
+    const result = await client.request([{ role: 'user', parts: [{ text: 'RELATO PRIVADO' }] }], 'catálogo público', 64);
+    expect(result.status).toBe('ok');
+    expect(prepareSystemPrefix).toHaveBeenCalledWith('catálogo público\n/no_think');
+    expect(JSON.stringify(prepareSystemPrefix.mock.calls)).not.toContain('PRIVADO');
+    expect(prepareSystemPrefix.mock.invocationCallOrder[0]).toBeLessThan(fetcher.mock.invocationCallOrder[0]);
+  });
+  it('exporta somente tempos e contagens válidos do runtime', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{
+      message: { content: '{"m":[]}' }, finish_reason: 'stop',
+    }], timings: { cache_n: 100, prompt_n: 12, prompt_ms: 3.5, predicted_n: -1, predicted_ms: 'inválido',
+      prompt: 'RELATO_PRIVADO', reasoning_content: 'RACIOCINIO_PRIVADO' } }))));
+    const onTimings = vi.fn();
+    const client = new LocalModelClient(() => ({ url: 'http://127.0.0.1:9876', token: 'x' }), { onTimings, indexed: true });
+    await client.request([], '', 32);
+    expect(onTimings).toHaveBeenCalledWith({ cachedTokens: 100, processedTokens: 12, promptMs: 3.5,
+      generatedTokens: undefined, generationMs: undefined });
+    expect(JSON.stringify(onTimings.mock.calls)).not.toContain('PRIVADO');
+    expect(client.localInterpretationProtocol).toBe('indexed');
+  });
+  it('separa identidade, cache e métricas de um candidato sem mudar o padrão', () => {
+    const standard = new LocalModelClient(() => null);
+    const candidate = new LocalModelClient(() => null, { modelName: 'Modelo-sintetico', modelSha256: 'a'.repeat(64) });
+    expect(candidate.cacheKey).not.toBe(standard.cacheKey);
+    expect(candidate.modelChain).toEqual(['Modelo-sintetico']);
+    expect(candidate.cacheKey).toContain('a'.repeat(64));
+  });
   it('separa o cache do experimento com orçamento menor, sem mudar o padrão direto', () => {
     const defaultClient = new LocalModelClient(() => null);
     const limited = new LocalModelClient(() => null, { thinking: true, reasoningBudget: 128 });

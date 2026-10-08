@@ -41,12 +41,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [localStatus, setLocalStatus] = useState<DesktopStatus | null>(null);
   const [backendConnection, setBackendConnection] = useState<BackendUiState>({
     state: 'not_configured',
   });
   const messageListRef = useRef<HTMLDivElement>(null);
+  const requestGeneration = useRef(0);
+
+  useEffect(() => {
+    if (!isThinking) { setElapsedSeconds(0); return; }
+    const started = Date.now();
+    const timer = setInterval(() => setElapsedSeconds(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [isThinking]);
 
   const isGeminiKeyConfigured = !getPackagedBackendUrl() && Boolean(
     storageAdapter.get<string>(STORAGE_KEYS.GEMINI_API_KEY, '').trim()
@@ -88,7 +97,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   }, [configurationRevision]);
 
   useEffect(() => {
+    // Uma resposta atrasada do serviço anterior nunca entra no caso novo.
+    requestGeneration.current += 1;
     setMessages([createWelcomeMessage(service.name)]);
+    setDraft('');
+    setIsThinking(false);
+    return () => { requestGeneration.current += 1; };
   }, [service.id, service.name, configurationRevision]);
 
   useEffect(() => {
@@ -132,6 +146,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     setMessages(updatedMessages);
     if (!customText) setDraft('');
     setIsThinking(true);
+    const generation = requestGeneration.current;
 
     try {
       const response = await assistantProvider.generateResponse(
@@ -140,6 +155,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         { id: service.id, name: service.name },
         requestHistory
       );
+      if (generation !== requestGeneration.current) return;
 
       if (isBackendConfigured && response.fallbackReason === 'backend_error') {
         setBackendConnection({
@@ -182,6 +198,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         ];
       });
     } catch (error) {
+      if (generation !== requestGeneration.current) return;
       setMessages((current) => [
         ...current,
         {
@@ -192,7 +209,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         },
       ]);
     } finally {
-      setIsThinking(false);
+      if (generation === requestGeneration.current) setIsThinking(false);
     }
   };
 
@@ -274,7 +291,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             <span />
           </span>
           <div>
-            <h3>Analista Sênior</h3>
+            <h3>{messages.length <= 1 ? 'Nova análise' : 'Caso em análise'}</h3>
             <span className="chat-hero-subtitle">
               <span className={`engine-dot ${engineStatus.className}`} aria-hidden="true" />
               {engineStatus.label}
@@ -305,12 +322,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      {/* Perguntas sugeridas */}
-      {service.suggestedQuestions && service.suggestedQuestions.length > 0 && (
+      {/* A abertura dá espaço ao relato; sugestões saem depois da primeira pergunta. */}
+      {messages.length <= 1 && <div className="conversation-intro">
+        <span className="intro-eyebrow">Uma OS por conversa</span>
+        <h2>O que as evidências mostram?</h2>
+        <p>Descreva o caso com suas palavras. Se faltar algo importante, eu pergunto.</p>
+      </div>}
+      {messages.length <= 1 && service.suggestedQuestions && service.suggestedQuestions.length > 0 && (
         <div className="prompt-suggestions">
-          <span className="prompt-label">Comece por aqui</span>
           <div className="prompt-row">
-            {service.suggestedQuestions.map((question, idx) => (
+            {service.suggestedQuestions.slice(0, 3).map((question, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -326,7 +347,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
       {/* Conversa */}
       <div ref={messageListRef} className="message-list" aria-live="polite">
-        {messages.map((message) => (
+        {messages.filter((message) => message.id !== 'welcome').map((message) => (
           <div key={message.id} className={`message-wrapper ${message.role}`}>
             <div className="bubble-header">
               <span className="author-name">
@@ -349,7 +370,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 <span>.</span>
                 <span>.</span>
               </span>
-              <span>Analisando o caso</span>
+              <span>{elapsedSeconds >= 20 ? 'A IA local está levando mais tempo' : 'Analisando o caso'}{elapsedSeconds > 0 ? ` · ${elapsedSeconds}s` : ''}</span>
             </div>
           </div>
         )}
@@ -369,6 +390,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
               }
             }}
             placeholder="Descreva a dúvida ou os fatos da OS..."
+            aria-label="Descreva a dúvida ou os fatos da Ordem de Serviço"
             rows={2}
             maxLength={4_000}
           />

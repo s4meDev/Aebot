@@ -38,6 +38,11 @@ function client(sourceId: unknown, group?: string): StructuredModelClient {
 }
 
 describe('ficha local de evidências', () => {
+  it('explica o conceito da evidência pelos dados, sem exigir uma palavra literal', () => {
+    expect(local.prompt).toContain(during.title);
+    expect(local.prompt).toContain(during.description);
+    expect(local.prompt).toContain('exemplos, não uma lista fechada');
+  });
   it('a gramática impede ausência sem referência e menção omitida com referência', () => {
     const schema = local.schema as { properties: { evidence: { properties: Record<string, {
       anyOf: Array<{ properties: { state: { enum: string[] }; sourceIds: { minItems?: number; maxItems: number } } }>

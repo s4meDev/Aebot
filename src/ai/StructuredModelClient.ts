@@ -33,6 +33,8 @@ export interface StructuredModelClient {
   readonly modelChain?: readonly string[];
   /** Identidade segura para separar caches de modelos/configurações diferentes. */
   readonly cacheKey: string;
+  /** Contrato local selecionado pelo transporte; não muda o motor nem os provedores online. */
+  readonly localInterpretationProtocol?: 'evidence' | 'compact' | 'indexed';
   request(
     contents: StructuredModelContent[],
     systemInstruction: string,

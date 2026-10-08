@@ -7,6 +7,7 @@
   "extraResources": [{ "from": "desktop-resources", "to": "local-ai", "filter": ["runtime-b11160-mix-a6922cc/**/*", "assets-lock.json", "licenses/**/*"] }],
   "asar": true,
   "npmRebuild": false,
+  "afterPack": "scripts/package-public-catalog.mjs",
   "forceCodeSigning": true,
   "afterSign": "scripts/verify-signed-runtime.mjs",
   "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "signAndEditExecutable": true, "signExts": [".dll"], "signtoolOptions": { "signingHashAlgorithms": ["sha256"] } },
