@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDownloadAssembler, DOWNLOAD_PART_BYTES } from '../download-packet.mjs';
+import { createDownloadAssembler, DOWNLOAD_PART_BYTES, zipEntryPathCheck } from '../download-packet.mjs';
 
 const version = '2.22.1';
 const hash = 'a'.repeat(64);
@@ -7,6 +7,14 @@ const parts = [{ name: `AEBOT-${version}.zip.001`, sha256: 'b'.repeat(64) },
   { name: `AEBOT-${version}.zip.002`, sha256: 'c'.repeat(64) }];
 
 describe('entrega em partes sem executar o aplicativo ou alterar segurança', () => {
+  it('preserva as barras da validação de caminhos enviada ao PowerShell', () => {
+    const pattern = new RegExp(zipEntryPathCheck);
+    for (const name of ['/fora', '\\fora', '../fora', 'resources/../fora', 'resources\\..\\fora']) {
+      expect(pattern.test(name)).toBe(true);
+    }
+    for (const name of ['resources/app.asar', 'resources/local-ai/model.gguf']) expect(pattern.test(name)).toBe(false);
+    expect(zipEntryPathCheck).toContain('\\.\\.');
+  });
   it('gera montagem explícita com hashes, sem sobrescrever ZIP existente', () => {
     const script = createDownloadAssembler(version, hash, parts);
     expect(DOWNLOAD_PART_BYTES).toBeLessThan(2 * 1024 ** 3);

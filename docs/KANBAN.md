@@ -1,6 +1,6 @@
 # Kanban de implantação do AEBOT local
 
-Atualização 2.22.1: corrigi as faltas coordenadas e a presença explícita do resultado final. A inferência real passou 51/51 casos de Asfalto, incluindo regras aplicadas, sem alterar o gabarito. Os 828 testes regulares passaram. K09/K13/K14 continuam em validação: a mediana com IA foi 17,7 s e o máximo 78,8 s nesta máquina de 8 GB; falta medir no Latitude, homologar o gabarito e validar execução autorizada do portátil. O pacote agora pode ser entregue em partes verificadas por SHA-256.
+Atualização 2.22.1: corrigi as faltas coordenadas e a presença explícita do resultado final. A inferência real passou 51/51 casos de Asfalto, incluindo regras aplicadas, sem alterar o gabarito. Os 829 testes regulares passaram. K09/K13/K14 continuam em validação: a mediana com IA foi 17,7 s e o máximo 78,8 s nesta máquina de 8 GB; falta medir no Latitude, homologar o gabarito e validar execução autorizada do portátil. O pacote agora pode ser entregue em partes verificadas por SHA-256.
 
 Os registros 2.22.0 abaixo são históricos, não o resultado da versão atual.
 

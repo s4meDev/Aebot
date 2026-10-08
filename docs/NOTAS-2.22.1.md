@@ -31,6 +31,6 @@ A latência de múltiplos fatos continua alta na máquina de desenvolvimento de 
 
 ## Validação
 
-Os 51 casos de Asfalto passaram com inferência real e conferência das regras aplicadas. Também passaram 828 testes regulares, o teste separado de 3.000 avaliações, TypeScript, auditoria e builds desktop/extensão/Node/Worker dry-run. Mediana dos casos com IA: 17,7 s; máximo: 78,8 s; carregamento separado: 10,6 s na máquina de 8 GB. Os resultados e a versão exata da rodada estão em [Desempenho local](https://github.com/s4meDev/Aebot/blob/main/docs/DESEMPENHO-IA-LOCAL.md). Teste aprovado não equivale a aceite dos analistas ou garantia de poucos segundos.
+Os 51 casos de Asfalto passaram com inferência real e conferência das regras aplicadas. Também passaram 829 testes regulares, o teste separado de 3.000 avaliações, TypeScript, auditoria e builds desktop/extensão/Node/Worker dry-run. Mediana dos casos com IA: 17,7 s; máximo: 78,8 s; carregamento separado: 10,6 s na máquina de 8 GB. Os resultados e a versão exata da rodada estão em [Desempenho local](https://github.com/s4meDev/Aebot/blob/main/docs/DESEMPENHO-IA-LOCAL.md). Teste aprovado não equivale a aceite dos analistas ou garantia de poucos segundos.
 
 Projeto idealizado e conduzido por **Pedro Lucas Botelho**.

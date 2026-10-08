@@ -12,11 +12,13 @@ A rodada `desktop-release/evaluations/2026-10-08T19-31-11-043Z.json` concluiu **
 
 O carregamento levou 10,6 s. A mediana dos casos com IA foi 17,7 s; o máximo foi 78,8 s. Os casos determinísticos tiveram mediana de 2 ms, que não representa velocidade do modelo. A máquina usada foi Ryzen 5 5600G com aproximadamente 8 GB; o Latitude de 16 GB ainda não foi medido. A conferência mais contextual melhora esta amostra, mas não comprova redução de latência.
 
-Validação de código: 828 testes aprovados, 1 teste de capacidade separado da suíte regular; TypeScript aprovado. O build desktop deixou de emitir o aviso de `inlineDynamicImports`. O pacote portátil continua sem assinatura própria; a validação de desenvolvimento é separada da abertura do EXE final.
+Validação de código: 829 testes aprovados, 1 teste de capacidade separado da suíte regular; TypeScript aprovado. O build desktop deixou de emitir o aviso de `inlineDynamicImports`. O pacote portátil continua sem assinatura própria; a validação de desenvolvimento é separada da abertura do EXE final.
 
 O teste adicional desta versão pela interface e IPC de desenvolvimento também passou (`desktop-release/desktop-smoke.json`, `packaged: false`): inferência real em 27,6 s, Reprovado com a regra final correta e renderer sem Node. Esse teste não substitui a medição dos 51 casos ou a conferência do executável empacotado. Os builds MV3, Node e Worker dry-run, a auditoria da base e o teste separado de 3.000 avaliações passaram.
 
 O protótipo final foi gerado em `desktop-release/prototipo-2.22.1-2026-10-08T19-49-16-448Z/win-unpacked`, com hashes conferidos. A tentativa explícita de iniciar `AEBOT-Prototipo.exe --aebot-package-check` foi bloqueada pelo Controle de Aplicativo do Windows, antes de executar o teste. Não há novo relatório empacotado aprovado: o relatório anterior não valida esta versão. Não alterei proteções ou assinatura para contornar a recusa. A entrega é um pré-lançamento para teste supervisionado, não uma instalação empresarial liberada.
+
+A primeira exportação do download detectou um escape inválido na regex enviada ao PowerShell. Preservei a pasta parcial, corrigi a transmissão literal das barras e acrescentei um teste para caminhos absolutos e `..`. A tentativa parcial não é um download distribuível. O exportador confere o conteúdo descompactado do ZIP e os hashes das partes antes de permitir a publicação.
 
 ## Histórico — 2.22.0
 

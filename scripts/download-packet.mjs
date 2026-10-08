@@ -9,6 +9,9 @@ import { runtimeDirectoryName, validateRuntimeInventory } from './runtime-securi
 
 export const DOWNLOAD_PART_BYTES = 1024 ** 3;
 
+// String.raw mantém as barras da regex no PowerShell; escapes JavaScript mudariam a validação.
+export const zipEntryPathCheck = String.raw`(^[/\\]|(^|[/\\])\.\.([/\\]|$))`;
+
 /** A montagem só junta arquivos conhecidos e confere hashes. Não executa o AEBOT ou muda proteções. */
 export function createDownloadAssembler(version, zipHash, parts) {
   if (!/^\d+\.\d+\.\d+$/.test(version) || !/^[a-f0-9]{64}$/.test(zipHash) ||
@@ -94,7 +97,7 @@ if ([IO.Path]::GetDirectoryName($targetPath) -ne $targetDirectory -or (Test-Path
 [IO.Compression.ZipFile]::CreateFromDirectory($sourcePath,$targetPath,[IO.Compression.CompressionLevel]::Fastest,$false);
 $archive=[IO.Compression.ZipFile]::OpenRead($targetPath);
 try { if (($archive.Entries | Where-Object { $_.Name }).Count -ne [int]$env:AEBOT_DOWNLOAD_FILE_COUNT) { throw 'Inventario ZIP divergente.' };
-foreach ($entry in $archive.Entries) { if ($entry.FullName -match '(^[/\\]|(^|[/\\])\.\.([/\\]|$))') { throw 'Caminho ZIP inseguro.' } };
+foreach ($entry in $archive.Entries) { if ($entry.FullName -match '${zipEntryPathCheck}') { throw 'Caminho ZIP inseguro.' } };
 foreach ($line in (Get-Content -LiteralPath (Join-Path $sourcePath 'SHA256SUMS.txt'))) {
 if ($line -notmatch '^([a-f0-9]{64})  (.+)$') { throw 'Hash de origem invalido.' };
 $expected=$Matches[1]; $entry=$archive.GetEntry($Matches[2]); if (-not $entry) { throw 'Arquivo ausente no ZIP.' };
