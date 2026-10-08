@@ -22,6 +22,12 @@ A primeira exportação do download detectou um escape inválido na regex enviad
 
 Também conferi o formato real do ZIP gerado pelo .NET do Windows: as entradas usam barras invertidas, enquanto o manifesto mantém barras normais. O leitor aceita as duas representações para localizar a mesma entrada e continua verificando seu conteúdo por SHA-256. A exportação final passou a conferência do conteúdo; as duas tentativas anteriores foram preservadas, sem publicação.
 
+No teste do montador, a chamada ao Windows PowerShell herdou um caminho de módulos que não disponibilizava `Get-FileHash`. Troquei essa dependência pela API SHA-256 do .NET, com fechamento dos streams e mensagem técnica em caso de falha. Não mudei Execution Policy nem proteções. O teste do montador é feito em subpasta própria, preservando ZIP e partes originais.
+
+A montagem real das quatro partes passou, incluindo o hash final do ZIP de 3.512.921.588 bytes. A entrega local validada está em `desktop-release/download-2.22.1-2026-10-08T20-01-41-175Z`; só as quatro partes e os arquivos auxiliares entram no pré-lançamento. ZIPs parciais, perfis e subpastas de teste não entram no upload.
+
+Uma execução simultânea da suíte com cópia pesada e upload teve cinco timeouts no ciclo do avaliador. Depois de concluir a cópia, repeti sem mudar código ou limites de tempo: 829 testes passaram em 4 s. Preservei essa distinção; a execução concorrente não foi contada como aprovada.
+
 ## Histórico — 2.22.0
 
 Mantive o Qwen3-4B-Instruct-2507 e revisei a base para 2.15.3. A inferência já é nativa em C++; trocar React ou TypeScript não remove a leitura do modelo. Priorizei o gargalo medido e a qualidade das associações, sem fallback de nuvem.

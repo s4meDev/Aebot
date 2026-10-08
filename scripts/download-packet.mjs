@@ -19,12 +19,14 @@ export function createDownloadAssembler(version, zipHash, parts) {
       parts.some((part, index) => part.name !== `AEBOT-${version}.zip.${String(index + 1).padStart(3, '0')}` ||
         !/^[a-f0-9]{64}$/.test(part.sha256))) throw new Error('Manifesto de download inválido.');
   const zip = `AEBOT-${version}.zip`;
-  const checks = parts.map(part => `if ((Get-FileHash -LiteralPath '${part.name}' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '${part.sha256}') { throw 'Parte ausente ou corrompida.' }`).join('; ');
-  const verify = `powershell.exe -NoProfile -NonInteractive -Command "$ErrorActionPreference='Stop'; try { if ((Get-FileHash -LiteralPath '${zip}' -Algorithm SHA256).Hash.ToLowerInvariant() -ne '${zipHash}') { throw 'ZIP divergente.' } } catch { Write-Host 'O ZIP nao passou na conferencia.'; exit 1 }"`;
+  // Uso SHA-256 do .NET, sem depender de módulos PowerShell instalados ou herdados pelo terminal.
+  const hashFunction = `function Assert-Hash($file,$expected) { $stream=[IO.File]::OpenRead($file); $algorithm=[Security.Cryptography.SHA256]::Create(); try { $actual=[BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-','').ToLowerInvariant(); if ($actual -ne $expected) { throw 'Hash divergente.' } } finally { $stream.Dispose(); $algorithm.Dispose() } }`;
+  const checks = parts.map(part => `Assert-Hash '${part.name}' '${part.sha256}'`).join('; ');
+  const verify = `powershell.exe -NoProfile -NonInteractive -Command "$ErrorActionPreference='Stop'; ${hashFunction}; try { Assert-Hash '${zip}' '${zipHash}' } catch { Write-Host 'O ZIP nao passou na conferencia.'; Write-Host $_.Exception.Message; exit 1 }"`;
   return ['@echo off', 'setlocal', 'cd /d "%~dp0"', 'if errorlevel 1 exit /b 1',
     'echo AEBOT - montagem do pacote para teste supervisionado',
     `if exist "${zip}" goto existente`,
-    `powershell.exe -NoProfile -NonInteractive -Command "$ErrorActionPreference='Stop'; try { ${checks} } catch { Write-Host 'Download incompleto ou corrompido. Baixe novamente as partes indicadas.'; exit 1 }"`,
+    `powershell.exe -NoProfile -NonInteractive -Command "$ErrorActionPreference='Stop'; ${hashFunction}; try { ${checks} } catch { Write-Host 'Download incompleto ou corrompido. Baixe novamente as partes indicadas.'; Write-Host $_.Exception.Message; exit 1 }"`,
     'if errorlevel 1 goto falha',
     `copy /b ${parts.map(part => `"${part.name}"`).join('+')} "${zip}" >nul`,
     'if errorlevel 1 goto falha', ':existente', verify, 'if errorlevel 1 goto falha',

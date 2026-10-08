@@ -21,6 +21,9 @@ describe('entrega em partes sem executar o aplicativo ou alterar segurança', ()
     expect(script).toContain('if exist "AEBOT-2.22.1.zip" goto existente');
     expect(script).toContain('copy /b "AEBOT-2.22.1.zip.001"+"AEBOT-2.22.1.zip.002"');
     for (const value of [hash, ...parts.map(part => part.sha256)]) expect(script).toContain(value);
+    expect(script).toContain('ComputeHash($stream)');
+    expect(script).toContain('$stream.Dispose(); $algorithm.Dispose()');
+    expect(script).not.toContain('Get-FileHash');
     expect(script).not.toMatch(/ExecutionPolicy|Unblock-File|Set-MpPreference|Remove-Item|start\s.*\.exe|\/Y\b/i);
   });
   it.each([
