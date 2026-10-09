@@ -1,0 +1,3 @@
+# Preservo os bytes das apresentações. Conversão de quebra de linha danifica PDFs.
+*.pdf binary
+*.pptx binary

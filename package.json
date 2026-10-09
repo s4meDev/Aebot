@@ -13,6 +13,7 @@
     "desktop:assets": "node scripts/prepare-desktop-assets.mjs",
     "desktop:prototype": "npm run desktop:build && node scripts/verify-desktop-assets.mjs && node scripts/package-prototype.mjs",
     "desktop:download": "node scripts/download-packet.mjs",
+    "desktop:transfer": "node scripts/prepare-transfer.mjs",
     "desktop:doctor": "node scripts/check-desktop-security.mjs",
     "desktop:evaluate": "node scripts/evaluate-local.mjs",
     "desktop:catalog:prepare": "node scripts/prepare-public-catalog.mjs",

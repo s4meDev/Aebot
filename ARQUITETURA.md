@@ -16,6 +16,10 @@ Arquivos do desktop, na ordem de responsabilidade:
 
 Atualização 2.22.1: `src/ai/LocalSources.ts` separa itens negados mantendo citações literais e o “nem”. Isso não altera o matching lexical nem cria fatos. A conferência local recebe também título e descrição da regra indicada, além do catálogo completo. `scripts/download-packet.mjs` confere o pacote, gera ZIP64 e partes de 1 GiB, com montagem verificável por SHA-256. Não publica automaticamente, não inclui perfil do analista e não altera proteções. Os testes ficam em `LocalSources.test.ts` e `download-packet.test.mjs`.
 
+Para enviar a entrega já gerada, `scripts/prepare-transfer.mjs` valida a pasta de origem e o manifesto da versão atual, confere cada parte e o hash do ZIP combinado e verifica novamente as cópias. Cria uma pasta `PARA-ENVIAR-AEBOT-*` e um ZIP pequeno com guia, montador e hashes. Não recompila o aplicativo, não executa a IA, não copia o workspace/perfil nem publica sozinho. Os contratos e a conferência de bytes são testados em `scripts/__tests__/prepare-transfer.test.mjs`; o uso está em `docs/TRANSFERIR-AEBOT.md`.
+
+As apresentações ficam em `apresentacoes/`, com versões anteriores preservadas e a versão curta em `AEBOT-2026-10-08/resumo`. `.gitattributes` mantém PDF e PPTX como binários, sem conversão de quebras de linha pelo Git.
+
 - `desktop/main.ts`: janela, validação do remetente IPC, coordenação das análises e diálogos de importação/exportação.
 - `desktop/preload.ts`: ponte limitada entre interface isolada e processo principal; não expõe Node nem IPC genérico.
 - `src/desktop/contracts.ts`: operações e estado do aplicativo local.
