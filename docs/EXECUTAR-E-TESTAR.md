@@ -1,5 +1,25 @@
 # Executar e testar o AEBOT
 
+## Revisão 2.23.0 — 13/10/2026
+
+O código atual não é o EXE 2.22.1 publicado. Separei o núcleo em `AnalysisProvider`, o transporte legado em `GeminiModelClient` e o histórico em `ModelContents`. A cobertura do relato preserva fatos comprovados e impede fechar uma OS usando só a primeira irregularidade reconhecida. Não passei a salvar conversas.
+
+Depois de mudar a instrução de interpretação, prepare novamente o catálogo público antes do build. O aplicativo continua usando Qwen3-4B-Instruct-2507; os candidatos menores comparados não foram adotados. O corpus de Asfalto tem **53 casos**. Para repetir a revisão:
+
+```powershell
+npm.cmd run desktop:catalog:prepare -- --service=repavimentacao-asfalto-ate-1m2
+npm.cmd run desktop:evaluate -- --corpus=asfalto --prepared
+npm.cmd test
+npm.cmd run typecheck
+npm.cmd run desktop:smoke
+```
+
+Faça a avaliação real sem outras instâncias do modelo ou tarefas pesadas concorrentes. O corpus novo inclui o recorte `--offset=48 --limit=5`, com vários fatos e mistura de palavras cadastradas com paráfrases. Consulte [o relatório de 13/10](STATUS-DESKTOP-2026-10-13.md): testes de código e respostas rápidas do motor não comprovam velocidade da IA.
+
+O contrato experimental por grupos de evidência (`--facts`) foi descartado após divergências e não faz parte desta versão. Experimentos isolados de NLI ficam em `.semantic-lab/`, ignorados pelo Git, sem dependência no aplicativo. Não distribua essa pasta.
+
+As referências ao protótipo 2.22.1 abaixo são históricas. Para abrir o código atual, use `desktop:start`; a distribuição anterior não se atualiza ao editar os arquivos do workspace.
+
 Atualização 2.22.1: a segmentação semântica preserva o “nem” de cada item negado e a conferência recebe descrições dos dados. Para preparar os downloads depois de gerar o protótipo, use `npm.cmd run desktop:download -- desktop-release/prototipo-<versão>-<data>/win-unpacked`. O comando aceita somente o pacote da versão atual, verifica hashes, recusa links/arquivos privados e cria uma pasta nova com ZIP64, partes e instruções de montagem. Não faz commit, push nem publicação; essas etapas continuam explícitas. Não use `Compress-Archive` no GGUF grande.
 
 Para o protótipo 2.22.1, `npm.cmd run desktop:prototype` prepara uma pasta completa com EXE, runtime, modelo e catálogo previamente preparado, sem assinatura própria do AEBOT. Leia [o guia portátil](PROTOTIPO-PORTATIL.md) e [as medições de desempenho](DESEMPENHO-IA-LOCAL.md) antes de distribuir. O comando empresarial `desktop:package` mantém assinatura obrigatória.
@@ -37,7 +57,7 @@ Neste workspace já preparado, também é possível abrir `Abrir-AEBOT.cmd` pela
 npm.cmd run desktop:start
 ```
 
-Para avaliar Asfalto com IA real: `npm.cmd run desktop:evaluate -- --corpus=asfalto --prepared`. O corpus tem 51 casos; o recorte `--offset=35 --limit=16` inclui paráfrases, negativos, continuações e vários fatos. O padrão usa o protocolo curto do aplicativo; `--compact` compara com o anterior. Sem `--prepared`, mede leitura fria sem restauração. O relatório separa carga do modelo, restauração, leitura, geração e tokens em cache, além de conclusão, regras e falhas técnicas. Não confunda inferência real com matching lexical ou primeiro uso com perguntas em cache.
+Para avaliar Asfalto com IA real: `npm.cmd run desktop:evaluate -- --corpus=asfalto --prepared`. O corpus tem 53 casos; o recorte `--offset=35 --limit=18` inclui paráfrases, negativos, continuações e vários fatos. O padrão usa o protocolo curto do aplicativo; `--compact` compara com o anterior. Sem `--prepared`, mede leitura fria sem restauração. O relatório separa carga do modelo, restauração, leitura, geração e tokens em cache, além de conclusão, regras e falhas técnicas. Não confunda inferência real com matching lexical ou primeiro uso com perguntas em cache.
 
 `desktop:catalog:prepare` é tarefa do mantenedor, não do analista. Pode repetir `--service=ID` para preparar outros catálogos; o índice publicado contém apenas a seleção daquela execução. Não recebe pergunta ou histórico. Refaça a preparação antes do build/pacote se mudar o catálogo ou a instrução local. A importação de regras no aplicativo não usa um cache antigo: se o prefixo mudar, faz a leitura normal. Não salve slots do runtime durante um chat.
 

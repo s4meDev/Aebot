@@ -1,4 +1,5 @@
 node_modules/
+.semantic-lab/
 desktop-dist/
 desktop-release/
 desktop-resources/runtime/

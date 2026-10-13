@@ -36,12 +36,14 @@ export function createLocalMappingVerification(query: string, service: DataServi
     properties: Object.fromEntries(keys.map((key) => [key, { type: 'boolean' }])) };
   // O prefixo de sistema já contém descrições, condições e exceções completas.
   // Nesta conferência, não precisamos repetir o catálogo nem gerar IDs longos.
-  const prompt = reuseSystemCatalog ? `Confira cada situação usando o catálogo da instrução de sistema, sobre ${service.name}.
-Retorne somente os booleanos solicitados. Confira CADA TRECHO, não apenas a regra: true exige que a citação sustente a situação e o estado. Estados: asserted = situação afirmada, inclusive uma falta; hypothetical = hipótese; informational = consulta; negated_or_present = a falha negada ou a evidência presente. Evidência de outra etapa não nega esta falta. Contexto obrigatório deve estar no relato. Não acrescente fatos nem conclua a OS.
+  const prompt = reuseSystemCatalog ? `CONFERIR_ASSOCIACOES
+Serviço: ${JSON.stringify({ id: service.id, name: service.name })}
+Confira cada citação e estado com o título, descrição, condições e exceções do catálogo de sistema. Presença de outra evidência não nega esta falta. Retorne somente os booleanos do schema.
+Um trecho iniciado por "nem" continua a negação anterior do relato. Não interprete esse trecho isolado como execução comprovada.
 Relato: ${JSON.stringify(query)}
-Checagens: ${JSON.stringify(candidates.map((mapping, index) =>
-    ({ key: keys[index], ruleId: mapping.ruleId, title: catalog.get(mapping.ruleId)?.title,
-      description: catalog.get(mapping.ruleId)?.description, stance: mapping.stance, quote: mapping.sourceQuote })))}`
+Checagens: ${JSON.stringify(candidates.map((mapping, index) => ({ key: keys[index], ruleId: mapping.ruleId,
+    title: catalog.get(mapping.ruleId)?.title, description: catalog.get(mapping.ruleId)?.description,
+    stance: mapping.stance, quote: mapping.sourceQuote })))}`
     : `Confira separadamente se cada situação descrita abaixo é sustentada pelo relato sobre ${service.name}.
 Responda true somente quando o relato afirmar ou consultar exatamente essa situação, inclusive uma hipótese explícita. Se exigir intervenção, motivo, evidência ou contexto não informado, responda false. Estar no mesmo assunto não é suficiente.
 Uma ausência não comprova outras ausências, outra irregularidade ou um contexto não informado. Não decida a conclusão oficial. Não crie regras e não complete o relato.

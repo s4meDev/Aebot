@@ -23,7 +23,7 @@ describe('polaridade das evidências', () => {
       expect(detectSemanticPolarity(`Não ${phrase} a identificação.`)).toBe('absence');
       expect(detectSemanticPolarity(`${phrase} a identificação.`)).toBe('present');
     });
-  it.each(['aparece', 'apareceu', 'veio', 'fotografaram', 'registraram', 'mediram', 'comprovaram',
+  it.each(['existe', 'existem', 'consta', 'constam', 'aparece', 'apareceu', 'veio', 'fotografaram', 'registraram', 'mediram', 'comprovaram',
     'vejo', 'vemos', 'vi', 'vimos', 'enxergo', 'enxergamos', 'visualizo', 'visualizamos'])
     ('reconhece a presença e a ausência usando o mesmo verbo: %s', (verb) => {
       expect(detectSemanticPolarity(`A evidência ${verb} na OS.`)).toBe('present');

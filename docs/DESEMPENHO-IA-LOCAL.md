@@ -1,5 +1,13 @@
 # Tempo de resposta da IA local
 
+## Revisão de 13/10/2026 — código 2.23.0
+
+A meta de poucos segundos para perguntas complexas continua pendente. O usuário relatou demora superior a 30 segundos tanto no PC pessoal quanto no Latitude de 16 GB. Mais RAM ou mudar a aplicação para Python não deve ser anunciado como solução comprovada.
+
+Corrigi a cobertura de relatos mistos e o prefixo de conferência, preservando os atalhos determinísticos quando todo o caso já está coberto. O trecho conhecido não encerra a avaliação se outro trecho ainda precisa de interpretação. A leitura pública foi preparada novamente para o prefixo v34; não contém perguntas nem histórico.
+
+Comparei Qwen3.5-2B, Granite 4.0 H Micro e Qwen3.5-4B. Houve respostas mais rápidas, mas também divergências; nenhum substituiu o modelo padrão. Um classificador NLI muito menor respondeu em dezenas de milissegundos, mas falhou ao relacionar os fatos às regras. Ele não foi integrado ao aplicativo. O [relatório de 13/10](STATUS-DESKTOP-2026-10-13.md) contém números, arquivos de avaliação e o que ainda falta. Os resultados abaixo são históricos, não validação da versão nova.
+
 ## Correção atual — 2.22.1
 
 Separei cada item de uma coordenação negativa no contrato curto, mantendo o “nem” e a citação literal. Condições, exceções e agregadoras continuam no motor, sobre o relato original. A conferência recebe também título/descrição da regra indicada, sem retirar o catálogo completo. Acrescentei validação de presença para verbos como “vejo” e “vi”: ver o resultado não significa que a foto final esteja ausente.

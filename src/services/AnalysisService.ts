@@ -1,4 +1,4 @@
-import { GeminiProvider } from '../ai/GeminiProvider';
+import { AnalysisProvider } from '../ai/AnalysisProvider';
 import { buildServiceSystemInstruction } from '../ai/PromptBuilder';
 import type {
   StructuredModelClient,
@@ -20,7 +20,7 @@ export interface AnalysisStatus {
   geminiConfigured: boolean;
   serviceCount?: number;
   ruleCount?: number;
-  aiMetrics?: ReturnType<GeminiProvider['getDiagnostics']>;
+  aiMetrics?: ReturnType<AnalysisProvider['getDiagnostics']>;
 }
 
 export interface AnalysisService {
@@ -37,13 +37,13 @@ export interface AnalysisServiceOptions {
 
 /** Usa o mesmo motor na extensão, no servidor local e no Worker online. */
 export class AebotAnalysisService implements AnalysisService {
-  private readonly provider: GeminiProvider;
+  private readonly provider: AnalysisProvider;
 
   constructor(
     private readonly options: AnalysisServiceOptions,
     private readonly engine: RuleEngine = ruleEngine
   ) {
-    this.provider = new GeminiProvider(engine, {
+    this.provider = new AnalysisProvider(engine, {
       getModelClient: () => this.options.modelClient,
       humanizeDeterministicResponses: this.options.humanizeDeterministicResponses,
     });

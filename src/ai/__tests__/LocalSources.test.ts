@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { splitLocalSources } from '../LocalSources';
 
 describe('citações locais de fatos coordenados', () => {
+  it('não mistura uma falta conhecida com outra oração negativa ligada por e', () => {
+    const query = 'Sem documento inicial e não registraram a revisão.';
+    expect(splitLocalSources(query)).toEqual(['Sem documento inicial', 'e não registraram a revisão.']);
+  });
   it('mantém as citações literais e a negação de cada item', () => {
     const query = 'Não há documento inicial nem da revisão nem do encerramento. O recibo está presente.';
     const parts = splitLocalSources(query);

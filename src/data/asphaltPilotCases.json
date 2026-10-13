@@ -443,5 +443,21 @@
     "decision": "Reprovado",
     "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01", "RULE-ASF-FOTO-DURANTE-01", "RULE-ASF-FOTOS-COMBINADAS-01"],
     "requiresSemantic": true
+  },
+  {
+    "name": "fato lexical não pode encerrar antes de interpretar outro fato",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem foto antes. Não registraram nada enquanto espalhavam o material na vala.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01", "RULE-ASF-FOTO-DURANTE-01", "RULE-ASF-FOTOS-COMBINADAS-01"],
+    "requiresSemantic": true
+  },
+  {
+    "name": "fato conhecido com outro fato em paráfrase na mesma oração",
+    "serviceId": "repavimentacao-asfalto-ate-1m2",
+    "query": "Sem foto antes e não registraram nada enquanto espalhavam o material na vala.",
+    "decision": "Reprovado",
+    "expectedClassifyingRuleIds": ["RULE-ASF-FOTO-ANTES-01", "RULE-ASF-FOTO-DURANTE-01", "RULE-ASF-FOTOS-COMBINADAS-01"],
+    "requiresSemantic": true
   }
 ]

@@ -1,12 +1,28 @@
 # Arquitetura do AEBOT
 
+## Revisão do núcleo em 13/10/2026 — código 2.23.0
+
+Separei o fluxo de análise do transporte do Gemini. O desktop continua offline; trocar o cliente não troca o motor nem as regras. Não migrei para Python: a inferência pesada já roda em C++ no llama.cpp, e a troca da linguagem da aplicação, sozinha, não resolve a demora medida.
+
+- `src/ai/AnalysisProvider.ts`: coordena contexto, cobertura do relato, interpretação, conferência, cache em memória e resposta. Não contém decisões específicas de serviço.
+- `src/ai/GeminiModelClient.ts`: transporte HTTP e configuração do perfil Chrome legado. O desktop injeta `LocalModelClient` e não usa essa configuração.
+- `src/ai/GeminiProvider.ts`: mantém os imports antigos compatíveis; reexporta os módulos acima, sem duplicar a lógica.
+- `src/ai/ModelContents.ts`: monta o histórico recente e a pergunta atual sem duplicação.
+- `src/services/AnalysisCoverage.ts`: confere se o matching lexical cobriu o relato completo. Contexto obrigatório já reconhecido não pede IA outra vez. Uma parte desconhecida impede fechar uma análise parcial como se fosse completa.
+- `src/services/FactSources.ts`: separa orações negativas preservando a citação original, inclusive “nem” e “e não”. `LocalSources.ts` reaproveita essa função.
+- `src/services/__tests__/AnalysisCoverage.test.ts`: protege fatos mistos, falha segura da interpretação, preservação de fatos comprovados, serviço inválido e atalhos determinísticos.
+
+Interpretação e conferência usam o mesmo prefixo público de sistema; o modo da chamada fica no pedido. Cada citação/estado continua conferido. Prepare novamente o catálogo público após mudar essa instrução. Não grave slots de conversas.
+
+O corpus de Asfalto tem **53 casos sintéticos**. Modelos menores e um classificador NLI foram comparados, mas não adotados por apresentarem divergências. O [relatório da revisão](docs/STATUS-DESKTOP-2026-10-13.md) separa correção de código, qualidade do modelo e latência. Esta revisão não é um anúncio de aplicativo pronto ou de novo EXE publicado.
+
 ## Rota atual: desktop offline
 
 Atualização de 07/10: `Abrir-AEBOT.cmd` abre o build local pelo executável Electron existente no workspace. É um atalho de desenvolvimento; o instalador empresarial continua exigindo assinatura. O protótipo de Asfalto é descrito em `docs/PROTOTIPO-ASFALTO.md`.
 
 O novo ponto de entrada é `desktop/main.ts`, um processo Electron que inicia o runtime e mantém o motor fora da interface. A interface React existente acessa somente operações tipadas em `src/desktop/contracts.ts` através de `desktop/preload.ts`. Não há servidor central ou autenticação por API no desktop.
 
-Ordem de execução: interface → IPC validado → `AnalysisService` → `LocalModelClient` → Qwen/llama.cpp no loopback → JSON validado pelo `SemanticInterpreter` → `RuleEngine` → explicação curta. Casos já conclusivos usam diretamente o motor. Perguntas pendentes e retificações continuam usando os contratos existentes.
+Ordem de execução: interface → IPC validado → `AnalysisService` → avaliação lexical e cobertura → `LocalModelClient` quando necessário → Qwen/llama.cpp no loopback → JSON validado pelo `SemanticInterpreter` → `RuleEngine.evaluateFacts` → explicação curta. Casos conclusivos com relato totalmente coberto usam diretamente o motor. Uma primeira regra reconhecida não encerra a análise de outro fato ainda desconhecido. Perguntas pendentes e retificações continuam usando os contratos existentes.
 
 Desde 28/09, o orquestrador entrega `SemanticEvaluationInput` a `RuleEngine.evaluateFacts`: relato original, serviço selecionado e mapeamentos com citações. O motor revalida essa entrada e `RuleRetriever.retrieveMappedRules` avalia somente as regras apontadas e suas combinações previstas na base, sem reconstruir texto para pesquisar todo o catálogo novamente. Exceções e condições obrigatórias são conferidas no relato original, inclusive nas regras agregadoras. O resultado, o ranking e a formatação continuam compartilhados com `evaluatePrompt`.
 
@@ -41,7 +57,7 @@ As apresentações ficam em `apresentacoes/`, com versões anteriores preservada
 - `desktop/__tests__/PublicCatalogCache.test.ts` e `scripts/__tests__/public-catalog-package.test.mjs`: incompatibilidade, adulteração, links, caminhos, reinício e restauração sem persistir chats. Testes simulados, não medições de desempenho.
 - `src/components/DesktopSettings.tsx`: situação da IA, importação e exportação, sem pedir chave ou endereço.
 - `desktop/evaluate.ts`: compara o modelo real ao corpus técnico; registra início antes de carregar o runtime, progresso e falhas sem copiar exceções brutas. O cliente de diagnóstico preserva o protocolo do aplicativo; o relatório registra protocolo e configuração real do runtime. `--inspect-facts` mostra somente interpretações do corpus sintético; não existe na telemetria do aplicativo. Mantém homologação operacional como pendente.
-- `src/data/asphaltPilotCases.json`: 49 casos sintéticos de Asfalto; 14 reservados ao fluxo conversacional/semântico. Incluem negação de falta, consulta sem ocorrência e ausências coordenadas. Negativos também conferem associações permitidas; falha técnica não conta como interpretação correta de `null`. O comando `desktop:evaluate -- --corpus=asfalto` preserva o serviço de cada caso; `--prepared` usa o catálogo preparado como no aplicativo.
+- `src/data/asphaltPilotCases.json`: 53 casos sintéticos de Asfalto, incluindo paráfrases, negação de falta, consulta sem ocorrência, ausências coordenadas e mistura de matching lexical com linguagem livre. Negativos também conferem associações permitidas; falha técnica não conta como interpretação correta de `null`. O comando `desktop:evaluate -- --corpus=asfalto` preserva o serviço de cada caso; `--prepared` usa o catálogo preparado como no aplicativo.
 - `src/services/__tests__/AsphaltPrototype.test.ts`: regras nas duas áreas, negações, combinações, prioridade, resposta curta, contexto obrigatório e isolamento dos outros serviços.
 - `desktop/EvaluationSummary.ts`: valida o progresso e resume divergências, consumo informado e latência separada por casos com e sem chamadas à IA. Uma rodada concluída pode ter divergências; uma falha sem casos não é aprovação.
 - As avaliações sintéticas são salvas desde o início e após cada caso em `desktop-release/evaluations/`; `local-evaluation.json` contém a rodada mais recente, inclusive quando falhou ao iniciar. São artefatos de teste, não conversas dos analistas. Uma interrupção abrupta pode deixar estado `starting` ou `running`, sempre incompleto.
@@ -180,9 +196,11 @@ Se nenhuma regra classificatória realmente aplicável for encontrada, `decision
 ### 2.6 Uso opcional de IA
 
 - `src/ai/StructuredModelClient.ts` define o contrato que qualquer modelo deve cumprir.
-- `src/ai/WorkersAiModelClient.ts` integra o modelo disponível no Cloudflare Worker.
 - `src/ai/WorkersAiModelClient.ts` integra a contingência online do Cloudflare Workers AI.
-- `src/ai/GeminiProvider.ts` mantém o nome histórico, mas hoje coordena o motor e qualquer cliente estruturado configurado.
+- `src/ai/AnalysisProvider.ts` coordena o motor e qualquer cliente estruturado configurado.
+- `src/ai/GeminiModelClient.ts` integra o transporte HTTP legado do Gemini.
+- `src/ai/GeminiProvider.ts` preserva os imports históricos por reexportação.
+- `src/ai/ModelContents.ts` prepara histórico recente e pergunta atual, sem duplicação.
 - `src/ai/PromptBuilder.ts` entrega ao modelo a avaliação já calculada e proíbe alteração da decisão.
 
 O modelo compreende linguagem informal, referências ao histórico e frases incompletas, responde em até quatro frases e faz no máximo uma pergunta por vez. A decisão recebida do motor é imutável; se o texto do modelo contrariá-la, ele é descartado e entra o formatador curto de contingência.
@@ -269,6 +287,8 @@ Regras que evitam acoplamento:
 
 - `AnalysisService.ts`: fachada compartilhada que executa uma análise completa.
 - `ConversationContextResolver.ts`: continuação, retificação e novo caso.
+- `AnalysisCoverage.ts`: cobertura lexical do relato e proteção contra conclusão parcial.
+- `FactSources.ts`: segmentação de fatos negativos, preservando citações e conectivos.
 - `TextNormalizer.ts`: normalização e tokens inteiros.
 - `QueryIntentClassifier.ts`: intenção e força da afirmação.
 - `RuleRetriever.ts`: recuperação, score e motivos de correspondência.
@@ -289,10 +309,12 @@ Regras que evitam acoplamento:
 
 - `BackendClient.ts`: cliente HTTP da API.
 - `BackendProvider.ts`: provider usado pela extensão e política de fallback.
-- `GeminiProvider.ts`: orquestra motor, interpretação e humanização.
+- `AnalysisProvider.ts`: orquestra motor, interpretação, conferência e resposta.
+- `GeminiProvider.ts`: compatibilidade dos imports históricos.
+- `GeminiModelClient.ts`: transporte HTTP do Gemini e configuração do Chrome legado.
+- `ModelContents.ts`: montagem do histórico e da mensagem atual.
 - `PromptBuilder.ts`: prompts restritos ao resultado e às regras recuperadas.
 - `StructuredModelClient.ts`: interface comum para modelos.
-- `WorkersAiModelClient.ts`: adaptador do Workers AI.
 - `WorkersAiModelClient.ts`: adaptador do modelo online executado no Cloudflare.
 - `__tests__`: contratos, falhas e garantias dos providers.
 
@@ -374,7 +396,6 @@ Os testes ficam perto da parte que protegem:
 - `src/ai/__tests__/BackendClient.test.ts`: requisições, respostas e falhas HTTP.
 - `src/ai/__tests__/BackendProvider.test.ts`: backend preferencial e regras do fallback.
 - `src/ai/__tests__/GeminiProvider.test.ts`: decisão imutável, histórico e humanização.
-- `src/ai/__tests__/WorkersAiModelClient.test.ts`: contrato do modelo de contingência online.
 - `src/ai/__tests__/WorkersAiModelClient.test.ts`: contrato do modelo Cloudflare.
 - `src/api/__tests__/FeedbackClient.test.ts`: envio e erros do feedback.
 - `src/api/__tests__/feedbackContracts.test.ts`: validação e limpeza dos campos de feedback.

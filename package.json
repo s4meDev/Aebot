@@ -1,6 +1,6 @@
 {
   "name": "field-service-assistant",
-  "version": "2.22.1",
+  "version": "2.23.0",
   "private": true,
   "description": "Assistente de análise operacional com IA local e regras auditáveis",
   "author": "Pedro Lucas Botelho",

@@ -1122,7 +1122,8 @@ describe('GeminiProvider', () => {
   });
 
   it('motor genérico não contém IDs nem textos de um serviço específico', () => {
-    const files = ['../../services/RuleEngine.ts', '../../services/RuleRetriever.ts', '../../services/ConflictResolver.ts'];
+    const files = ['../../services/RuleEngine.ts', '../../services/RuleRetriever.ts', '../../services/ConflictResolver.ts',
+      '../../services/AnalysisCoverage.ts', '../../services/FactSources.ts', '../AnalysisProvider.ts'];
     const source = files
       .map((relativePath) => readFileSync(new URL(relativePath, import.meta.url), 'utf8'))
       .join('\n');
@@ -1160,6 +1161,41 @@ describe('GeminiProvider', () => {
       modelRequests: 1,
     });
     expect(JSON.stringify(provider.getDiagnostics())).not.toContain(query);
+  });
+
+  it('não reaproveita a interpretação quando a pontuação muda de pergunta para relato', async () => {
+    const quote = 'O momento do torque sumiu do relatório';
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({
+      candidates: [{ content: { parts: [{ text: JSON.stringify({ mappings: [{ ruleId: duringRule.id,
+        sourceQuote: quote, stance: 'asserted' }] }) }] } }],
+    }) });
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new GeminiProvider(ruleEngine, { getApiKey: () => 'test-key', humanizeDeterministicResponses: false });
+    const service = { id: selectedService.id, name: selectedService.name };
+    const question = await provider.generateResponse('', `${quote}?`, service);
+    const report = await provider.generateResponse('', `${quote}.`, service);
+    expect(question.decision).toBeNull();
+    expect(report.decision).toBe('Não Conforme');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(provider.getDiagnostics()).toMatchObject({ semanticCacheEntries: 2, semanticCacheHits: 0 });
+    expect(JSON.stringify(provider.getDiagnostics())).not.toContain(quote);
+  });
+
+  it('o cache considera o texto do histórico mesmo quando o contexto técnico não mudou', async () => {
+    const query = 'O momento do torque sumiu do relatório.';
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({
+      candidates: [{ content: { parts: [{ text: JSON.stringify({ mappings: [{ ruleId: duringRule.id,
+        sourceQuote: query, stance: 'asserted' }] }) }] } }],
+    }) });
+    vi.stubGlobal('fetch', fetchMock);
+    const provider = new GeminiProvider(ruleEngine, { getApiKey: () => 'test-key', humanizeDeterministicResponses: false });
+    const service = { id: selectedService.id, name: selectedService.name };
+    const message: AiMessage = { id: 'previous', role: 'assistant', content: 'Orientação sintética A.',
+      contextQuery: 'Contexto sintético igual.', timestamp: '09:00' };
+    await provider.generateResponse('', query, service, [message]);
+    await provider.generateResponse('', query, service, [{ ...message, content: 'Orientação sintética B.' }]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(provider.getDiagnostics()).toMatchObject({ semanticCacheEntries: 2, semanticCacheHits: 0 });
   });
 
   it('não usa chave Gemini local no pacote empresarial', async () => {

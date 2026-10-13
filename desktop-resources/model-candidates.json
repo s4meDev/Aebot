@@ -1,4 +1,11 @@
 {
+  "granite4micro": {
+    "name": "granite-4.0-h-micro-Q4_K_M.gguf",
+    "revision": "dc1dd2585fac18a78001c677d33ef8a7bbb7eb68",
+    "url": "https://huggingface.co/ibm-granite/granite-4.0-h-micro-GGUF/resolve/dc1dd2585fac18a78001c677d33ef8a7bbb7eb68/granite-4.0-h-micro-Q4_K_M.gguf",
+    "sha256": "bcc78b9b25450101d1ad90d4b9a264e1bac892f534dfb76066f4eec792fdf023",
+    "size": 1942564512
+  },
   "qwen3instruct": {
     "name": "Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
     "revision": "a06e946bb6b655725eafa393f4a9745d460374c9",

@@ -29,7 +29,9 @@ describe('conferência local de associações múltiplas', () => {
     const full = createLocalMappingVerification('Relato sintético.', service, rules, interpretation)!;
     expect(short.prompt.length).toBeLessThan(full.prompt.length);
     expect(short.prompt).toContain(first.id);
-    expect(short.prompt).toContain(first.description);
+    expect(short.prompt).toContain('catálogo de sistema');
+    expect(short.prompt).toContain(first.description); // Âncora da regra conferida, além do catálogo completo.
+    expect(short.prompt).toContain('continua a negação anterior');
     expect(short.parse('{"0":true,"1":false}')?.mappings.map((mapping) => mapping.ruleId)).toEqual([first.id]);
     for (const value of ['{"0":true}', '{"0":true,"1":"true"}', '{"0":true,"1":false,"2":true}']) {
       expect(short.parse(value)).toBeNull();

@@ -1,5 +1,11 @@
 # AEBOT — decisões técnicas permanentes
 
+- A coordenação compartilhada pertence a `AnalysisProvider`; transportes ficam em `GeminiModelClient`, `LocalModelClient` etc. `GeminiProvider` é apenas compatibilidade de imports, não o cérebro do desktop.
+- No desktop, uma correspondência lexical parcial não deve encerrar a análise. Confira a cobertura do relato, preserve fatos determinísticos na interpretação e valide as associações antes de combinar regras. Falha de interpretação de outro fato não autoriza fechar a OS com a primeira regra.
+- Interpretação e conferência locais usam prefixo de sistema idêntico; o modo vai no pedido. Cada citação/estado continua conferido. Mudança no prefixo exige nova preparação pública e medição real; nunca use o cache antigo como se fosse compatível.
+- Cache semântico usa hash de campos serializados, incluindo relato original, intenção, serviço, base e histórico recente. Não reutilize uma interpretação só pela frase normalizada: pontuação, acento e limites de citação podem mudar o caso. Nunca exponha esses campos nos diagnósticos.
+- O atalho de esclarecimento aceita somente contexto presente nas condições cadastradas das regras aplicáveis. Não use um limite de palavras para presumir que a resposta não trouxe outro fato; uma confirmação de equipe com nova irregularidade também precisa de análise.
+
 - Rota principal desde setembro/2026: aplicativo Windows offline por notebook, Qwen3-4B-Instruct-2507 Q4_K_M selecionado no protótipo de outubro, em llama.cpp gerenciado pelo Electron. Modelos anteriores são preservados; a seleção não é homologação. Piloto com 5–10 analistas; expansão até 60 depende de homologação. As diretrizes online abaixo se aplicam somente aos perfis legados, nunca ao desktop.
 - O desktop usa IPC tipado, renderer isolado/sandboxed, runtime em 127.0.0.1 com credencial temporária e sem fallback de nuvem. Modelo e runtime são empacotados; o analista não configura chave, URL ou porta.
 - Atualizações de regras locais exigem pacote validado, versão superior, responsável declarado, vigência e descrição da revisão. Preserve a versão anterior; autoria declarada não substitui assinatura nem distribuição confiável da TI.
