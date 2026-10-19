@@ -2,6 +2,8 @@
 
 ## Só quero usar
 
+O [guia de download em outro computador](../COMO-BAIXAR-EM-OUTRO-PC.md) contém o link do ZIP completo no GitHub e o passo a passo sem ferramentas de desenvolvimento. Não use “Source code (zip)” para instalar: ele não contém EXE nem modelo.
+
 1. Abra `python/dist/AEBOT-Python-0.1.1.zip` e extraia tudo.
 2. Entre na pasta extraída e abra `AEBOT.exe`.
 3. Aguarde “IA local pronta”, escolha a faixa de área de Asfalto e descreva a OS.

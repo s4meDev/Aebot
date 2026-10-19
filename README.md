@@ -8,7 +8,7 @@ O AEBOT ajuda a interpretar relatos de análise, consultar regras e orientar a r
 
 Em 19/10/2026, restaurei o projeto e comecei uma implementação desktop em **Python**, separada do Electron antigo. O foco é **Repavimentação Asfalto, até e acima de 1 m²**. Troquei a geração longa de texto por interpretação local de trechos com ONNX e uma resposta curta construída a partir das regras. Não usa servidor, API, chave ou cota por chamada.
 
-**Para testar:** extraia o pacote `AEBOT-Python-0.1.1.zip` em `python/dist/`, abra a pasta extraída e execute `AEBOT.exe`. Mantenha `resources` e `_internal` junto dele. O passo a passo acompanha o pacote em `LEIA-ME.txt`. O executável foi iniciado nesta máquina; não possui assinatura própria e não há garantia de liberação em todos os Windows.
+**Para baixar em outro computador:** [baixe o pacote completo](https://github.com/s4meDev/Aebot/releases/download/python-v0.1.1-prototipo/AEBOT-Python-0.1.1.zip) e siga [o passo a passo simples](COMO-BAIXAR-EM-OUTRO-PC.md). Extraia tudo, abra a pasta extraída e execute `AEBOT.exe`. Mantenha `resources` e `_internal` junto dele. Não precisa instalar Python nem cadastrar chave. O executável foi iniciado nesta máquina; não possui assinatura própria e não há garantia de liberação em todos os Windows. O pacote local também está em `python/dist/` e contém um `LEIA-ME.txt`.
 
 Resultado atual: **50/53 casos do corpus anterior e 16/16 cenários adicionais**. Os três casos não atendidos pedem esclarecimento em vez de concluir. Maior tempo medido de análise nessas rodadas: **2,38 segundos**, com modelo carregado. Isso não garante 100% de acerto nem o mesmo tempo em qualquer notebook. [Resultados e limitações](docs/STATUS-PYTHON-2026-10-19.md).
 
