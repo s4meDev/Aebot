@@ -83,6 +83,8 @@ export interface DataRule {
   mandatoryConditionGroups?: RuleConditionGroup[];
   exceptions?: string[];
   examples?: string[];
+  /** Situações canônicas para interpretação local; não são novas regras ou sinônimos de cada pergunta. */
+  semanticCriteria?: string[];
   guidance?: string;
   category?: string;
   relatedEvidence?: string[];

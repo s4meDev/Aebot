@@ -11,6 +11,14 @@ function cloneStore(): Record<string, unknown> {
 }
 
 describe('RuleStoreValidator', () => {
+  it('preserva critérios semânticos opcionais e rejeita valores inválidos', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    rules[0].semanticCriteria = ['Critério descritivo para interpretação local.'];
+    expect(parseRuleStore(store).rules[0].semanticCriteria).toEqual(rules[0].semanticCriteria);
+    rules[0].semanticCriteria = [123];
+    expect(() => parseRuleStore(store)).toThrow(/semanticCriteria/);
+  });
   it('aceita e tipa a base atual', () => {
     const store = parseRuleStore(rulesStoreData);
     expect(store.version).toBe(CURRENT_RULE_STORE_VERSION);

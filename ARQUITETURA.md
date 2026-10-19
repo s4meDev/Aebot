@@ -1,5 +1,40 @@
 # Arquitetura do AEBOT
 
+## Rota Python — 19/10/2026
+
+Esta é a implementação nova em avaliação. As seções seguintes são o histórico do Electron/TypeScript e não devem ser confundidas com o fluxo Python. Mantive o legado para evitar apagar recursos que ainda não migrei.
+
+Fluxo: janela Tkinter → sessão em memória → normalização e separação de fatos → regras do serviço → interpretação ONNX quando necessária → condições/exceções e combinação de fatos → decisão e orientação. Não existe servidor HTTP, processo llama-server nem geração de parágrafos pelo modelo nesta rota.
+
+Arquivos, na ordem da arquitetura:
+
+| Arquivo/pasta | Responsabilidade |
+| --- | --- |
+| `python/main.py` | Abre a janela; `--check` testa o runtime e uma paráfrase real do modelo. |
+| `python/aebot/app.py` | Interface, seleção dos dois serviços, fila entre threads, conversa e Novo caso. Não decide regras. |
+| `python/aebot/session.py` | Contexto temporário; une continuações explícitas e respostas a uma informação pendente. Trocar caso ou serviço limpa o contexto. |
+| `python/aebot/contracts.py` | Contratos de fonte literal, regra encontrada e avaliação; hipótese tem `scenarioDecision`, não decisão de uma OS real. |
+| `python/aebot/text.py` | Normaliza caixa, acentos, aliases e tokens; identifica intenção, negação e voz passiva. Preserva citação e antecedente de “nem”. |
+| `python/aebot/store.py` | Lê e valida o JSON compartilhado; filtra serviço e confere condições/exceções no relato original. |
+| `python/aebot/engine.py` | Matching lexical/semântico, cobertura dos trechos, agregação dos grupos confirmados, conflito, resultado tipado e resposta curta. Não contém nomes/IDs de regras de Asfalto. |
+| `python/aebot/reranker.py` | Compara pares de texto com BGE local. Retorna relevância, não porcentagem de acerto. Um par por inferência evita interferência da quantização entre exemplos do lote. |
+| `python/aebot/runtime.py` | Encontra os recursos do código/EXE, confere tamanho e hashes do modelo e carrega o motor uma vez. Não baixa nada. |
+| `src/data/rulesStore.json` | Fonte única de regras, conclusões, condições, exceções, mensagens e orientações. `semanticCriteria` opcional descreve o significado da regra sem mudar sua conclusão. |
+| `src/data/languageAliases.json` | Equivalências linguísticas compartilhadas com o legado. |
+| `schemas/rulesStore.schema.json` | Validação de estrutura e apoio à edição no VS Code. |
+| `python/prepare_model.py` + `reranker.lock.json` | Preparação online pelo mantenedor, revisão fixa do modelo e verificação de bytes. Não recebe relatos de OS. |
+| `python/tests/` | Testes rápidos de regra, contexto, contratos e integridade, sem rede neural. |
+| `python/evaluate.py` | Compara decisões e regras com os 53 casos antigos, usando a sessão real. |
+| `python/test_semantic.py` | Cenários sintéticos adicionais com modelo real; não é um conjunto cego de homologação. |
+| `python/test_app.py` | Testa janela, fila de resposta, Novo caso, equipe e serviço com a IA real. |
+| `python/package_app.py` | Monta EXE portátil, recursos permitidos, licenças, versões e hashes. Não copia o workspace inteiro. |
+| `python/zip_app.py` | Confere o manifesto e a ausência de arquivos extras antes de criar e verificar o ZIP de transferência. |
+| `python/requirements*.txt`, `environment-tested.txt` | Dependências diretas, ferramenta de build e fotografia do ambiente completo testado. |
+| `python/LEIA-ME.txt`, `THIRD-PARTY-NOTICES.md` | Guia do analista e identificação dos componentes distribuídos. |
+| `python/models/`, `build/`, `dist/`, `artifacts/`, `.venv/` | Pesos, intermediários, entrega, medições e ambiente gerados localmente; ficam fora do Git. |
+
+Limites importantes: a relevância semântica ainda é heurística, não prova formal de ocorrência. Limiar e margem são controles técnicos, não garantia estatística. A versão é focada em Asfalto; não homologuei a equivalência do motor Python com todos os serviços nem migrei todas as funções administrativas. A resposta atual usa as mensagens da base, não um LLM redator livre. Veja [as pendências e medições](docs/STATUS-PYTHON-2026-10-19.md).
+
 ## Revisão do núcleo em 13/10/2026 — código 2.23.0
 
 Separei o fluxo de análise do transporte do Gemini. O desktop continua offline; trocar o cliente não troca o motor nem as regras. Não migrei para Python: a inferência pesada já roda em C++ no llama.cpp, e a troca da linguagem da aplicação, sozinha, não resolve a demora medida.

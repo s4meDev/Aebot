@@ -1,5 +1,5 @@
 {
-  "version": "2.15.3",
+  "version": "2.16.0",
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -2398,6 +2398,7 @@
     },
     {
       "id": "RULE-ASF-FOTO-ANTES-01",
+      "semanticCriteria": ["Falta de registro da condição inicial do local, antes de começar o trabalho."],
       "examples": ["sem foto antes"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2444,6 +2445,7 @@
     },
     {
       "id": "RULE-ASF-FOTO-DURANTE-01",
+      "semanticCriteria": ["Falta de registro do serviço em andamento, com aplicação do material de pavimentação."],
       "examples": ["sem foto durante"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2490,6 +2492,7 @@
     },
     {
       "id": "RULE-ASF-FOTO-DEPOIS-01",
+      "semanticCriteria": ["Falta de registro do resultado final, depois que o pavimento ficou pronto."],
       "examples": ["sem foto depois"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2770,6 +2773,7 @@
     },
     {
       "id": "RULE-ASF-MEDICAO-01",
+      "semanticCriteria": ["Metragem informada no formulário diferente do tamanho real do trecho executado."],
       "examples": ["medição incoerente"],
       "positiveSignals": ["incoerente", "não bate", "não corresponde"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
@@ -2925,6 +2929,7 @@
     },
     {
       "id": "RULE-ASF-DUPLICIDADE-01",
+      "semanticCriteria": ["O mesmo serviço já foi executado e encerrado em outra ordem de serviço, conforme consulta ao Field ou SCAE."],
       "examples": ["serviço já executado em outra OS no Field"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [

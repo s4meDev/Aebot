@@ -1,5 +1,17 @@
 # AEBOT — decisões técnicas permanentes
 
+## Implementação Python em avaliação (19/10/2026)
+
+- A rota nova solicitada é `python/`, com Tkinter e BGE/ONNX local, focada nas duas faixas de Repavimentação Asfalto. Não imponha Electron ou TypeScript a essa implementação.
+- Regras continuam exclusivamente no `src/data/rulesStore.json` compartilhado; não copie IDs, conclusões ou textos de serviço para o motor Python.
+- Preserve citações, serviço selecionado, condições, exceções, múltiplos fatos, estado de esclarecimento e `decision: null` quando não houver suporte. Hipótese não é classificação de uma OS real.
+- Não há telemetria ou persistência automática de conversas. A análise não acessa a rede. Downloads só ocorrem no preparador do mantenedor, com revisão e hashes fixos.
+- Antes de entregar: `unittest`, corpus e cenários adicionais com modelo real, teste da janela, typecheck/build/Vitest do legado e execução do EXE gerado. Compare regras e decisão; não conte falha técnica como acerto. Registre também as divergências.
+- Não prometa 100% de acerto nem velocidade universal. Preserve os créditos completos de Pedro Lucas Botelho Naus e mantenha README, arquitetura e guia de execução atualizados.
+- As orientações abaixo descrevem **exclusivamente o legado**. Preservar sua compatibilidade não significa usar seus protocolos, catálogo em prompt ou runtime no Python. O protótipo sem assinatura própria deve informar essa limitação e nunca alterar controles do Windows.
+
+## Histórico técnico — aplicável aos perfis legados
+
 - A coordenação compartilhada pertence a `AnalysisProvider`; transportes ficam em `GeminiModelClient`, `LocalModelClient` etc. `GeminiProvider` é apenas compatibilidade de imports, não o cérebro do desktop.
 - No desktop, uma correspondência lexical parcial não deve encerrar a análise. Confira a cobertura do relato, preserve fatos determinísticos na interpretação e valide as associações antes de combinar regras. Falha de interpretação de outro fato não autoriza fechar a OS com a primeira regra.
 - Interpretação e conferência locais usam prefixo de sistema idêntico; o modo vai no pedido. Cada citação/estado continua conferido. Mudança no prefixo exige nova preparação pública e medição real; nunca use o cache antigo como se fosse compatível.

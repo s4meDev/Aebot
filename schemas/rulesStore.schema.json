@@ -133,6 +133,7 @@
         "mandatoryConditionGroups": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/conditionGroup" }, "description": "Todos os grupos são obrigatórios; basta uma expressão de cada grupo no relato original." },
         "exceptions": { "$ref": "#/$defs/stringList" },
         "examples": { "$ref": "#/$defs/stringList" },
+        "semanticCriteria": { "$ref": "#/$defs/stringList", "description": "Situações canônicas usadas pelo interpretador local. Não alteram a conclusão ou dispensam condições e exceções." },
         "guidance": { "$ref": "#/$defs/nonEmptyString" },
         "category": { "$ref": "#/$defs/nonEmptyString" },
         "relatedEvidence": { "$ref": "#/$defs/stringList" },

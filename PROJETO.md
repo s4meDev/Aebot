@@ -1,3 +1,9 @@
+# Direção atual — 19/10/2026
+
+A implementação nova em avaliação usa Python, Tkinter e inferência ONNX local, inicialmente nas duas faixas de Repavimentação Asfalto. A regra permanece no JSON compartilhado. O objetivo é reduzir a demora sem terceirizar a conclusão para a IA. Não considero 100% de acerto ou poucos segundos em qualquer notebook como resultado comprovado.
+
+O fluxo Electron/Qwen abaixo fica como histórico, não como obrigação de usar esse runtime na versão Python. Documentação atual: `docs/EXECUTAR-PYTHON.md`, `docs/STATUS-PYTHON-2026-10-19.md` e seção inicial de `ARQUITETURA.md`.
+
 # Objetivo
 
 Criar um Analista Sênior Virtual.

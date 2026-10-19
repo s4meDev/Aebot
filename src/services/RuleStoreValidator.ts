@@ -12,7 +12,7 @@ import type {
   ServiceParameterization,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.15.3';
+export const CURRENT_RULE_STORE_VERSION = '2.16.0';
 const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
 const DECISION_POLICIES: ServiceDecisionPolicy[] = ['ranked', 'most_severe_applicable'];
 const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];
@@ -450,7 +450,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
             'id', 'serviceId', 'applicableServiceIds', 'appliesToAllActiveServices', 'title', 'description',
             'severity', 'priority', 'conditionKeywords', 'message',
             'equivalentExpressions', 'positiveSignals', 'negativeSignals',
-            'mandatoryConditions', 'mandatoryConditionGroups', 'exceptions', 'examples', 'guidance', 'category',
+            'mandatoryConditions', 'mandatoryConditionGroups', 'exceptions', 'examples', 'semanticCriteria', 'guidance', 'category',
             'relatedEvidence', 'topicKeywords', 'sourceReferences', 'factGroup',
             'attentionLevel', 'matchPolicy', 'missingInformation',
           ],
@@ -497,6 +497,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           mandatoryConditionGroups: parseMandatoryGroups(item.mandatoryConditionGroups, `${path}.mandatoryConditionGroups`, issues),
           exceptions: stringArray(item.exceptions, `${path}.exceptions`, issues),
           examples: stringArray(item.examples, `${path}.examples`, issues),
+          semanticCriteria: stringArray(item.semanticCriteria, `${path}.semanticCriteria`, issues),
           guidance: optionalString(item, 'guidance', path, issues),
           category: optionalString(item, 'category', path, issues),
           relatedEvidence: stringArray(item.relatedEvidence, `${path}.relatedEvidence`, issues),

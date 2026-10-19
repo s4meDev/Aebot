@@ -1,0 +1,36 @@
+AEBOT - protótipo Python 0.1.1 / Repavimentação Asfalto
+
+COMO ABRIR
+1. Copie a pasta inteira para o computador (não somente o EXE).
+2. Se recebeu um ZIP, extraia tudo antes de abrir.
+3. Abra AEBOT.exe. Aguarde a indicação "IA local pronta".
+4. Escolha a faixa de área do serviço e conte o que encontrou na OS.
+5. Responda à pergunta do assistente se ele precisar de um detalhe.
+6. Use "Novo caso" para analisar outra OS e descartar o contexto anterior.
+
+Não precisa instalar Python, cadastrar chave, configurar servidor ou ter internet
+para analisar. Não existe cota de API. O desempenho depende do computador.
+O modelo já está na pasta. Não exclua resources nem _internal.
+
+IMPORTANTE
+Este é um protótipo novo, não uma garantia de 100% de acerto. Ele não lê fotos:
+interpreta o relato do analista e aplica as regras. Revise a orientação na OS.
+Algumas frases ainda precisam ser esclarecidas. Não use o pacote antigo 2.22.1
+para avaliar o desempenho desta versão: são implementações diferentes.
+
+Somente as duas faixas de Repavimentação Asfalto estão disponíveis nesta interface.
+As regras vêm do material "Repavimentação Asfalto atualizado.txt", preservado na
+base do projeto. Nenhuma conversa é gravada. Fechar a janela apaga o caso atual.
+
+SE O WINDOWS BLOQUEAR
+Este EXE não possui certificado próprio do AEBOT. A mudança para Python não
+garante liberação em qualquer computador. Não desative antivírus, SmartScreen,
+AppLocker ou políticas da empresa. Guarde a mensagem de bloqueio para diagnóstico.
+
+MANTENÇÃO
+Regras: resources/src/data/rulesStore.json
+Após uma alteração aprovada, feche e reabra o aplicativo e execute os testes do
+projeto antes de redistribuir a base. Não altere IDs sem revisar suas referências.
+Os critérios de interpretação não mudam as conclusões cadastradas.
+
+Projeto idealizado e conduzido por Pedro Lucas Botelho Naus.

@@ -1,4 +1,12 @@
 node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+python/models/
+python/artifacts/
+python/build/
+python/dist/
 .semantic-lab/
 desktop-dist/
 desktop-release/

@@ -2,7 +2,36 @@
 
 Assistente de Análise para revisão de Ordens de Serviço executadas por equipes de campo.
 
-O AEBOT está migrando para um aplicativo Windows com IA local e funcionamento offline. Ele ajuda o analista a interpretar situações em linguagem natural, aplicar as regras cadastradas e receber orientação curta e fundamentada. A extensão Chrome e a API online continuam no repositório como versões legadas compatíveis.
+O AEBOT ajuda a interpretar relatos de análise, consultar regras e orientar a revisão de Ordens de Serviço. As decisões são fundamentadas na base cadastrada; a IA não inventa critérios de aprovação.
+
+## Atual — protótipo Python para Asfalto
+
+Em 19/10/2026, restaurei o projeto e comecei uma implementação desktop em **Python**, separada do Electron antigo. O foco é **Repavimentação Asfalto, até e acima de 1 m²**. Troquei a geração longa de texto por interpretação local de trechos com ONNX e uma resposta curta construída a partir das regras. Não usa servidor, API, chave ou cota por chamada.
+
+**Para testar:** extraia o pacote `AEBOT-Python-0.1.1.zip` em `python/dist/`, abra a pasta extraída e execute `AEBOT.exe`. Mantenha `resources` e `_internal` junto dele. O passo a passo acompanha o pacote em `LEIA-ME.txt`. O executável foi iniciado nesta máquina; não possui assinatura própria e não há garantia de liberação em todos os Windows.
+
+Resultado atual: **50/53 casos do corpus anterior e 16/16 cenários adicionais**. Os três casos não atendidos pedem esclarecimento em vez de concluir. Maior tempo medido de análise nessas rodadas: **2,38 segundos**, com modelo carregado. Isso não garante 100% de acerto nem o mesmo tempo em qualquer notebook. [Resultados e limitações](docs/STATUS-PYTHON-2026-10-19.md).
+
+Para desenvolver em Windows x64, com Python 3.12 e Tkinter disponíveis:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r python/requirements.txt
+.\.venv\Scripts\python.exe python/prepare_model.py
+.\.venv\Scripts\python.exe python/main.py
+```
+
+O preparador baixa e verifica aproximadamente 588 MB de modelo e tokenizer uma vez. A análise posterior é offline. O pacote portátil já contém esses arquivos e o runtime Python; o analista não executa esses comandos.
+
+- [Executar, testar e empacotar em Python](docs/EXECUTAR-PYTHON.md)
+- [Arquitetura, arquivo por arquivo](ARQUITETURA.md)
+- [Regras editáveis](src/data/rulesStore.json): mesma fonte dos perfis antigos, sem cópia das decisões em Python.
+
+O novo protótipo ainda **não incorpora** importador de atualizações, feedback e métricas administrativas das versões anteriores. Conversas ficam somente em memória. Use **Novo caso** ao mudar de OS. Ainda preciso validar mais linguagem real e medir no Latitude antes de substituir definitivamente o aplicativo antigo.
+
+## Histórico preservado — Electron, extensão e API
+
+As seções abaixo documentam a implementação até 13/10/2026. Seus modelos, pacotes 2.22.1 e comandos `desktop:*` **não executam a nova versão Python**. O código legado permanece disponível; seus resultados não são apresentados como resultados do novo protótipo.
 
 ## Por onde começar
 
@@ -247,4 +276,4 @@ Nunca adicione chaves em variáveis `VITE_*`, pois elas seriam incorporadas ao p
 
 ## Créditos
 
-Projeto idealizado e conduzido por **Pedro Lucas Botelho**, responsável pela visão do produto e pelas diretrizes operacionais do AEBOT.
+Projeto idealizado e conduzido por **Pedro Lucas Botelho Naus**, responsável pela visão do produto e pelas diretrizes operacionais do AEBOT.
