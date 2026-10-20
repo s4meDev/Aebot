@@ -11,6 +11,27 @@ class Source:
     quote: str
     model_text: str
     inherited_from: str | None = None
+    scope_hint: str | None = None
+    relationship: str | None = None
+
+
+@dataclass(frozen=True)
+class ContextFact:
+    dimension: str
+    value: str
+    scope: str
+    quote: str
+
+
+@dataclass(frozen=True)
+class Observation:
+    fact: str
+    scope: str
+    source: Source
+    active: bool
+    score: float
+    terms: tuple[str, ...]
+    semantic: bool = False
 
 
 @dataclass
@@ -28,6 +49,7 @@ class Match:
     missingInformation: list[str] = field(default_factory=list)
     supportingRuleIds: list[str] = field(default_factory=list)
     matchedTerms: list[str] = field(default_factory=list)
+    contextQuotes: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -53,6 +75,10 @@ class Evaluation:
     durationMs: float = 0
     errorCode: str | None = None
     content: str = ""
+    pendingContext: dict | None = None
+    activeScope: str | None = None
+    observations: list[dict] = field(default_factory=list)
+    contextFacts: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)

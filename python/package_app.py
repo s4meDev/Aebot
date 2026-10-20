@@ -7,9 +7,10 @@ import shutil
 import subprocess
 import sys
 from aebot.runtime import verify_model
+from aebot import __version__
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / 'python/dist/AEBOT-Python-0.1.1'
+OUTPUT = ROOT / 'python/dist' / f'AEBOT-Python-{__version__}'
 
 
 def main() -> None:
@@ -29,6 +30,8 @@ def main() -> None:
     shutil.copytree(ROOT / 'python/models/bge', resources / 'python/models/bge')
     for name in ('LEIA-ME.txt', 'THIRD-PARTY-NOTICES.md'):
         shutil.copy2(ROOT / 'python' / name, OUTPUT / name)
+    shutil.copy2(ROOT / 'docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md', OUTPUT / 'RESULTADOS-TESTES.md')
+    shutil.copy2(ROOT / 'docs/FEEDBACK-PYTHON.md', OUTPUT / 'GUIA-FEEDBACK.md')
     licenses = OUTPUT / 'LICENSES'
     licenses.mkdir()
     packages = sorted(importlib.metadata.distributions(), key=lambda item: item.metadata['Name'].lower())

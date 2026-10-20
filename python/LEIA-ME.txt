@@ -1,4 +1,4 @@
-AEBOT - protótipo Python 0.1.1 / Repavimentação Asfalto
+AEBOT - protótipo Python 0.3.0 / Repavimentação Asfalto
 
 COMO ABRIR
 1. Copie a pasta inteira para o computador (não somente o EXE).
@@ -18,9 +18,24 @@ interpreta o relato do analista e aplica as regras. Revise a orientação na OS.
 Algumas frases ainda precisam ser esclarecidas. Não use o pacote antigo 2.22.1
 para avaliar o desempenho desta versão: são implementações diferentes.
 
+NESTA REVISÃO
+Melhorei relatos informais, etapas, plurais, comparações e palavras intermediárias.
+O serviço atual, a origem e o adicional continuam separados. Corrigir equipe ou
+frente substitui o dado anterior sem apagar as outras falhas. Se faltar contexto
+ou a interpretação não for segura, o assistente pede esclarecimento.
+
 Somente as duas faixas de Repavimentação Asfalto estão disponíveis nesta interface.
 As regras vêm do material "Repavimentação Asfalto atualizado.txt", preservado na
 base do projeto. Nenhuma conversa é gravada. Fechar a janela apaga o caso atual.
+
+FEEDBACK
+Clique em "Enviar feedback", escreva o problema e salve. Só o formulário e as
+versões são gravados, sem anexar o chat. Não inclua dados de cliente ou número de OS.
+Em "Feedbacks salvos", leia, busque, exporte JSON ou importe arquivos recebidos.
+O responsável reúne os JSONs dos analistas na própria instalação; não há envio
+automático, servidor ou métricas persistentes. Importar novamente não duplica.
+O banco fica em %LOCALAPPDATA%\AEBOT\Python\feedback.sqlite3 e é preservado ao
+trocar a pasta do aplicativo. Não é criptografado. Consulte GUIA-FEEDBACK.md.
 
 SE O WINDOWS BLOQUEAR
 Este EXE não possui certificado próprio do AEBOT. A mudança para Python não

@@ -1,76 +1,48 @@
-# Como baixar e abrir o AEBOT em outro computador
+# Como levar o AEBOT para outro computador
 
-Esta é a versão **Python 0.1.1**, focada em **Repavimentação Asfalto**. O pacote já leva o programa, o Python e o modelo local. Não precisa instalar ferramentas, configurar servidor ou cadastrar chave de IA.
+## Pacote atualizado: Python 0.3.0
 
-## 1. Baixar
+**Ainda em preparação:** o código 0.3.0 está salvo, mas seu novo EXE/ZIP precisa concluir validação e empacotamento. O caminho previsto é `python/dist/AEBOT-Python-0.3.0.zip`; não considero o pacote entregue antes de ele existir e passar no teste do executável.
 
-No computador em que vou usar o AEBOT, abro este link:
+Quando estiver pronto, posso enviá-lo pelo WhatsApp como **Documento**, copiar por pendrive ou compartilhar o arquivo inteiro. Não preciso enviar o código-fonte. Os passos abaixo valem para a pasta completa gerada, não para o código baixado do GitHub.
 
-**[Baixar AEBOT-Python-0.1.1.zip](https://github.com/s4meDev/Aebot/releases/download/python-v0.1.1-prototipo/AEBOT-Python-0.1.1.zip)**
+Esta revisão é local. O [download público 0.1.1](https://github.com/s4meDev/Aebot/releases/tag/python-v0.1.1-prototipo) continua disponível como versão anterior, mas **não contém as correções nem o feedback da 0.3.0**.
 
-O arquivo tem aproximadamente **495 MB**. Preciso de internet para baixar, mas as análises funcionam offline depois de extrair o pacote.
+## Extrair e abrir
 
-Se o download direto não abrir, entro na [página do protótipo](https://github.com/s4meDev/Aebot/releases/tag/python-v0.1.1-prototipo), procuro **Assets** e seleciono **AEBOT-Python-0.1.1.zip**.
-
-**Não escolho “Source code (zip)”**: esse é o código para desenvolvimento e não contém o aplicativo pronto nem o modelo.
-
-Também posso enviar o mesmo ZIP pelo WhatsApp, como **Documento**, ou copiar por pendrive. Não preciso levar a pasta inteira do projeto.
-
-## 2. Extrair e abrir
-
-1. Localizo `AEBOT-Python-0.1.1.zip` na pasta Downloads.
+1. Copio `AEBOT-Python-0.3.0.zip` para o outro computador.
 2. Clico com o botão direito e escolho **Extrair Tudo**.
-3. Escolho uma pasta em Documentos e aguardo terminar a extração.
-4. Abro a pasta `AEBOT-Python-0.1.1` extraída.
-5. Dou dois cliques em **AEBOT.exe** e aguardo aparecer **IA local pronta**.
+3. Aguardo terminar e abro a pasta `AEBOT-Python-0.3.0`.
+4. Dou dois cliques em **AEBOT.exe**.
+5. Aguardo **IA local pronta**, seleciono o serviço e escrevo o caso.
 
-Não abro o EXE de dentro do ZIP. Mantenho as pastas `_internal` e `resources` ao lado dele: elas fazem parte do programa. Se quiser um atalho, crio um atalho do EXE; não movo apenas o EXE para a área de trabalho.
+Não abro o EXE de dentro do ZIP. Mantenho `_internal`, `resources`, licenças e guias ao lado dele. O pacote já contém o Python e o modelo; não preciso instalar ferramentas, configurar servidor, cadastrar chave ou manter internet para analisar.
 
-O pacote foi gerado para **Windows de 64 bits**. O Latitude com 16 GB é um alvo de teste, não uma garantia de desempenho já comprovada. Reservo cerca de 2 GB livres para o ZIP e a pasta extraída; o uso de RAM e a velocidade dependem da máquina e dos outros programas abertos.
+O alvo é **Windows de 64 bits**. Reservo cerca de 2 GB livres para o ZIP e a pasta extraída. A velocidade depende do computador e dos programas abertos. Evito deixar a versão antiga e a nova com suas IAs abertas ao mesmo tempo.
 
-## 3. Usar
+## Usar
 
-1. Seleciono a faixa de área de Repavimentação Asfalto.
-2. Descrevo o que observei na OS. O programa interpreta meu relato; não analisa fotos diretamente.
-3. Se ele perguntar o tipo de equipe, respondo **interna** ou **terceirizada**.
-4. Confiro a orientação e as regras citadas antes de concluir a análise.
-5. Clico em **Novo caso** antes de analisar outra OS.
+- Escolho até ou acima de 1 m² de Repavimentação Asfalto.
+- Descrevo o que observei. O programa interpreta meu relato; **não lê as fotos**.
+- Se ele perguntar equipe ou frente, respondo na mesma conversa.
+- Para corrigir um dado, escrevo “Corrigindo: ...”.
+- Para outra OS, clico em **Novo caso**.
+- Confiro a orientação e as regras antes de concluir no sistema.
 
-Fechar a janela descarta a conversa. Esta versão ainda não guarda histórico nem oferece as telas de feedback e administração do aplicativo antigo.
+A conversa fica somente em memória. Fechar a janela a descarta. **Enviar feedback** salva apenas o formulário preenchido voluntariamente, sem anexar o chat. Em **Feedbacks salvos**, leio ou exporto um JSON para o responsável importar no próprio AEBOT. Veja [o guia de feedback](docs/FEEDBACK-PYTHON.md). O banco fica no perfil Windows, fora da pasta do aplicativo, e é preservado ao trocar de versão. Administração central e atualização de regras pela interface ainda não foram migradas. Não há métricas persistentes.
 
 ## Se não abrir
 
-- Se aparecer “IA local pronta” e depois houver dúvida na resposta, descrevo melhor o fato ou começo um Novo caso.
-- Se faltar arquivo ou modelo, extraio novamente o ZIP inteiro em outra pasta, sem misturar com a versão antiga.
-- Se o Windows bloquear, guardo uma captura com a mensagem completa. Este EXE **não tem assinatura digital própria**. Não desativo antivírus, SmartScreen ou políticas da empresa para tentar executá-lo.
-- A execução já foi verificada na máquina de desenvolvimento, mas ainda preciso validar a cópia no Latitude e em máquinas limpas.
+Se faltar arquivo ou modelo, extraio o ZIP inteiro novamente em uma pasta separada, sem misturar versões.
 
-## O que esperar deste protótipo
+Se o Windows bloquear, guardo uma captura da mensagem completa. O protótipo **não tem assinatura digital própria**. Não desativo antivírus, SmartScreen, AppLocker ou políticas para fazê-lo executar. Python não elimina esse tipo de restrição.
 
-Nos testes registrados, 66 de 69 cenários foram atendidos; três ainda pedem esclarecimento. Não é uma garantia de 100% de acerto. O maior tempo de análise medido naquelas rodadas foi 2,38 segundos com o modelo carregado; a abertura e o desempenho em outro computador podem ser diferentes.
+O EXE é testado na máquina de desenvolvimento, mas isso não garante liberação ou desempenho igual em qualquer notebook.
 
-O pacote Python é separado do antigo `2.22.1`. Não preciso desinstalar a versão antiga para testar esta pasta, mas evito deixar as duas IAs abertas ao mesmo tempo, disputando memória.
+## Limitações e manutenção
 
-## Para quem vai continuar o desenvolvimento
+A [revisão 0.3.0](docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md) explica o que melhorou, os tempos medidos e as perguntas que ainda falham. Não é uma garantia de 100% de acerto.
 
-O código está no [repositório do AEBOT](https://github.com/s4meDev/Aebot), na branch `main`. O commit `6513992` contém a implementação Python. O guia [Executar Python](docs/EXECUTAR-PYTHON.md) explica dependências, regras, testes e geração do EXE. Clonar o Git não baixa os modelos nem o pacote portátil; para apenas usar, prefiro o link do ZIP acima.
-
-### Conferência opcional do download
-
-No PowerShell, dentro da pasta Downloads:
-
-```powershell
-Get-FileHash -LiteralPath '.\AEBOT-Python-0.1.1.zip' -Algorithm SHA256
-```
-
-O resultado deve ser:
-
-```text
-A98D816D190D201C08609EBA4991C6F60E906BCFC673BC299130FF9E3C6E430D
-```
-
-Esse hash confere os bytes do download; não substitui assinatura digital nem comprova a qualidade das respostas.
-
----
+A pasta contém `LEIA-ME.txt` e `SHA256SUMS.txt`. Os hashes verificam os bytes dos arquivos; não substituem assinatura digital nem comprovam a qualidade da análise. Para executar pelo código, editar regras ou gerar outra versão, sigo [Executar Python](docs/EXECUTAR-PYTHON.md).
 
 Projeto idealizado e conduzido por **Pedro Lucas Botelho Naus**.

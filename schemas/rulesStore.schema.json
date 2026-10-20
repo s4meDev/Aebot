@@ -7,6 +7,7 @@
   "required": ["version", "conclusions", "services", "rules"],
   "properties": {
     "version": { "type": "string", "pattern": "^2\\.\\d+\\.\\d+$" },
+    "interpretation": { "$ref": "#/$defs/interpretation" },
     "conclusions": {
       "type": "object",
       "additionalProperties": false,
@@ -28,6 +29,36 @@
     }
   },
   "$defs": {
+    "interpretation": {
+      "type": "object", "additionalProperties": false, "required": ["defaultScope", "scopes", "contexts"],
+      "properties": {
+        "defaultScope": { "$ref": "#/$defs/nonEmptyString" },
+        "recordTerms": { "$ref": "#/$defs/stringList" },
+        "scopes": { "type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "expressions"],
+          "properties": { "id": { "$ref": "#/$defs/nonEmptyString" }, "expressions": { "$ref": "#/$defs/stringList" } }
+        } },
+        "contexts": { "type": "array", "items": {
+          "type": "object", "additionalProperties": false, "required": ["id", "question", "values"],
+          "properties": {
+            "id": { "$ref": "#/$defs/nonEmptyString" }, "question": { "$ref": "#/$defs/nonEmptyString" }, "shared": { "type": "boolean" }, "perStatement": { "type": "boolean" },
+            "values": { "type": "array", "minItems": 1, "items": {
+              "type": "object", "additionalProperties": false, "required": ["id", "label", "expressions"],
+              "properties": { "id": { "$ref": "#/$defs/nonEmptyString" }, "label": { "$ref": "#/$defs/nonEmptyString" }, "expressions": { "$ref": "#/$defs/stringList" } }
+            } }
+          }
+        } }
+      }
+    },
+    "evaluation": {
+      "type": "object", "additionalProperties": false, "required": ["fact", "scope", "stance"],
+      "properties": {
+        "fact": { "$ref": "#/$defs/nonEmptyString" }, "scope": { "$ref": "#/$defs/nonEmptyString" },
+        "stance": { "enum": ["absence", "irregularity", "presence"] }, "ask": { "$ref": "#/$defs/nonEmptyString" },
+        "requires": { "type": "object", "additionalProperties": { "$ref": "#/$defs/stringList" } },
+        "incompatible": { "type": "object", "additionalProperties": { "$ref": "#/$defs/stringList" } }
+      }
+    },
     "nonEmptyString": { "type": "string", "minLength": 1 },
     "stringList": {
       "type": "array",
@@ -134,6 +165,7 @@
         "exceptions": { "$ref": "#/$defs/stringList" },
         "examples": { "$ref": "#/$defs/stringList" },
         "semanticCriteria": { "$ref": "#/$defs/stringList", "description": "Situações canônicas usadas pelo interpretador local. Não alteram a conclusão ou dispensam condições e exceções." },
+        "evaluation": { "$ref": "#/$defs/evaluation" },
         "guidance": { "$ref": "#/$defs/nonEmptyString" },
         "category": { "$ref": "#/$defs/nonEmptyString" },
         "relatedEvidence": { "$ref": "#/$defs/stringList" },

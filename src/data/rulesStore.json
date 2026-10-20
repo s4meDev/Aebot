@@ -1,5 +1,34 @@
 {
-  "version": "2.16.0",
+  "version": "2.18.0",
+  "interpretation": {
+    "defaultScope": "current",
+    "recordTerms": ["foto", "imagem", "registro", "evidência", "vídeo"],
+    "scopes": [
+      { "id": "current", "expressions": ["serviço atual", "OS atual", "repavimentação atual", "asfalto atual", "original"] },
+      { "id": "origin", "expressions": ["OS de origem", "ordem de origem", "ordem de serviço de origem", "na origem", "da origem", "origem sem aferição"] },
+      { "id": "executed", "expressions": ["adicional executado", "desdobro executado", "no executado", "serviço adicional"] }
+    ],
+    "contexts": [
+      { "id": "team", "question": "A equipe que executou esse serviço é interna ou terceirizada?", "values": [
+        { "id": "internal", "label": "equipe interna", "expressions": ["interna", "interno", "equipe própria", "própria empresa", "pessoal próprio", "funcionário da empresa", "equipe da empresa"] },
+        { "id": "contractor", "label": "equipe terceirizada", "expressions": ["terceirizada", "terceirizado", "equipe terceira", "empreiteira", "contratada"] }
+      ] },
+      { "id": "front", "shared": true, "question": "A frente desse serviço é VCG, Manutenção ou Comercial?", "values": [
+        { "id": "vcg", "label": "frente VCG", "expressions": ["VCG"] },
+        { "id": "maintenance", "label": "frente manutenção", "expressions": ["manutenção"] },
+        { "id": "commercial", "label": "frente comercial", "expressions": ["comercial"] }
+      ] },
+      { "id": "stage", "perStatement": true, "question": "A informação se refere ao início, à execução ou ao resultado final?", "values": [
+        { "id": "initial", "label": "condição inicial", "expressions": ["antes", "início", "começo", "chegaram", "chegada", "condição inicial", "fase inicial", "estado inicial"] },
+        { "id": "during", "label": "execução em andamento", "expressions": ["durante", "fazendo", "trabalhando", "andamento", "aplicando", "espalhando", "aplicavam", "espalhavam", "aplicação do material", "sendo feito"] },
+        { "id": "final", "label": "resultado final", "expressions": ["depois", "final", "pronto", "resultado", "entregaram", "terminaram", "concluído", "conclusão", "como ficou"] }
+      ] },
+      { "id": "exchange", "question": "O sistema oferece a troca para o serviço que foi realmente executado no local correto?", "values": [
+        { "id": "available", "label": "troca correta disponível", "expressions": ["troca disponível", "opção correta disponível", "existe opção correta", "existe opção para trocar", "permite trocar", "dá para trocar", "dá pra trocar", "dá para mudar", "dá pra mudar", "disponível para trocar", "deixa mudar", "deixa trocar"] },
+        { "id": "unavailable", "label": "troca correta indisponível", "expressions": ["sem opção de troca", "sem possibilidade de troca", "não há possibilidade de troca", "não existe opção correta", "não existe a opção correta", "não tem opção de troca", "não permite trocar", "não deixa mudar", "não deixa trocar", "não está disponível para troca", "não oferece o serviço"] }
+      ] }
+    ]
+  },
   "conclusions": {
     "Conforme": {
       "severity": "Conforme",
@@ -1105,6 +1134,7 @@
     },
     {
       "id": "RULE-PARAM-GERAL-01",
+      "semanticCriteria": ["Um adicional, desdobro ou uma troca necessária não foi lançado ou cadastrado no sistema; esqueceram ou deixaram de registrar a parametrização necessária."],
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
       "title": "Ausência de parametrização obrigatória",
@@ -1174,6 +1204,7 @@
     },
     {
       "id": "RULE-PARAM-TROCA-IMPOSSIVEL-01",
+      "evaluation": {"fact":"service-mismatch","scope":"current","stance":"irregularity","requires":{"exchange":["unavailable"]}},
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
       "title": "Impossibilidade de troca para o serviço correto",
@@ -1862,6 +1893,22 @@
       "sourceReferences": ["Orientação operacional informada pelo responsável do projeto em 11/08/2026"]
     },
     {
+      "id": "RULE-PARAM-TROCA-CONTEXTO-01",
+      "serviceId": "reparo-cavalete",
+      "appliesToAllActiveServices": true,
+      "title": "Código diferente da execução: confirmar a possibilidade de troca",
+      "description": "O tipo lançado na OS não representa o serviço feito. Antes de orientar a conclusão, é necessário saber se o sistema permite a troca correta, mantendo o local correto.",
+      "priority": 2,
+      "conditionKeywords": ["código errado", "tipo errado", "serviço original diferente do executado", "código não corresponde à execução"],
+      "semanticCriteria": ["O tipo ou código lançado na ordem de serviço está errado ou não corresponde ao que a equipe fez no local."],
+      "examples": ["O código está errado, mas ainda preciso conferir se o sistema oferece a troca correta."],
+      "evaluation": {"fact":"service-mismatch","scope":"current","stance":"irregularity","ask":"exchange"},
+      "message": "O código precisa representar o serviço realmente executado no local correto. A possibilidade de troca muda a orientação.",
+      "guidance": "Confirme se o sistema oferece o tipo correto antes de recomendar a conclusão.",
+      "missingInformation": ["O sistema oferece a troca para o serviço que foi realmente executado no local correto?"],
+      "category": "Troca de serviço"
+    },
+    {
       "id": "RULE-GERAL-EVID-01",
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
@@ -2201,6 +2248,7 @@
     },
     {
       "id": "RULE-PAV-01",
+      "evaluation": {"fact":"measurement-format","scope":"current","stance":"irregularity"},
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2","repavimentacao-calcada","repavimentacao-concreto","repavimentacao-bloco-paralelo","repavimentacao-ceramica","repavimentacao-muro-alvenaria"],
       "title": "Medição da repavimentação fora do formato aceito",
@@ -2227,6 +2275,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-CONTEXTO-01",
+      "evaluation": {"fact":"measurement-missing","scope":"current","stance":"absence","ask":"team"},
       "negativeSignals": ["OS de origem", "ordem de serviço de origem"],
       "serviceId": "reaterro-valas-asfalto",
       "applicableServiceIds": ["reaterro-valas-calcada","reaterro-valas-terra","repavimentacao-asfalto-acima-1m2","repavimentacao-asfalto-ate-1m2","repavimentacao-bloco-paralelo","repavimentacao-calcada","repavimentacao-ceramica","repavimentacao-concreto","repavimentacao-muro-alvenaria"],
@@ -2247,6 +2296,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-INTERNA-01",
+      "evaluation": {"fact":"measurement-missing","scope":"current","stance":"absence","requires":{"team":["internal"]}},
       "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio","interna"]}],
       "negativeSignals": ["OS de origem", "ordem de serviço de origem"],
       "serviceId": "reaterro-valas-asfalto",
@@ -2277,6 +2327,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-TERCEIRA-01",
+      "evaluation": {"fact":"measurement-missing","scope":"current","stance":"absence","requires":{"team":["contractor"]}},
       "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe terceirizada","equipe terceira","terceirizada","empreiteira","contratada"]}],
       "negativeSignals": ["OS de origem", "ordem de serviço de origem"],
       "serviceId": "reaterro-valas-asfalto",
@@ -2307,6 +2358,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-ADICIONAL-CONTEXTO-01",
+      "evaluation": {"fact":"measurement-missing","scope":"executed","stance":"absence","ask":"team"},
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
       "title": "Tipo de equipe necessário para corrigir adicional executado sem aferição",
@@ -2336,6 +2388,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-ADICIONAL-INTERNA-01",
+      "evaluation": {"fact":"measurement-missing","scope":"executed","stance":"absence","requires":{"team":["internal"]}},
       "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe interna","equipe própria","funcionário da empresa","equipe da empresa","pessoal próprio","interna"]},{"label":"posição do serviço confirmada","expressions":["adicional executado","desdobro executado","no executado"]},{"label":"serviço de pavimento confirmado","expressions":["reaterro","repavimentação"]}],
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
@@ -2367,6 +2420,7 @@
     },
     {
       "id": "RULE-PAV-AFERICAO-ADICIONAL-TERCEIRA-01",
+      "evaluation": {"fact":"measurement-missing","scope":"executed","stance":"absence","requires":{"team":["contractor"]}},
       "mandatoryConditionGroups": [{"label":"tipo de equipe confirmado","expressions":["equipe terceirizada","equipe terceira","terceirizada","empreiteira","contratada"]},{"label":"posição do serviço confirmada","expressions":["adicional executado","desdobro executado","no executado"]},{"label":"serviço de pavimento confirmado","expressions":["reaterro","repavimentação"]}],
       "serviceId": "reparo-cavalete",
       "appliesToAllActiveServices": true,
@@ -2398,7 +2452,8 @@
     },
     {
       "id": "RULE-ASF-FOTO-ANTES-01",
-      "semanticCriteria": ["Falta de registro da condição inicial do local, antes de começar o trabalho."],
+      "evaluation": {"fact":"asfalto-antes-ausente","scope":"current","stance":"absence","incompatible":{"stage":["during","final"]}},
+      "semanticCriteria": ["Não há fotos da condição inicial do local, de como a vala estava na chegada da equipe, antes de começar o trabalho."],
       "examples": ["sem foto antes"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2422,7 +2477,10 @@
       "factGroup": "asfalto-antes-ausente",
       "relatedEvidence": [
         "foto antes",
-        "foto antes da execução"
+        "foto antes da execução",
+        "registro antes",
+        "registro inicial",
+        "condição inicial"
       ],
       "positiveSignals": [
         "sem",
@@ -2445,7 +2503,8 @@
     },
     {
       "id": "RULE-ASF-FOTO-DURANTE-01",
-      "semanticCriteria": ["Falta de registro do serviço em andamento, com aplicação do material de pavimentação."],
+      "evaluation": {"fact":"asfalto-durante-ausente","scope":"current","stance":"absence","incompatible":{"stage":["initial","final"]}},
+      "semanticCriteria": ["Faltam fotos ou vídeos da equipe trabalhando, mostrando o serviço em andamento e a aplicação do material enquanto a execução estava sendo feita."],
       "examples": ["sem foto durante"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2469,7 +2528,9 @@
       "factGroup": "asfalto-durante-ausente",
       "relatedEvidence": [
         "foto durante",
-        "foto durante da execução"
+        "foto durante da execução",
+        "registro durante",
+        "registro da execução em andamento"
       ],
       "positiveSignals": [
         "sem",
@@ -2492,6 +2553,7 @@
     },
     {
       "id": "RULE-ASF-FOTO-DEPOIS-01",
+      "evaluation": {"fact":"asfalto-depois-ausente","scope":"current","stance":"absence","incompatible":{"stage":["initial","during"]}},
       "semanticCriteria": ["Falta de registro do resultado final, depois que o pavimento ficou pronto."],
       "examples": ["sem foto depois"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
@@ -2573,6 +2635,8 @@
     },
     {
       "id": "RULE-ASF-FOTO-QUALIDADE-01",
+      "mandatoryConditionGroups": [{"label":"evidência visual identificada","expressions":["foto","imagem","evidência visual","registro fotográfico"]}],
+      "evaluation": {"fact":"photo-quality","scope":"current","stance":"irregularity"},
       "examples": ["fotos tremidas"],
       "positiveSignals": ["tremidas", "embaçadas", "borradas", "sem nitidez"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
@@ -2607,6 +2671,7 @@
     },
     {
     "id": "RULE-ASF-ORIGEM-01",
+      "evaluation": {"fact":"origin-missing","scope":"origin","stance":"absence"},
     "mandatoryConditionGroups": [
       {
         "label": "vínculo de origem relatado",
@@ -2645,6 +2710,7 @@
     },
     {
       "id": "RULE-ASF-ORIGEM-AFERICAO-CONTEXTO-01",
+      "evaluation": {"fact":"measurement-missing","scope":"origin","stance":"absence","ask":"front"},
       "examples": ["sem aferição na OS de origem"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2681,6 +2747,7 @@
     },
     {
       "id": "RULE-ASF-ORIGEM-AFERICAO-01",
+      "evaluation": {"fact":"measurement-missing","scope":"origin","stance":"absence","requires":{"front":["maintenance","commercial"]}},
       "examples": ["Sem aferição na OS de origem, frente manutenção."],
       "mandatoryConditionGroups": [{"label":"origem identificada","expressions":["OS de origem","origem sem aferição"]},{"label":"frente confirmada fora de VCG","expressions":["frente manutenção","frente comercial"]}],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
@@ -2731,6 +2798,7 @@
     },
     {
       "id": "RULE-ASF-ORIGEM-VCG-01",
+      "evaluation": {"fact":"measurement-missing","scope":"origin","stance":"absence","requires":{"front":["vcg"]}},
       "examples": ["Sem aferição na OS de origem, frente VCG."],
       "mandatoryConditionGroups": [{"label":"frente VCG confirmada","expressions":["frente VCG","é VCG"]}],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
@@ -2773,9 +2841,10 @@
     },
     {
       "id": "RULE-ASF-MEDICAO-01",
-      "semanticCriteria": ["Metragem informada no formulário diferente do tamanho real do trecho executado."],
+      "evaluation": {"fact":"measurement-inconsistent","scope":"current","stance":"irregularity"},
+      "semanticCriteria": ["A metragem ou área lançada no formulário ou relatório é maior, menor ou diferente da medida real comprovada nas fotos do trecho executado."],
       "examples": ["medição incoerente"],
-      "positiveSignals": ["incoerente", "não bate", "não corresponde"],
+      "positiveSignals": ["incoerente", "não bate", "não corresponde", "maior do que", "menor do que"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
         "repavimentacao-asfalto-acima-1m2"
@@ -2799,11 +2868,15 @@
       "relatedEvidence": [
         "medição",
         "metragem",
-        "área medida"
+        "área medida",
+        "medida",
+        "tamanho do trecho"
       ]
     },
     {
       "id": "RULE-ASF-TRENA-01",
+      "semanticCriteria": ["Usaram trena para medir, mas pelas imagens não é possível conferir ou saber o tamanho real do trecho executado. A medição não está verificável."],
+      "evaluation": {"fact":"measurement-obstructed","scope":"current","stance":"irregularity"},
       "mandatoryConditionGroups": [{"label":"impedimento de conferir a medição relatado","expressions":["impossibilita verificar","impede verificar","não permite conferir","não consigo conferir","ninguém consegue saber","ninguém consegue ver","não é possível conferir","não dá para conferir","não dá pra conferir"]}],
       "examples": ["trena impossibilita verificar a metragem"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
@@ -2836,6 +2909,8 @@
     },
     {
       "id": "RULE-ASF-LOCAL-01",
+      "semanticCriteria": ["A equipe executou o serviço no endereço errado, em outra rua ou em uma vala diferente daquela indicada na ordem de serviço analisada."],
+      "evaluation": {"fact":"wrong-location","scope":"current","stance":"irregularity"},
       "examples": ["vala incorreta"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2864,11 +2939,14 @@
       ],
       "negativeSignals": [
         "local correto",
-        "vala correta"
+        "vala correta",
+        "endereço correto",
+        "rua correta"
       ]
     },
     {
       "id": "RULE-ASF-MATERIAL-01",
+      "evaluation": {"fact":"wrong-material","scope":"current","stance":"irregularity"},
       "examples": ["fez concreto na OS de asfalto"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2897,6 +2975,8 @@
     },
     {
       "id": "RULE-ASF-ACABAMENTO-01",
+      "semanticCriteria": ["O pavimento foi recomposto com defeitos visíveis: o resultado está mal acabado, desnivelado ou com qualidade final inadequada."],
+      "evaluation": {"fact":"poor-finish","scope":"current","stance":"irregularity","incompatible":{"stage":["initial","during"]}},
       "examples": ["qualidade inapropriada da repavimentação"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -2929,6 +3009,9 @@
     },
     {
       "id": "RULE-ASF-DUPLICIDADE-01",
+      "mandatoryConditionGroups": [{"label":"sistema consultado para comprovar a duplicidade","expressions":["Field","SCAE"]}],
+      "evaluation": {"fact":"duplicate","scope":"current","stance":"irregularity"},
+      "negativeSignals": ["não existe outra ordem", "não há outra ordem", "não confirmei duplicidade", "não foi confirmado em outra OS"],
       "semanticCriteria": ["O mesmo serviço já foi executado e encerrado em outra ordem de serviço, conforme consulta ao Field ou SCAE."],
       "examples": ["serviço já executado em outra OS no Field"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
@@ -2973,6 +3056,7 @@
     },
     {
       "id": "RULE-ASF-TROCA-01",
+      "evaluation": {"fact":"service-mismatch","scope":"current","stance":"irregularity","requires":{"exchange":["available"]}},
       "examples": ["código incompatível com troca disponível"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -3004,6 +3088,8 @@
     },
     {
       "id": "RULE-ASF-FORMULARIO-01",
+      "mandatoryConditionGroups": [{"label":"formulário ou preenchimento identificado","expressions":["formulário","preenchimento","preencheram","preenchido","campos"]}],
+      "evaluation": {"fact":"incorrect-form","scope":"current","stance":"irregularity"},
       "examples": ["formulário preenchido incorretamente"],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
@@ -3052,6 +3138,7 @@
     },
     {
     "id": "RULE-ASF-DESDOBRO-EXCESSO-01",
+      "evaluation": {"fact":"unnecessary-additional","scope":"current","stance":"irregularity"},
     "mandatoryConditionGroups": [
       {
         "label": "parametrização de adicional relatada",

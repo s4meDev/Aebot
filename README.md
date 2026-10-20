@@ -4,13 +4,15 @@ Assistente de Análise para revisão de Ordens de Serviço executadas por equipe
 
 O AEBOT ajuda a interpretar relatos de análise, consultar regras e orientar a revisão de Ordens de Serviço. As decisões são fundamentadas na base cadastrada; a IA não inventa critérios de aprovação.
 
-## Atual — protótipo Python para Asfalto
+## Atual — protótipo Python 0.3.0 para Asfalto
 
-Em 19/10/2026, restaurei o projeto e comecei uma implementação desktop em **Python**, separada do Electron antigo. O foco é **Repavimentação Asfalto, até e acima de 1 m²**. Troquei a geração longa de texto por interpretação local de trechos com ONNX e uma resposta curta construída a partir das regras. Não usa servidor, API, chave ou cota por chamada.
+A rota atual é **Python + Tkinter + BGE/ONNX local**, focada nas duas faixas de Repavimentação Asfalto. A resposta é curta e vem das regras cadastradas. Não usa servidor, API, chave ou cota por chamada; o modelo relaciona linguagem, mas não é um ChatGPT gerador de respostas livres.
 
-**Para baixar em outro computador:** [baixe o pacote completo](https://github.com/s4meDev/Aebot/releases/download/python-v0.1.1-prototipo/AEBOT-Python-0.1.1.zip) e siga [o passo a passo simples](COMO-BAIXAR-EM-OUTRO-PC.md). Extraia tudo, abra a pasta extraída e execute `AEBOT.exe`. Mantenha `resources` e `_internal` junto dele. Não precisa instalar Python nem cadastrar chave. O executável foi iniciado nesta máquina; não possui assinatura própria e não há garantia de liberação em todos os Windows. O pacote local também está em `python/dist/` e contém um `LEIA-ME.txt`.
+Na revisão **0.3.0**, ampliei a interpretação informal: separação das etapas, palavras intermediárias, plurais, omissões e comparações entre formulário e evidência. A IA recebe o serviço real selecionado e continua sem poder inventar regra. Mantive negações, retificações de equipe/frente e a separação entre serviço atual, origem e adicional executado. Ainda existem frases que precisam de esclarecimento; não apresento o protótipo como 100% confiável.
 
-Resultado atual: **50/53 casos do corpus anterior e 16/16 cenários adicionais**. Os três casos não atendidos pedem esclarecimento em vez de concluir. Maior tempo medido de análise nessas rodadas: **2,38 segundos**, com modelo carregado. Isso não garante 100% de acerto nem o mesmo tempo em qualquer notebook. [Resultados e limitações](docs/STATUS-PYTHON-2026-10-19.md).
+As medições da rodada atual, os casos que falharam e os testes estão na [revisão de linguagem informal e feedback](docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md). A [comparação anterior com o Electron](docs/REVISAO-PYTHON-2026-10-20.md) é histórica e não mede esta versão. Velocidade e acerto nesta máquina não garantem o mesmo resultado em todo notebook ou pergunta.
+
+**Estado da entrega:** o código 0.3.0 está salvo; o novo EXE/ZIP ainda precisa ser gerado e validado após fechar a auditoria. Não confunda os pacotes anteriores com esta versão. O [guia simples](COMO-BAIXAR-EM-OUTRO-PC.md) explica a transferência quando a pasta estiver pronta. Mantenha `resources` e `_internal` ao lado de `AEBOT.exe`. O pacote dispensa instalar Python, mas não tem assinatura própria e pode ser bloqueado pelo Windows; não altere proteções para executá-lo.
 
 Para desenvolver em Windows x64, com Python 3.12 e Tkinter disponíveis:
 
@@ -25,9 +27,10 @@ O preparador baixa e verifica aproximadamente 588 MB de modelo e tokenizer uma v
 
 - [Executar, testar e empacotar em Python](docs/EXECUTAR-PYTHON.md)
 - [Arquitetura, arquivo por arquivo](ARQUITETURA.md)
-- [Regras editáveis](src/data/rulesStore.json): mesma fonte dos perfis antigos, sem cópia das decisões em Python.
+- [Regras editáveis](src/data/rulesStore.json): fonte única, com contexto e dependências explícitas na base 2.18.0.
+- [Feedback local: enviar, consultar e reunir](docs/FEEDBACK-PYTHON.md).
 
-O novo protótipo ainda **não incorpora** importador de atualizações, feedback e métricas administrativas das versões anteriores. Conversas ficam somente em memória. Use **Novo caso** ao mudar de OS. Ainda preciso validar mais linguagem real e medir no Latitude antes de substituir definitivamente o aplicativo antigo.
+**Enviar feedback** salva somente o formulário escrito voluntariamente. Em **Feedbacks salvos**, posso ler, buscar, exportar e importar relatos de outros PCs, sem servidor. Conversas ficam somente em memória. Não há métricas persistentes nesta etapa, por decisão do responsável. Importador de atualizações de regras e administração central ainda não foram migrados. Use **Novo caso** ao mudar de OS. O programa interpreta o relato; não lê as fotos.
 
 ## Histórico preservado — Electron, extensão e API
 

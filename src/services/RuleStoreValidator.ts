@@ -10,9 +10,11 @@ import type {
   ServiceAnalysisStatus,
   ServiceDecisionPolicy,
   ServiceParameterization,
+  InterpretationCatalog,
+  RuleEvaluation,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.16.0';
+export const CURRENT_RULE_STORE_VERSION = '2.18.0';
 const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
 const DECISION_POLICIES: ServiceDecisionPolicy[] = ['ranked', 'most_severe_applicable'];
 const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];
@@ -298,13 +300,84 @@ function migrateLegacyStore(value: unknown): unknown {
   };
 }
 
+function parseInterpretation(value: unknown, issues: string[]): InterpretationCatalog | undefined {
+  if (value === undefined) return undefined;
+  const source = record(value);
+  if (!source) { issues.push('store.interpretation deve ser objeto'); return undefined; }
+  const path = 'store.interpretation';
+  rejectUnknownKeys(source, ['defaultScope', 'recordTerms', 'scopes', 'contexts'], path, issues);
+  function items(value: unknown, label: string): UnknownRecord[] {
+    if (!Array.isArray(value)) { issues.push(`${label} deve ser lista`); return []; }
+    return value.map((item) => {
+      const parsed = record(item);
+      if (!parsed) issues.push(`${label} deve conter objetos`);
+      return parsed ?? {};
+    });
+  }
+  function expressions(item: UnknownRecord, label: string): string[] {
+    const values = stringArray(item.expressions, `${label}.expressions`, issues, true) ?? [];
+    if (!values.length) issues.push(`${label}.expressions não pode ser vazia`);
+    return values;
+  }
+  function unique(ids: string[], label: string) {
+    if (new Set(ids).size !== ids.length) issues.push(`${label} possui IDs duplicados`);
+  }
+  const scopes = items(source.scopes, `${path}.scopes`).map((item, index) => {
+    const label = `${path}.scopes[${index}]`;
+    rejectUnknownKeys(item, ['id', 'expressions'], label, issues);
+    return { id: requiredString(item, 'id', label, issues), expressions: expressions(item, label) };
+  });
+  const contexts = items(source.contexts, `${path}.contexts`).map((item, index) => {
+    const label = `${path}.contexts[${index}]`;
+    rejectUnknownKeys(item, ['id', 'question', 'shared', 'perStatement', 'values'], label, issues);
+    const values = items(item.values, `${label}.values`).map((entry, i) => {
+      const valuePath = `${label}.values[${i}]`;
+      rejectUnknownKeys(entry, ['id', 'label', 'expressions'], valuePath, issues);
+      return { id: requiredString(entry, 'id', valuePath, issues), label: requiredString(entry, 'label', valuePath, issues), expressions: expressions(entry, valuePath) };
+    });
+    if (!values.length) issues.push(`${label}.values não pode ser vazia`);
+    unique(values.map((entry) => entry.id), `${label}.values`);
+    return { id: requiredString(item, 'id', label, issues), question: requiredString(item, 'question', label, issues), shared: optionalBoolean(item, 'shared', label, issues), perStatement: optionalBoolean(item, 'perStatement', label, issues), values };
+  });
+  unique(scopes.map((item) => item.id), `${path}.scopes`);
+  unique(contexts.map((item) => item.id), `${path}.contexts`);
+  const defaultScope = requiredString(source, 'defaultScope', path, issues);
+  if (!scopes.some((scope) => scope.id === defaultScope)) issues.push(`${path}.defaultScope inexistente`);
+  return { defaultScope, recordTerms: stringArray(source.recordTerms, `${path}.recordTerms`, issues), scopes, contexts };
+}
+
+function parseEvaluation(value: unknown, path: string, issues: string[]): RuleEvaluation | undefined {
+  if (value === undefined) return undefined;
+  const source = record(value);
+  if (!source) { issues.push(`${path} deve ser objeto`); return undefined; }
+  rejectUnknownKeys(source, ['fact', 'scope', 'stance', 'ask', 'requires', 'incompatible'], path, issues);
+  const stance = requiredString(source, 'stance', path, issues);
+  if (!['absence', 'irregularity', 'presence'].includes(stance)) issues.push(`${path}.stance inválida`);
+  function references(key: 'requires' | 'incompatible'): Record<string, string[]> | undefined {
+    if (source?.[key] === undefined) return undefined;
+    const entries = record(source[key]);
+    if (!entries) { issues.push(`${path}.${key} deve ser objeto`); return undefined; }
+    else {
+      const parsed = Object.create(null) as Record<string, string[]>;
+      for (const [dimension, raw] of Object.entries(entries)) {
+        const values = stringArray(raw, `${path}.${key}.${dimension}`, issues, true) ?? [];
+        if (!values.length) issues.push(`${path}.${key}.${dimension} não pode ser vazia`);
+        parsed[dimension] = values;
+      }
+      return parsed;
+    }
+  }
+  return { fact: requiredString(source, 'fact', path, issues), scope: requiredString(source, 'scope', path, issues), stance: stance as RuleEvaluation['stance'], ask: optionalString(source, 'ask', path, issues), requires: references('requires'), incompatible: references('incompatible') };
+}
+
 export function parseRuleStore(value: unknown): RuleStoreSchema {
   const migrated = migrateLegacyStore(value);
   const source = record(migrated);
   if (!source) throw new RuleStoreValidationError(['raiz deve ser objeto']);
 
   const issues: string[] = [];
-  rejectUnknownKeys(source, ['version', 'conclusions', 'services', 'rules'], 'store', issues);
+  rejectUnknownKeys(source, ['version', 'conclusions', 'services', 'rules', 'interpretation'], 'store', issues);
+  const interpretation = parseInterpretation(source.interpretation, issues);
   const version = requiredString(source, 'version', 'store', issues);
   if (version && !/^2\.\d+\.\d+$/.test(version)) {
     issues.push(`store.version ${version} não é suportada`);
@@ -452,7 +525,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
             'equivalentExpressions', 'positiveSignals', 'negativeSignals',
             'mandatoryConditions', 'mandatoryConditionGroups', 'exceptions', 'examples', 'semanticCriteria', 'guidance', 'category',
             'relatedEvidence', 'topicKeywords', 'sourceReferences', 'factGroup',
-            'attentionLevel', 'matchPolicy', 'missingInformation',
+            'attentionLevel', 'matchPolicy', 'missingInformation', 'evaluation',
           ],
           path,
           issues
@@ -464,6 +537,7 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
           issues.push(`${path}.severity não é uma conclusão oficial`);
         }
         const parsedRule: DataRule = {
+          evaluation: parseEvaluation(item.evaluation, `${path}.evaluation`, issues),
           id: requiredString(item, 'id', path, issues),
           serviceId: requiredString(item, 'serviceId', path, issues),
           applicableServiceIds: stringArray(
@@ -530,6 +604,15 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
 
   const ruleIds = new Set<string>();
   for (const rule of rules) {
+    if (rule.evaluation) {
+      const meta = rule.evaluation;
+      if (!interpretation?.scopes.some((scope) => scope.id === meta.scope)) issues.push(`regra ${rule.id}: escopo inexistente`);
+      if (meta.ask && !interpretation?.contexts.some((context) => context.id === meta.ask)) issues.push(`regra ${rule.id}: contexto inexistente`);
+      for (const [dimension, values] of [...Object.entries(meta.requires ?? {}), ...Object.entries(meta.incompatible ?? {})]) {
+        const context = interpretation?.contexts.find((item) => item.id === dimension);
+        if (!context || values.some((value) => !context.values.some((item) => item.id === value))) issues.push(`regra ${rule.id}: valor de contexto inexistente`);
+      }
+    }
     if (ruleIds.has(rule.id)) issues.push(`ruleId duplicado: ${rule.id}`);
     ruleIds.add(rule.id);
     if (!serviceIds.has(rule.serviceId)) {
@@ -574,5 +657,5 @@ export function parseRuleStore(value: unknown): RuleStoreSchema {
   }
 
   if (issues.length) throw new RuleStoreValidationError(issues);
-  return { version, conclusions, services, rules };
+  return { version, conclusions, services, rules, ...(interpretation ? { interpretation } : {}) };
 }

@@ -4,6 +4,7 @@ import json
 import time
 from pathlib import Path
 import sys
+from aebot import __version__
 
 
 def main() -> None:
@@ -12,27 +13,45 @@ def main() -> None:
     parser.add_argument('--report', type=Path, help='Salva o resultado técnico de --check, sem conversa.')
     args = parser.parse_args()
     if args.check:
-        import tkinter as tk
-        from aebot.runtime import load_engine
-        started = time.perf_counter()
-        window = tk.Tk()
-        window.withdraw()
-        engine = load_engine()
-        result = engine.evaluate('Sem foto depois.', 'repavimentacao-asfalto-ate-1m2')
-        assert result.decision == 'Reprovado', 'Falha na verificação básica do pacote.'
-        semantic = engine.evaluate('Não enviaram nenhuma imagem de como ficou depois que terminaram de asfaltar.', 'repavimentacao-asfalto-ate-1m2')
-        assert semantic.decision == 'Reprovado' and semantic.semanticApplied, 'Falha na interpretação local do pacote.'
-        window.destroy()
-        report = dict(ok=True, base=engine.store.version, decision=result.decision,
-            analysisMs=result.durationMs, semanticMs=semantic.durationMs, semanticCalls=semantic.inferenceCalls,
-            startupAndCheckMs=(time.perf_counter() - started) * 1000)
+        report = dict(ok=False, status='starting', version=__version__)
         if args.report:
-            args.report.write_text(json.dumps(report, indent=2), encoding='utf-8')
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(json.dumps(report), encoding='utf-8')
+        try:
+            check_runtime(report)
+            report['status'] = 'completed'
+        except Exception as error:
+            report.update(status='failed', technicalException=type(error).__name__)
+            raise
+        finally:
+            if args.report:
+                args.report.write_text(json.dumps(report, indent=2), encoding='utf-8')
         if sys.stdout is not None:
             print(json.dumps(report))
     else:
         from aebot.app import run
         run()
+
+
+def check_runtime(report: dict) -> None:
+    import tkinter as tk
+    from aebot.runtime import load_engine
+    started = time.perf_counter()
+    window = tk.Tk()
+    window.withdraw()
+    try:
+        engine = load_engine()
+        result = engine.evaluate('Sem foto depois.', 'repavimentacao-asfalto-ate-1m2')
+        if result.decision != 'Reprovado':
+            raise RuntimeError('Falha na verificação básica do pacote.')
+        semantic = engine.evaluate('A recomposição ficou visivelmente mal feita.', 'repavimentacao-asfalto-ate-1m2')
+        if semantic.decision != 'Reprovado' or not semantic.semanticApplied:
+            raise RuntimeError('Falha na interpretação local do pacote.')
+        report.update(ok=True, base=engine.store.version, decision=result.decision,
+            analysisMs=result.durationMs, semanticMs=semantic.durationMs, semanticCalls=semantic.inferenceCalls,
+            startupAndCheckMs=(time.perf_counter() - started) * 1000)
+    finally:
+        window.destroy()
 
 
 if __name__ == '__main__':

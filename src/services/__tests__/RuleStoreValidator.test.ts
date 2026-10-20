@@ -11,6 +11,32 @@ function cloneStore(): Record<string, unknown> {
 }
 
 describe('RuleStoreValidator', () => {
+  it('preserva o catálogo de contexto e recusa referências inválidas', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    expect(parseRuleStore(store).interpretation?.defaultScope).toBe('current');
+    rules[0].evaluation = { fact: 'sample', scope: 'current', stance: 'absence', requires: { team: ['internal'] } };
+    expect(parseRuleStore(store).rules[0].evaluation?.requires?.team).toEqual(['internal']);
+    (rules[0].evaluation as Record<string, unknown>).scope = 'missing';
+    expect(() => parseRuleStore(store)).toThrow(/escopo inexistente/);
+  });
+
+  it('recusa valores e campos desconhecidos na interpretação', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    rules[0].evaluation = { fact: 'sample', scope: 'current', stance: 'absence', requires: { team: ['invented'] } };
+    expect(() => parseRuleStore(store)).toThrow(/contexto inexistente/);
+    rules[0].evaluation = { fact: 'sample', scope: 'current', stance: 'absence', arbitrary: true };
+    expect(() => parseRuleStore(store)).toThrow(/não é um campo suportado/);
+  });
+
+  it('não perde uma dimensão desconhecida com nome especial de objeto', () => {
+    const store = cloneStore();
+    const rules = store.rules as Array<Record<string, unknown>>;
+    rules[0].evaluation = { fact: 'sample', scope: 'current', stance: 'absence',
+      requires: JSON.parse('{"__proto__":["internal"]}') as Record<string, string[]> };
+    expect(() => parseRuleStore(store)).toThrow(/contexto inexistente/);
+  });
   it('preserva critérios semânticos opcionais e rejeita valores inválidos', () => {
     const store = cloneStore();
     const rules = store.rules as Array<Record<string, unknown>>;

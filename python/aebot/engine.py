@@ -1,10 +1,12 @@
 """Avalio fatos rastreáveis. A rede neural relaciona linguagem; o JSON decide."""
 from __future__ import annotations
-import re
 import time
+from dataclasses import asdict, replace
 from typing import Protocol
-from .contracts import Evaluation, Match, Source
+from .contracts import Evaluation, Match
 from .store import RuleStore
+from .facts import FactIndex, CaseFacts
+from .extraction import Extractor
 
 
 class PairScorer(Protocol):
@@ -16,6 +18,7 @@ class Engine:
     def __init__(self, store: RuleStore, scorer: PairScorer | None = None):
         self.store, self.scorer = store, scorer
         self.text = store.text
+        self.extractors: dict[str, Extractor] = {}
 
     def _match(self, rule: dict, quote: str, terms: list[str], score: float = 1.0, semantic: bool = False) -> Match:
         return Match(rule["id"], rule["title"], rule.get("severity"), rule["priority"], quote, score,
@@ -23,53 +26,7 @@ class Engine:
             rule.get("factGroup"), rule.get("guidance", ""), rule["message"], rule.get("missingInformation", []),
             matchedTerms=terms)
 
-    def _expressions(self, rule: dict) -> list[str]:
-        return rule.get("conditionKeywords", []) + rule.get("equivalentExpressions", [])
-
-    def _rule_absence(self, rule: dict) -> bool:
-        criterion = self.store.criteria(rule)[0]
-        return self.text.polarity(criterion) == "absence"
-
-    def _lexical(self, query: str, rule: dict, sources: list[Source], intent: str) -> tuple[Match | None, bool]:
-        if not self.store.constraints(query, rule):
-            return None, False
-        if rule.get("matchPolicy", {}).get("minimumMatchedFactGroups"):
-            return None, False
-        active, present = None, False
-        for source in sources:
-            terms = self.text.found(source.model_text, self._expressions(rule))
-            polarity = self.text.polarity(source.model_text)
-            evidence = self.text.found(source.model_text, rule.get("relatedEvidence"))
-            cancelled = self.text.found(source.model_text, rule.get("negativeSignals"))
-            if self._rule_absence(rule) and (cancelled or (evidence and polarity == "present")):
-                active, present = None, True
-                continue
-            if terms and not cancelled:
-                active, present = self._match(rule, source.quote, terms), False
-                continue
-            signals = self.text.found(source.model_text, rule.get("positiveSignals"))
-            if evidence and signals and polarity != "present":
-                active, present = self._match(rule, source.quote, evidence + signals), False
-            passive = self.text.missing_subject(source.model_text, rule.get('relatedEvidence'))
-            if self._rule_absence(rule) and passive:
-                active, present = self._match(rule, source.quote, passive), False
-        # Regras compostas exigem os fatos/contextos do relato inteiro, não uma
-        # semelhança do modelo nem uma palavra solta da pergunta.
-        policy = rule.get("matchPolicy", {})
-        groups = policy.get("minimumGroups")
-        all_of = policy.get("allOf", [])
-        group_terms = [term for group in (groups or {}).get("groups", [])
-            for term in self.text.found(query, group["expressions"])]
-        enough_groups = groups and sum(bool(self.text.found(query, group["expressions"]))
-            for group in groups["groups"]) >= groups["count"]
-        full_terms = self.text.found(query, self._expressions(rule))
-        if enough_groups or (all_of and all(self.text.has(query, term) for term in all_of)):
-            active = self._match(rule, query, group_terms + all_of)
-        elif full_terms and not self.text.found(query, rule.get("negativeSignals")) and not present:
-            active = active or self._match(rule, query, full_terms)
-        return active, present
-
-    def _aggregate(self, query: str, rules: list[dict], matches: dict[str, Match]) -> None:
+    def _aggregate(self, query, rules, matches):
         for rule in rules:
             policy = rule.get("matchPolicy", {}).get("minimumMatchedFactGroups")
             if not policy or not self.store.constraints(query, rule):
@@ -77,13 +34,13 @@ class Engine:
             support = {match.factGroup: match for match in matches.values()
                 if match.severity and match.factGroup in policy["groups"]}
             if len(support) >= policy["count"]:
-                matched = self._match(rule, " | ".join(item.sourceQuote for item in support.values()),
+                match = self._match(rule, " | ".join(item.sourceQuote for item in support.values()),
                     [term for item in support.values() for term in item.matchedTerms])
-                matched.reasons = [f"{len(support)} grupos de fatos independentes confirmados"]
-                matched.supportingRuleIds = [item.id for item in support.values()]
-                matches[rule["id"]] = matched
+                match.supportingRuleIds = [item.id for item in support.values()]
+                match.reasons = [f"{len(support)} grupos de fatos independentes confirmados"]
+                matches[rule["id"]] = match
 
-    def evaluate(self, query: str, service_id: str) -> Evaluation:
+    def evaluate(self, query: str, service_id: str, messages=None) -> Evaluation:
         started = time.perf_counter()
         result = Evaluation(service_id, self.store.version, self.text.normalize(query), self.text.intent(query))
         service = self.store.services.get(service_id)
@@ -95,110 +52,82 @@ class Engine:
             result.errorCode = "INVALID_QUERY"
             result.reasoningSummary = "Escreva um relato de até 8.000 caracteres, sem dados pessoais."
             return self._finish(result, started)
+        if service_id not in self.extractors:
+            self.extractors[service_id] = Extractor(FactIndex(self.store, service_id), self.scorer)
+        extractor = self.extractors[service_id]
+        index = extractor.index
+        state = CaseFacts(self.store)
         rules = self.store.for_service(service_id)
-        sources = self.text.sources(query)
-        matches: dict[str, Match] = {}
-        negated: set[str] = set()
-        for rule in rules:
-            match, present = self._lexical(query, rule, sources, result.intent)
-            if present:
-                negated.add(rule["id"])
-            if match:
-                matches[rule["id"]] = match
-        consumed = set()
-        for match in matches.values():
-            consumed.update(self.text.tokens(" ".join(match.matchedTerms)))
-            rule = next(rule for rule in rules if rule["id"] == match.id)
-            for group in rule.get("mandatoryConditionGroups", []):
-                consumed.update(self.text.tokens(" ".join(self.text.found(query, group["expressions"]))))
-        harmless = {"e", "nem", "nao", "sim", "esta", "estao", "foi", "informacao", "solicitada", "eu",
-            "reprovado", "conforme", "aprovar", "devo", "posso"}
-        unresolved: list[Source] = []
-        for source in sources:
-            tokens = set(self.text.tokens(source.model_text)) - harmless
-            covered = any(match.sourceQuote == source.quote
-                for match in matches.values())
-            covered = covered or any(rule.get('matchPolicy', {}).get('minimumGroups') and
-                self.text.found(source.model_text, [term for group in rule['matchPolicy']['minimumGroups']['groups'] for term in group['expressions']])
-                for rule in rules if rule['id'] in matches)
-            # Uma declaração global de conferência não acrescenta uma falha.
-            # Se houver falha específica, ela continua prevalecendo.
-            covered = covered or any(rule.get('severity') == 'Conforme' and
-                self.text.found(source.model_text, [term for group in rule.get('mandatoryConditionGroups', []) for term in group['expressions']])
-                for rule in rules)
-            if tokens and not tokens.issubset(consumed) and not covered:
-                unresolved.append(source)
-        # Informação presente isolada não vira irregularidade. Em consulta,
-        # recupero o tema para explicar a regra sem classificar uma OS real.
-        if result.intent == "question":
-            if not matches:
-                ranked = [(max((len(self.text.tokens(term)) for term in self.text.found(query, rule.get("relatedEvidence", []) + rule.get("topicKeywords", []))), default=0), rule)
-                    for rule in rules if self.store.constraints(query, rule)]
-                ranked.sort(key=lambda item: (item[0], not item[1].get('appliesToAllActiveServices'), -item[1]['priority']), reverse=True)
-                if ranked and ranked[0][0]:
-                    rule = ranked[0][1]
-                    matches[rule["id"]] = self._match(rule, query, [], 0.5)
-            unresolved = [] if matches else unresolved
+        matches = {}
         calls_before = self.scorer.calls if self.scorer else 0
-        unconfirmed = []
-        if unresolved and self.scorer:
-            # Aprovação depende de conferência explícita, nunca de semelhança.
-            atomic = [rule for rule in rules if rule.get("severity") != "Conforme"
-                and not rule.get("matchPolicy", {}).get("minimumMatchedFactGroups")
-                and rule["id"] not in negated and self.store.constraints(query, rule)]
-            cards = [(rule, criterion) for rule in atomic for criterion in self.store.criteria(rule)]
-            for source in unresolved:
-                polarity = self.text.polarity(source.model_text)
-                # Não pontuo mera presença ou consulta como uma falta.
-                if result.intent == "report" and polarity == "present":
-                    continue
-                explicit = [card for card in cards if card[0].get('semanticCriteria')]
-                first = explicit or cards
-                try:
-                    scores = self.scorer.score([(source.model_text, criterion) for _, criterion in first])
-                except Exception:
-                    return self._semantic_failure(result, matches, started)
-                ranked = sorted(zip(first, scores), key=lambda item: item[1], reverse=True)
-                if explicit and (not ranked or ranked[0][1] < 0):
-                    rest = [card for card in cards if not card[0].get('semanticCriteria')]
-                    try:
-                        scores = self.scorer.score([(source.model_text, criterion) for _, criterion in rest])
-                    except Exception:
-                        return self._semantic_failure(result, matches, started)
-                    ranked = sorted(ranked + list(zip(rest, scores)), key=lambda item: item[1], reverse=True)
-                if not ranked:
-                    unconfirmed.append(source)
-                    continue
-                (rule, criterion), score = ranked[0]
-                runner = next((other for (card, other) in ranked[1:] if card[0]["id"] != rule["id"]), -100)
-                # Valores são logits de relevância, não porcentagens de acerto.
-                # O critério precisa estar destacado e sustentar a ocorrência.
-                compatible = (self._rule_absence(rule) == (polarity == "absence")) or result.intent != "report"
-                if score >= 0 and score - runner >= 0.25 and compatible:
-                    matches[rule["id"]] = self._match(rule, source.quote, [criterion], score, True)
-                    result.semanticApplied = True
-                elif polarity == "absence" or matches:
-                    unconfirmed.append(source)
-        elif unresolved:
-            unconfirmed = [source for source in unresolved if self.text.polarity(source.model_text) != "present"]
+        try:
+            # Cada mensagem mantém sua ordem e o escopo da pergunta pendente.
+            # Não transformo os fatos em um prompt que possa mudar o serviço.
+            for message, scope_hint in messages or [(query, None)]:
+                sources = [replace(source, scope_hint=scope_hint) for source in self.text.sources(message)]
+                extractor.extract(state, sources, result.intent)
+        except Exception:
+            self._apply_observations(state, index, matches)
+            return self._semantic_failure(result, matches, started)
+        self._apply_observations(state, index, matches)
+        result.observations = [asdict(item) for item in state.observations.values()]
+        result.contextFacts = [asdict(item) for item in state.contexts.values()]
+        result.contextFacts.extend(asdict(item) for item in state.statement_contexts.values())
         result.inferenceCalls = (self.scorer.calls - calls_before) if self.scorer else 0
+        result.semanticApplied = any(item.semantic and item.active for item in state.observations.values())
+
+        # Aprovação exige declaração completa; nunca é sugerida pela rede.
+        for rule in rules:
+            if rule.get("severity") == "Conforme" and self.store.constraints(query, rule):
+                terms = self.text.found(query, self._expressions(rule))
+                if terms and not any(self.text.denied(source.model_text) for source in state.sources):
+                    matches[rule["id"]] = self._match(rule, query, terms)
+        if any(match.severity and match.severity != "Conforme" for match in matches.values()):
+            matches = {key: match for key, match in matches.items() if match.severity != "Conforme"}
+        if result.intent == "question" and not matches:
+            candidates = index.candidates(state.default_scope)
+            ranked = sorted(candidates, key=lambda group: extractor.topic_rank(query, group), reverse=True)
+            if ranked and extractor.topic(query, ranked[0]) > 0:
+                group = ranked[0]
+                for rule in group.rules:
+                    if rule.get("severity") == "Conforme" or not state.requirements(rule, state.default_scope):
+                        continue
+                    matches[rule["id"]] = self._match(rule, query, [], .5)
         self._aggregate(query, rules, matches)
-        severities = {value["severity"]: value["priority"] for value in self.store.data["conclusions"].values()}
-        ordered = sorted(matches.values(), key=lambda match: (severities.get(match.severity, 99),
-            -len(self.text.tokens(" ".join(match.matchedTerms))), match.priority, match.id))
+        severities = {item["severity"]: item["priority"] for item in self.store.data["conclusions"].values()}
+        def rank(match):
+            specificity = len(self.text.tokens(" ".join(match.matchedTerms)))
+            if service.get("decisionPolicy") == "most_severe_applicable":
+                return (severities.get(match.severity, 99), -specificity, match.priority, match.id)
+            return (-specificity, -match.score, match.priority, severities.get(match.severity, 99), match.id)
+        ordered = sorted(matches.values(), key=rank)
         result.matchedRules = ordered
-        classified = [item for item in ordered if item.severity]
-        guidance = [item for item in ordered if not item.severity]
-        if result.intent == "question":
+        classified = [match for match in ordered if match.severity]
+        guidance = [match for match in ordered if not match.severity]
+        pending = []
+        for match in guidance:
+            rule = next(rule for rule in rules if rule["id"] == match.id)
+            meta = rule.get("evaluation", {})
+            dimension = meta.get("ask")
+            scope = meta.get("scope", state.default_scope)
+            if dimension and state.context(dimension, scope) is None:
+                pending.append((match, dimension, scope))
+        if pending:
+            primary, dimension, scope = pending[0]
+            result.outcome, result.primaryRule = "advisory", primary.id
+            result.reasoningSummary = primary.message
+            result.pendingInformation = [state.question(dimension)]
+            result.pendingContext = {"dimension": dimension, "scope": scope}
+            result.activeScope = scope
+        elif result.intent == "question":
             result.outcome, result.requiresHumanValidation = "informational", False
             if ordered:
                 primary = ordered[0]
                 result.primaryRule = primary.id
                 result.reasoningSummary = (f"A regra prevê {primary.severity} quando esse cenário é confirmado. " if primary.severity else "") + primary.message
-                result.pendingInformation = primary.missingInformation[:1]
             else:
                 result.reasoningSummary = service["summary"] + " " + " ".join(service.get("insights", [])[:2])
-        elif classified and not unconfirmed:
+        elif classified and not state.unresolved:
             primary = classified[0]
             result.primaryRule = primary.id
             result.scenarioDecision = primary.severity
@@ -209,20 +138,49 @@ class Engine:
             result.reasoningSummary = primary.message
             if len({item.severity for item in classified}) > 1:
                 result.conflicts = [{"ruleIds": [item.id for item in classified], "winnerRuleId": primary.id,
-                    "resolution": "Prevaleceu a conclusão mais grave entre regras realmente aplicáveis."}]
-        elif guidance:
-            primary = sorted(guidance, key=lambda item: (-len(self.text.tokens(" ".join(item.matchedTerms))), item.priority))[0]
+                    "resolution": "Ordem de aplicabilidade e gravidade definida no serviço."}]
+        elif guidance and not state.unresolved:
+            primary = guidance[0]
             result.outcome, result.primaryRule = "advisory", primary.id
             result.reasoningSummary = primary.message
-            result.pendingInformation = primary.missingInformation[:1]
         else:
-            result.outcome = "advisory" if classified else "insufficient"
-            result.reasoningSummary = "Reconheci parte do relato, mas falta confirmar outro ponto antes de concluir." if classified else "Não encontrei regra suficiente para recomendar uma conclusão."
-            if unconfirmed:
+            result.outcome = "advisory" if ordered else "insufficient"
+            result.reasoningSummary = "Reconheci parte do relato, mas falta confirmar outro ponto antes de concluir." if ordered else "Não encontrei regra suficiente para recomendar uma conclusão."
+            if state.unresolved:
                 result.pendingInformation = ["Pode detalhar qual evidência ou correção está faltando nesse ponto?"]
-        supported = result.decision is not None or result.scenarioDecision is not None
+        if result.activeScope is None:
+            active = [item for item in state.observations.values() if item.active]
+            result.activeScope = active[-1].scope if active else state.default_scope
+        supported = result.scenarioDecision is not None
         result.confidence = ("média" if result.semanticApplied else "alta") if supported else "baixa" if ordered else "insuficiente"
         return self._finish(result, started)
+
+    def _expressions(self, rule):
+        return rule.get("conditionKeywords", []) + rule.get("equivalentExpressions", [])
+
+    def _apply_observations(self, state, index, matches):
+        for observation in state.observations.values():
+            if not observation.active:
+                continue
+            group = index.groups.get((observation.scope, observation.fact)) or index.groups.get(("*", observation.fact))
+            if not group:
+                continue
+            for rule in group.rules:
+                meta = rule.get("evaluation", {})
+                if not state.requirements(rule, observation.scope, observation.source):
+                    continue
+                if meta.get("ask") and state.context(meta["ask"], observation.scope):
+                    continue
+                issue = state.constraint_issue(rule, observation.scope, observation.source)
+                if issue:
+                    if issue == 'missing' and rule.get('evaluation') and observation.source not in state.unresolved:
+                        state.unresolved.append(observation.source)
+                    continue
+                match = self._match(rule, observation.source.quote,
+                    list(observation.terms), observation.score, observation.semantic)
+                if observation.source.inherited_from:
+                    match.contextQuotes = [observation.source.inherited_from]
+                matches[rule['id']] = match
 
     def _finish(self, result: Evaluation, started: float) -> Evaluation:
         result.durationMs = round((time.perf_counter() - started) * 1000, 2)

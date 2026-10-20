@@ -4,23 +4,27 @@ import queue
 import threading
 import time
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from .contracts import Evaluation
 from .runtime import load_engine, resources_root
 from .session import Session
 from .store import RuleStore
+from . import __version__
+from .feedback import FeedbackStore
+from .feedback_ui import FeedbackDialog, FeedbackReader
 
 SERVICES = ('repavimentacao-asfalto-ate-1m2', 'repavimentacao-asfalto-acima-1m2')
 
 
 class App:
-    def __init__(self, window: tk.Tk):
+    def __init__(self, window: tk.Tk, feedback_directory=None):
         self.window = window
         self.session: Session | None = None
         self.events: queue.Queue = queue.Queue()
         self.busy = True
         self.turns = 0
-        window.title('AEBOT • Repavimentação Asfalto')
+        self.feedback_store = FeedbackStore(feedback_directory)
+        window.title(f'AEBOT • Repavimentação Asfalto • {__version__}')
         window.geometry('820x720')
         window.minsize(580, 530)
         window.configure(bg='#101113')
@@ -41,6 +45,7 @@ class App:
         self.status = tk.StringVar(value='Preparando a IA local…')
         tk.Label(header, textvariable=self.status, fg='#a5a9b4', bg='#101113', font=('Segoe UI', 9)).pack(anchor='w', pady=(7, 12))
         store = RuleStore(resources_root())
+        self.base_version = store.version
         self.names = [store.services[item]['name'] for item in SERVICES]
         self.service = ttk.Combobox(header, values=self.names, state='readonly', font=('Segoe UI', 11))
         self.service.current(0)
@@ -66,6 +71,12 @@ class App:
         self.send_button = tk.Button(buttons, text='Enviar  →', command=self.send, bg='#284cbe', fg='white',
             relief='flat', padx=22, pady=9, font=('Segoe UI', 10, 'bold'), state='disabled')
         self.send_button.pack(side='right')
+        feedback = tk.Frame(footer, bg='#101113')
+        feedback.pack(fill='x', pady=(9, 0))
+        for title, command in [('Enviar feedback', self.open_feedback), ('Feedbacks salvos', self.open_feedback_reader)]:
+            tk.Button(feedback, text=title, command=command, bg='#101113', fg='#a5a9b4',
+                activebackground='#22252a', activeforeground='#eee', bd=0, font=('Segoe UI', 9),
+                padx=8, pady=5).pack(side='left')
         tk.Label(footer, text='Local e sem API • Conversa somente em memória • Revise a orientação antes de concluir a OS',
             fg='#888e9c', bg='#101113', font=('Segoe UI', 8), wraplength=730).pack(pady=(12, 0))
         self.append('Conte o que encontrou na OS. Se faltar uma informação que muda a regra, eu pergunto.\n', 'assistant')
@@ -119,6 +130,9 @@ class App:
         text = self.input.get('1.0', 'end').strip()
         if self.busy or not self.session or not text:
             return
+        if not 0 <= self.service.current() < len(SERVICES):
+            messagebox.showerror('Serviço não selecionado', 'Selecione um serviço válido antes de analisar.', parent=self.window)
+            return
         if len(text) > 4000:
             self.append('Resuma este relato em até 4.000 caracteres, sem dados pessoais.', 'assistant')
             return
@@ -143,6 +157,19 @@ class App:
             except Exception:
                 self.events.put(('error', 'A interpretação falhou; nenhuma conclusão foi emitida. Tente um relato mais curto.'))
         threading.Thread(target=work, daemon=True).start()
+
+    def open_feedback(self):
+        index = self.service.current()
+        if not 0 <= index < len(SERVICES):
+            messagebox.showerror('Serviço não selecionado', 'Selecione o serviço a que o feedback se refere.', parent=self.window)
+            return
+        # Envio só os metadados da versão. Nem a pergunta nem a resposta
+        # são copiadas para o formulário ou para o banco local.
+        return FeedbackDialog(self.window, self.feedback_store, dict(service_id=SERVICES[index],
+            service_name=self.names[index], app_version=__version__, base_version=self.base_version))
+
+    def open_feedback_reader(self):
+        return FeedbackReader(self.window, self.feedback_store)
 
     def new_case(self) -> None:
         if self.busy:

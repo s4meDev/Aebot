@@ -13,12 +13,38 @@ class RuleStore:
         validator_for(schema)(schema).validate(self.data)
         self.version = self.data["version"]
         self.services = {service["id"]: service for service in self.data["services"]}
+        if len(self.services) != len(self.data['services']):
+            raise ValueError('IDs de serviços duplicados.')
         self.rules = self.data["rules"]
         if len({rule["id"] for rule in self.rules}) != len(self.rules):
             raise ValueError("IDs de regras duplicados.")
         for rule in self.rules:
             if rule["serviceId"] not in self.services or any(item not in self.services for item in rule.get("applicableServiceIds", [])):
                 raise ValueError("Regra ligada a serviço inexistente.")
+        interpretation = self.data.get('interpretation', {})
+        scopes = [item['id'] for item in interpretation.get('scopes', [])]
+        contexts = {item['id']: item for item in interpretation.get('contexts', [])}
+        if len(scopes) != len(set(scopes)) or len(contexts) != len(interpretation.get('contexts', [])):
+            raise ValueError('IDs de interpretação duplicados.')
+        if interpretation and interpretation['defaultScope'] not in scopes:
+            raise ValueError('Escopo padrão inexistente.')
+        for context in contexts.values():
+            ids = [item['id'] for item in context['values']]
+            if len(ids) != len(set(ids)):
+                raise ValueError('Valores de contexto duplicados.')
+        for rule in self.rules:
+            for policy_name in ('minimumGroups', 'minimumMatchedFactGroups'):
+                policy = rule.get('matchPolicy', {}).get(policy_name)
+                if policy and policy['count'] > len(policy['groups']):
+                    raise ValueError('Quantidade mínima maior que os grupos cadastrados.')
+            meta = rule.get('evaluation')
+            if not meta:
+                continue
+            if meta['scope'] not in scopes or (meta.get('ask') and meta['ask'] not in contexts):
+                raise ValueError('Regra com escopo ou contexto inexistente.')
+            for dimension, values in list(meta.get('requires', {}).items()) + list(meta.get('incompatible', {}).items()):
+                if dimension not in contexts or not set(values).issubset({item['id'] for item in contexts[dimension]['values']}):
+                    raise ValueError('Regra com valor de contexto inexistente.')
         aliases = json.loads((root / "src/data/languageAliases.json").read_text(encoding="utf-8"))["aliases"]
         self.text = Text(aliases)
 

@@ -58,6 +58,8 @@ export interface RuleMatchPolicy {
 }
 
 export interface DataRule {
+  /** Contexto factual da rota Python; não altera conclusões do legado. */
+  evaluation?: RuleEvaluation;
   id: string;
   /** Serviço principal da regra. */
   serviceId: string;
@@ -127,9 +129,34 @@ export interface RuleConclusionMeta {
 
 export interface RuleStoreSchema {
   version: string;
+  interpretation?: InterpretationCatalog;
   conclusions: Record<DecisionType, RuleConclusionMeta>;
   services: DataService[];
   rules: DataRule[];
+}
+
+export interface RuleEvaluation {
+  fact: string;
+  scope: string;
+  stance: 'absence' | 'irregularity' | 'presence';
+  ask?: string;
+  requires?: Record<string, string[]>;
+  /** Impede misturar contextos conhecidos; ausência do contexto não o inventa. */
+  incompatible?: Record<string, string[]>;
+}
+
+export interface InterpretationCatalog {
+  defaultScope: string;
+  recordTerms?: string[];
+  scopes: Array<{ id: string; expressions: string[] }>;
+  contexts: Array<{
+    id: string;
+    question: string;
+    shared?: boolean;
+    /** Vale só para a oração citada, nunca para as outras etapas do caso. */
+    perStatement?: boolean;
+    values: Array<{ id: string; label: string; expressions: string[] }>;
+  }>;
 }
 
 export interface MatchedRule {
