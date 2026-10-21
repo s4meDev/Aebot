@@ -12,7 +12,7 @@ Na revisão **0.3.0**, ampliei a interpretação informal: separação das etapa
 
 As medições da rodada atual, os casos que falharam e os testes estão na [revisão de linguagem informal e feedback](docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md). A [comparação anterior com o Electron](docs/REVISAO-PYTHON-2026-10-20.md) é histórica e não mede esta versão. Velocidade e acerto nesta máquina não garantem o mesmo resultado em todo notebook ou pergunta.
 
-**Estado da entrega:** o código 0.3.0 está salvo; o novo EXE/ZIP ainda precisa ser gerado e validado após fechar a auditoria. Não confunda os pacotes anteriores com esta versão. O [guia simples](COMO-BAIXAR-EM-OUTRO-PC.md) explica a transferência quando a pasta estiver pronta. Mantenha `resources` e `_internal` ao lado de `AEBOT.exe`. O pacote dispensa instalar Python, mas não tem assinatura própria e pode ser bloqueado pelo Windows; não altere proteções para executá-lo.
+**Para baixar e abrir:** use o [ZIP local completo 0.3.0](python/dist/AEBOT-Python-0.3.0.zip), extraia tudo e leia `00-COMECE-AQUI.txt`. O EXE passou em três execuções de diagnóstico, incluindo IA e feedback. O [guia simples](COMO-BAIXAR-EM-OUTRO-PC.md) explica a transferência. Mantenha `resources` e `_internal` ao lado de `AEBOT.exe`. Não precisa instalar Python, baixar outro modelo ou configurar chave/servidor. O pacote não tem assinatura própria e pode ser bloqueado pelo Windows; não altere proteções para executá-lo. Não confunda os pacotes antigos do GitHub com esta entrega local.
 
 Para desenvolver em Windows x64, com Python 3.12 e Tkinter disponíveis:
 

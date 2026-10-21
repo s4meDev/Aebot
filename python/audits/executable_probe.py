@@ -20,7 +20,7 @@ def main():
         raise SystemExit('Use um destino novo; não sobrescrevo medições anteriores.')
     target.parent.mkdir(parents=True, exist_ok=True)
     report = dict(status='running', executable=str(args.exe),
-        method='Três novas instâncias do EXE --check, sem outras suítes em paralelo. Cada uma valida Tk/modelo/base e faz duas análises. Cache de arquivos do Windows não foi limpo. Não é boot frio nem tempo isolado da primeira resposta.', runs=[])
+        method='Três novas instâncias do EXE --check, sem outras suítes em paralelo. Cada uma valida Tk/modelo/base, faz duas análises e testa feedback sintético em SQLite temporário separado. Cache de arquivos do Windows não foi limpo. Não é boot frio nem tempo isolado da primeira resposta.', runs=[])
     def save():
         target.write_text(json.dumps(report, indent=2), encoding='utf-8')
     save()

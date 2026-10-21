@@ -1,16 +1,31 @@
 AEBOT - protótipo Python 0.3.0 / Repavimentação Asfalto
 
-COMO ABRIR
-1. Copie a pasta inteira para o computador (não somente o EXE).
-2. Se recebeu um ZIP, extraia tudo antes de abrir.
-3. Abra AEBOT.exe. Aguarde a indicação "IA local pronta".
-4. Escolha a faixa de área do serviço e conte o que encontrou na OS.
-5. Responda à pergunta do assistente se ele precisar de um detalhe.
-6. Use "Novo caso" para analisar outra OS e descartar o contexto anterior.
+COMECE AQUI - SÓ PRECISA DE UM ZIP
+1. Baixe AEBOT-Python-0.3.0.zip. Se receber pelo WhatsApp, salve o Documento.
+2. No computador em que vai usar, clique com o botão direito nesse ZIP.
+3. Escolha "Extrair Tudo" e aguarde terminar. Não abra o EXE dentro do ZIP.
+4. Abra a pasta extraída AEBOT-Python-0.3.0 e dê dois cliques em AEBOT.exe.
+5. Aguarde a indicação "IA local pronta". A primeira abertura prepara o modelo.
+6. Escolha até ou acima de 1 m² e descreva o que encontrou na OS.
+
+Não há ordem de instalação: este ZIP já contém aplicativo, modelo e regras.
+Não precisa baixar o 2.22.1, modelos GGUF ou outro arquivo da página antiga.
+Use Windows 10/11 de 64 bits atualizado e reserve cerca de 2 GB livres no disco.
+Se uma versão antiga estiver aberta, feche a janela dela antes de abrir a nova.
+
+COMO USAR
+- Escreva o relato ou a dúvida. Enter envia; Shift+Enter pula uma linha.
+- Se ele perguntar um detalhe (por exemplo, equipe), responda no mesmo chat.
+- Para retificar, escreva "Corrigindo: ...", explicando o que mudou.
+- Para outra OS, clique em "Novo caso". Fechar a janela também descarta o chat.
+- Confira a orientação e as regras antes de concluir no sistema da empresa.
 
 Não precisa instalar Python, cadastrar chave, configurar servidor ou ter internet
 para analisar. Não existe cota de API. O desempenho depende do computador.
 O modelo já está na pasta. Não exclua resources nem _internal.
+Para levar a outro PC, envie o ZIP inteiro ou copie toda a pasta extraída.
+Não envie só AEBOT.exe. Para atualizar, extraia a nova versão em outra pasta;
+não misture arquivos de versões diferentes. Não há Setup nem servidor a instalar.
 
 IMPORTANTE
 Este é um protótipo novo, não uma garantia de 100% de acerto. Ele não lê fotos:
@@ -41,6 +56,9 @@ SE O WINDOWS BLOQUEAR
 Este EXE não possui certificado próprio do AEBOT. A mudança para Python não
 garante liberação em qualquer computador. Não desative antivírus, SmartScreen,
 AppLocker ou políticas da empresa. Guarde a mensagem de bloqueio para diagnóstico.
+Se disser que falta modelo ou DLL, extraia o ZIP inteiro novamente numa pasta
+nova. Se persistir, envie a mensagem completa ao responsável, sem desativar a
+proteção do Windows. Rodar nesta máquina não garante liberação em toda empresa.
 
 MANTENÇÃO
 Regras: resources/src/data/rulesStore.json

@@ -9,8 +9,9 @@ FILLERS = {"a", "o", "as", "os", "de", "da", "do", "das", "dos", "um", "uma", "e
 
 
 class Text:
-    def __init__(self, aliases: dict[str, str]):
+    def __init__(self, aliases: dict[str, str], ellipsis_terms: tuple[str, ...] = ()):
         self.aliases = aliases
+        self.ellipsis_terms = ellipsis_terms
 
     @lru_cache(maxsize=4096)
     def normalize(self, value: str) -> str:
@@ -161,6 +162,7 @@ class Text:
             model_text = quote
             context_link = None
             relationship = None
+            ellipsis = re.match(r'^(?:s[oó] )?(?:falta|faltou|sem)\s+(.+)$', quote, re.I)
             if re.match(r'^(?:nem|e)\s+', normal) and prefix and not re.match(independent, quote, re.I) and not re.match(r'^(?:e|nem)\s+(?:nao|sem|falt\w*)\b', normal):
                 model_text = prefix + " " + re.sub(r"^(?:nem|e)\s+", "", quote, flags=re.I)
             elif re.match(r'^nenhum\w*\b', normal) and result:
@@ -178,11 +180,12 @@ class Text:
                 if head:
                     model_text = head.group(1) + ' ' + re.sub(r'^e\s+', '', quote, flags=re.I)
                     antecedent = result[-1].quote
-            elif result and re.match(r'^(?:so )?(?:falta|faltou|sem)\s+', normal):
+            elif result and ellipsis and any(self.tokens(ellipsis.group(1)) == self.tokens(term) for term in self.ellipsis_terms):
                 noun = re.search(r'\b(?:foto|registro|imagem|evidência)\b', result[-1].quote, re.I)
                 if noun and not re.search(r'\b(?:foto|registro|imagem|evidência)\b', quote, re.I):
                     # "Tem foto durante, só falta antes": o substantivo é
-                    # literal; a negação vem da oração atual, não da anterior.
+                    # literal; a negação vem da oração atual. Só retomo um
+                    # complemento cadastrado: "sem sinalização" é outro fato.
                     model_text = re.sub(r'\b(falta|faltou|sem)\b', lambda match: match.group(1) + ' ' + noun.group(0), quote, count=1, flags=re.I)
                     antecedent = result[-1].quote
             else:

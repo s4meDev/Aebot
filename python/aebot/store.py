@@ -46,7 +46,9 @@ class RuleStore:
                 if dimension not in contexts or not set(values).issubset({item['id'] for item in contexts[dimension]['values']}):
                     raise ValueError('Regra com valor de contexto inexistente.')
         aliases = json.loads((root / "src/data/languageAliases.json").read_text(encoding="utf-8"))["aliases"]
-        self.text = Text(aliases)
+        ellipsis_terms = tuple(expression for context in contexts.values() if context.get('perStatement')
+            for value in context['values'] for expression in value['expressions'])
+        self.text = Text(aliases, ellipsis_terms)
 
     def for_service(self, service_id: str) -> list[dict]:
         if service_id not in self.services:

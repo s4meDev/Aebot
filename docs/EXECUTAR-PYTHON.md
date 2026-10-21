@@ -2,7 +2,7 @@
 
 ## Só quero usar
 
-Estado no checkpoint 0.3.0: código salvo; novo pacote ainda em validação/empacotamento. As instruções abaixo se aplicam depois de gerar e testar essa entrega. Não há anúncio de um ZIP 0.3.0 já disponível.
+O pacote local 0.3.0 foi gerado com modelo e runtime. O EXE passou em três execuções de diagnóstico; as instruções abaixo usam essa pasta completa, não os pacotes antigos do GitHub. Dentro dela, começo pelo `00-COMECE-AQUI.txt`.
 
 O [guia de transferência](../COMO-BAIXAR-EM-OUTRO-PC.md) explica o pacote local 0.3.0 e distingue a publicação anterior no GitHub. Não use “Source code (zip)” para instalar: ele não contém EXE nem modelo.
 
@@ -71,7 +71,17 @@ Start-Process -FilePath $exe -ArgumentList ('--check --report "' + $relatorio + 
 Get-Content $relatorio
 ```
 
-Esse diagnóstico abre e fecha o runtime Tk, confere os hashes e faz uma análise lexical e outra com modelo real. Não salva conversa. A pasta `python/artifacts` precisa existir; ela já é criada pelo avaliador. Nunca apresente somente esse smoke test como homologação de qualidade.
+Esse diagnóstico abre e fecha o runtime Tk, confere os hashes, faz uma análise lexical e outra com modelo real e verifica o formulário/leitura com feedback sintético em SQLite temporário, sem acessar o banco do usuário. Não salva conversa. A pasta `python/artifacts` precisa existir; ela já é criada pelo avaliador. Nunca apresente somente esse smoke test como homologação de qualidade.
+
+Se eu finalizar os resultados do EXE depois de gerar a pasta, atualizo somente os guias e regenero o manifesto antes de criar o ZIP:
+
+```powershell
+$env:PYTHONPATH = 'python'
+.\.venv\Scripts\python.exe -c "from package_app import OUTPUT, copy_guides, write_manifest; copy_guides(OUTPUT); print(write_manifest(OUTPUT))"
+.\.venv\Scripts\python.exe python/zip_app.py
+```
+
+Não uso essa etapa para trocar binários ou modelo depois do teste. O ZIP confere cada hash e a ausência de arquivos extras antes de compactar, e verifica o CRC após gerar.
 
 Feedback fica fora da pasta distribuída, em `%LOCALAPPDATA%\AEBOT\Python\feedback.sqlite3`. Os testes da janela usam um diretório temporário separado; não escrevem no banco do usuário. Não há métricas persistentes. Não incluo feedbacks, banco local ou relatórios com conversas no pacote.
 

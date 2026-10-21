@@ -11,6 +11,7 @@
 - Mantenho uma segunda organização dos mesmos textos quando a primeira comparação fica ambígua, sem reduzir o limiar ou acrescentar fatos. Isso custa tempo em parte das frases.
 - Corrigi um falso positivo encontrado durante a revisão: uma foto informada como presente não deve virar uma medição incoerente. Consultas sem relato de irregularidade buscam o assunto sem disputar uma falha como se tivesse ocorrido.
 - A amostra adicional de 20 casos revelou falta de interpretação de “ninguém mostrou”, retificação “só falta antes” e uma regra genérica extra ao comparar valores em duas orações. Corrigi esses pontos por construção gramatical/contexto, mantendo os gabaritos originais. Depois dessas correções, essa amostra passa a ser regressão, não teste cego.
+- Antes de empacotar, a auditoria detectou que a retomada de substantivo estava ampla demais e confundia “sem sinalização” com uma foto citada antes. Corrigi: só complemento de contexto por oração cadastrado pode retomar o substantivo. Acrescentei a regressão e todas as 1.024 combinações explícitas aos testes sem modelo. A rodada `package-030-full.json` foi interrompida após encontrar esse defeito; não é o resultado da entrega.
 - Cache é limitado à memória do caso e considera texto original, contexto, serviço, base e candidatos. Novo caso, inclusive escrito no chat, limpa as interpretações anteriores.
 
 As conclusões e orientações continuam no `rulesStore.json`. Não copiei regras para Python, não alterei as três conclusões oficiais nem baixei outro modelo para a entrega. BGE mede relevância: não é um LLM conversacional nem uma prova formal de que um fato ocorreu. Se a associação não for suficiente, peço esclarecimento ou mantenho a análise sem decisão.
@@ -23,15 +24,41 @@ O formulário começa vazio. Salvo descrição, orientação esperada opcional, 
 
 ## Validação desta entrega
 
-**Checkpoint solicitado antes de encerrar os créditos: código salvo, ainda não é entrega homologada.**
+O checkpoint anterior foi salvo no commit `8273637`. Depois dele corrigi a regressão de elipse e repeti a medição, em série, sem outro modelo ou suíte pesada concorrente.
 
-- Python: **66 testes de unidade aprovados**, incluindo feedback, retificações e proteção contra falsos positivos conhecidos.
-- Legado: **875 testes aprovados, um ignorado**; typecheck e build aprovados. Validador Manifest V3 e integridade da base aprovados; 36 serviços, 100 regras, sem avisos de governança.
-- A primeira auditoria completa desta rodada teve 1.230 cenários × 3 repetições: 1.226 completos e 1.228 decisões esperadas. Ela encontrou um falso positivo e consultas mal recuperadas; corrigi esses caminhos depois. Esse resultado **não mede o código final**.
-- A amostra adicional inicial de 20 casos teve 17 completos e 18 decisões esperadas, sem decisão oficial incorreta; suas três divergências motivaram as correções gramaticais descritas acima. Não alterei o gabarito.
-- A repetição completa e a janela real estavam em andamento neste checkpoint. Ainda é preciso repetir a aceitação e a auditoria com todos os últimos fontes, concluir o teste visual/funcional, gerar o EXE 0.3.0 e testá-lo antes de criar o ZIP.
+| Verificação | Resultado |
+| --- | --- |
+| Python, incluindo manifesto e guia portátil | 70 testes aprovados; um deles verifica as 1.024 combinações explícitas |
+| Auditoria principal, 1.230 cenários × 3 | 1.228 completos; 1.229 decisões/cenários esperados; zero conclusão oficial incorreta e zero falha técnica |
+| Amostra adicional, 20 cenários × 3 | 20 completos; zero falha técnica |
+| Janela com modelo real | Aprovada: equipe, resposta curta, serviço selecionado, Novo caso e feedback sem anexar chat |
+| Diagnóstico pelo código | Aprovado: modelo, base, Tk, análise lexical, análise neural e feedback sintético em SQLite temporário |
+| Legado | 875 testes aprovados, um ignorado; typecheck, build e Manifest V3 aprovados |
+| Integridade da base | 36 serviços, 100 regras, sem aviso de governança |
 
-Não apresento tempos intermediários como medição final: parte da rodada coincidiu com testes do legado. A próxima medição deve ser serial, sem outra suíte pesada concorrendo. Os relatórios locais `informal-release-030.json`, `informal-release-030-final.json` e `acceptance-030-final.json` preservam os resultados intermediários; o sufixo “final” nesses arquivos não comprova equivalência com correções feitas depois. Compare seus hashes com os fontes atuais.
+As duas divergências da auditoria principal foram preservadas:
+
+1. “tem o começo e o pronto, só não tem o pessoal fazendo o serviço”: esperado Não Conforme; o sistema pede esclarecimento e fica sem decisão. É uma limitação na referência implícita à evidência, não um acerto.
+2. Consulta sobre duplicidade: a resposta mantém `decision: null` e cita a regra consultada, mas o corpus antigo esperava nenhuma regra classificatória citada. Conta como divergência de fundamento, não como OS reprovada.
+
+Recortes: as 1.024 combinações explícitas passaram; corpus anterior 52/53 completos (53/53 decisões/cenários); 16 paráfrases anteriores passaram; 14 relatos de linguagem livre passaram; 29 novos informais tiveram 28 completos; os 12 relatos longos e os oito novos complexos passaram. Não alterei gabaritos para esconder as falhas.
+
+Medições da auditoria principal nesta máquina (Ryzen 5600G, 12 processadores lógicos, 7,87 GiB de RAM, Windows 11, Python 3.12.14):
+
+| Caminho medido | Média | Mediana | P95 | Máximo |
+| --- | --- | --- | --- | --- |
+| 225 mensagens com chamadas reais ao BGE, modelo já carregado | 2,10 s | 1,82 s | 3,98 s | 5,13 s |
+| 3.534 mensagens sem chamada ao modelo | 6,48 ms | 6,08 ms | 11,07 ms | 103,63 ms |
+
+Inicializar e conferir o motor levou 3,06 s. Nos 12 relatos longos, a média por mensagem foi 1,68 s e o máximo 4,25 s. São medidas desta rodada/máquina, não garantia de tempo no Latitude nem para qualquer pergunta. Respostas com vários trechos podem exigir mais de uma comparação.
+
+Relatórios finais desta medição: `package-030-corrected-full.json`, `package-030-corrected-acceptance.json` e `package-030-corrected-runtime.json`, em `python/artifacts/`. Os hashes do motor, base e cenários identificam o código efetivamente avaliado. O diagnóstico do EXE e os guias de empacotamento foram ampliados à parte, sem alterar essa inferência, e precisam passar no pacote gerado.
+
+As rodadas `informal-release-030*.json`, `acceptance-030-final.json` e a rodada interrompida `package-030-full.json` são históricas. O sufixo “final” de um nome antigo não comprova equivalência com as correções posteriores.
+
+**Executável 0.3.0 gerado e aprovado em três novas instâncias**, todas com exit code zero e feedback conferido. Tempos do processo completo `--check`: 12,06 s, 5,35 s e 5,06 s. Cada medição inclui abrir o processo, conferir hashes, carregar o modelo, fazer duas análises, testar o feedback e encerrar. Não é tempo de uma resposta nem boot frio do Windows. A análise neural nessas instâncias levou 2,32 s, 1,28 s e 1,29 s. Relatório local: `package-030-exe.json`.
+
+O ZIP leva EXE, runtime, modelo, regras, guias e licenças. Antes de compactar, o script confere hashes e arquivos extras; depois verifica o CRC. O ponto de partida para o usuário é `00-COMECE-AQUI.txt`. Não contém banco de feedback, conversas, credenciais ou os modelos experimentais rejeitados. O pacote continua sem assinatura própria e sem garantia de acerto universal.
 
 ## Como ler os resultados
 

@@ -2,19 +2,21 @@
 
 ## Pacote atualizado: Python 0.3.0
 
-**Ainda em preparação:** o código 0.3.0 está salvo, mas seu novo EXE/ZIP precisa concluir validação e empacotamento. O caminho previsto é `python/dist/AEBOT-Python-0.3.0.zip`; não considero o pacote entregue antes de ele existir e passar no teste do executável.
+Uso somente **[AEBOT-Python-0.3.0.zip](python/dist/AEBOT-Python-0.3.0.zip)**. Ele reúne EXE, modelo, regras e instruções. O EXE passou em três execuções de diagnóstico com IA e feedback; não preciso baixar o antigo 2.22.1 nem arquivos separados de modelo.
 
-Quando estiver pronto, posso enviá-lo pelo WhatsApp como **Documento**, copiar por pendrive ou compartilhar o arquivo inteiro. Não preciso enviar o código-fonte. Os passos abaixo valem para a pasta completa gerada, não para o código baixado do GitHub.
+Posso enviá-lo pelo WhatsApp como **Documento**, copiar por pendrive ou compartilhar o arquivo inteiro. Não preciso enviar o código-fonte nem juntar partes. Os passos abaixo valem para a pasta completa gerada, não para “Source code (zip)” do GitHub.
 
 Esta revisão é local. O [download público 0.1.1](https://github.com/s4meDev/Aebot/releases/tag/python-v0.1.1-prototipo) continua disponível como versão anterior, mas **não contém as correções nem o feedback da 0.3.0**.
 
 ## Extrair e abrir
 
-1. Copio `AEBOT-Python-0.3.0.zip` para o outro computador.
+1. Baixo e copio `AEBOT-Python-0.3.0.zip` inteiro para o outro computador.
 2. Clico com o botão direito e escolho **Extrair Tudo**.
 3. Aguardo terminar e abro a pasta `AEBOT-Python-0.3.0`.
 4. Dou dois cliques em **AEBOT.exe**.
 5. Aguardo **IA local pronta**, seleciono o serviço e escrevo o caso.
+
+Não há ordem de instalação: só extraio e abro. O arquivo `00-COMECE-AQUI.txt`, dentro da pasta, repete o passo a passo. A primeira abertura pode levar mais tempo para conferir e carregar os arquivos; aguardo o estado **IA local pronta** antes de enviar.
 
 Não abro o EXE de dentro do ZIP. Mantenho `_internal`, `resources`, licenças e guias ao lado dele. O pacote já contém o Python e o modelo; não preciso instalar ferramentas, configurar servidor, cadastrar chave ou manter internet para analisar.
 

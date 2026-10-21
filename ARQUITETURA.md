@@ -43,7 +43,11 @@ Limites importantes: a relevância semântica ainda é heurística, não prova f
 
 Na 0.3.0, o modelo compara os grupos elegíveis do serviço, com contexto literal quando uma oração retoma a anterior. `contextQuotes` permite conferir essa relação; escopos diferentes não compartilham a comparação. Há uma segunda organização dos mesmos textos apenas quando a primeira comparação é ambígua, sem baixar o limiar. Cache limitado em RAM considera texto original, contexto, serviço, versão e candidatos; Novo caso limpa esse cache. Não uso lista de palavras de defeito como requisito para consultar o modelo. Isso melhora cobertura, mas não transforma o BGE em prova de ocorrência nem elimina abstenções.
 
+A retomada de substantivo em “só falta antes” exige que o complemento pertença ao contexto por oração declarado na base. `store.py` entrega essas expressões ao normalizador; não trato “sem sinalização” como elipse de uma foto citada antes. Além da regressão específica, os testes de unidade conferem as 1.024 combinações explícitas sem depender da rede neural.
+
 O feedback fica fora do fluxo de análise: interface → formulário voluntário → validação → SQLite. Exportar/importar usa JSON local e transação; campos desconhecidos e colisões de conteúdo são rejeitados. O arquivo não é sincronizado nem usado como treinamento automático. [Guia de feedback](docs/FEEDBACK-PYTHON.md) e [revisão 0.3.0](docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md).
+
+O pacote leva `00-COMECE-AQUI.txt`, modelo, regras e runtime. O diagnóstico `--check` verifica Tk, duas análises e o feedback sintético em banco temporário, sem acessar o banco do usuário. `copy_guides` e `write_manifest` no empacotador permitem finalizar a documentação depois de testar o EXE e antes de conferir o ZIP. Isso não assina o aplicativo nem garante liberação por políticas do Windows.
 
 ## Revisão do núcleo em 13/10/2026 — código 2.23.0
 

@@ -13,6 +13,27 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'python/dist' / f'AEBOT-Python-{__version__}'
 
 
+def copy_guides(directory: Path) -> None:
+    for name in ('LEIA-ME.txt', 'THIRD-PARTY-NOTICES.md'):
+        shutil.copy2(ROOT / 'python' / name, directory / name)
+    shutil.copy2(ROOT / 'python/LEIA-ME.txt', directory / '00-COMECE-AQUI.txt')
+    shutil.copy2(ROOT / 'docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md', directory / 'RESULTADOS-TESTES.md')
+    shutil.copy2(ROOT / 'docs/FEEDBACK-PYTHON.md', directory / 'GUIA-FEEDBACK.md')
+
+
+def write_manifest(directory: Path) -> int:
+    # O próprio manifesto não entra no hash. Posso atualizar os guias depois
+    # do teste do EXE e regenerar os hashes antes de fechar o ZIP.
+    hashes = []
+    for file in sorted(directory.rglob('*')):
+        if file.is_file() and file != directory / 'SHA256SUMS.txt':
+            with file.open('rb') as source:
+                digest = hashlib.file_digest(source, 'sha256').hexdigest()
+            hashes.append(f'{digest}  {file.relative_to(directory).as_posix()}')
+    (directory / 'SHA256SUMS.txt').write_text('\n'.join(hashes) + '\n', encoding='utf-8')
+    return len(hashes)
+
+
 def main() -> None:
     if OUTPUT.exists():
         raise SystemExit('A pasta de entrega já existe. Preserve-a e use uma nova versão; não sobrescrevo entregas.')
@@ -28,10 +49,7 @@ def main() -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / relative, target)
     shutil.copytree(ROOT / 'python/models/bge', resources / 'python/models/bge')
-    for name in ('LEIA-ME.txt', 'THIRD-PARTY-NOTICES.md'):
-        shutil.copy2(ROOT / 'python' / name, OUTPUT / name)
-    shutil.copy2(ROOT / 'docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md', OUTPUT / 'RESULTADOS-TESTES.md')
-    shutil.copy2(ROOT / 'docs/FEEDBACK-PYTHON.md', OUTPUT / 'GUIA-FEEDBACK.md')
+    copy_guides(OUTPUT)
     licenses = OUTPUT / 'LICENSES'
     licenses.mkdir()
     packages = sorted(importlib.metadata.distributions(), key=lambda item: item.metadata['Name'].lower())
@@ -57,14 +75,8 @@ def main() -> None:
         if source.is_file():
             shutil.copy2(source, licenses / ('Python-' + relative.replace('/', '-')))
     (OUTPUT / 'DEPENDENCIAS.txt').write_text('\n'.join(versions) + '\n', encoding='utf-8')
-    hashes = []
-    for file in sorted(OUTPUT.rglob('*')):
-        if file.is_file():
-            with file.open('rb') as source:
-                digest = hashlib.file_digest(source, 'sha256').hexdigest()
-            hashes.append(f'{digest}  {file.relative_to(OUTPUT).as_posix()}')
-    (OUTPUT / 'SHA256SUMS.txt').write_text('\n'.join(hashes) + '\n', encoding='utf-8')
-    print(json.dumps(dict(directory=str(OUTPUT), files=len(hashes)), ensure_ascii=False))
+    count = write_manifest(OUTPUT)
+    print(json.dumps(dict(directory=str(OUTPUT), files=count), ensure_ascii=False))
 
 
 if __name__ == '__main__':

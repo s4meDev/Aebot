@@ -47,11 +47,41 @@ def check_runtime(report: dict) -> None:
         semantic = engine.evaluate('A recomposição ficou visivelmente mal feita.', 'repavimentacao-asfalto-ate-1m2')
         if semantic.decision != 'Reprovado' or not semantic.semanticApplied:
             raise RuntimeError('Falha na interpretação local do pacote.')
+        check_feedback(window, engine)
         report.update(ok=True, base=engine.store.version, decision=result.decision,
+            feedbackCheck=True,
             analysisMs=result.durationMs, semanticMs=semantic.durationMs, semanticCalls=semantic.inferenceCalls,
             startupAndCheckMs=(time.perf_counter() - started) * 1000)
     finally:
         window.destroy()
+
+
+def check_feedback(window, engine) -> None:
+    """Confiro também SQLite e telas no EXE, sem tocar no feedback do usuário."""
+    import tempfile
+    from aebot.feedback import FeedbackStore
+    from aebot.feedback_ui import FeedbackDialog, FeedbackReader
+    with tempfile.TemporaryDirectory(prefix='aebot-diagnostic-') as directory:
+        store = FeedbackStore(Path(directory))
+        service_id = 'repavimentacao-asfalto-ate-1m2'
+        form = FeedbackDialog(window, store, dict(service_id=service_id,
+            service_name=engine.store.services[service_id]['name'], app_version=__version__, base_version=engine.store.version))
+        form.window.withdraw()
+        try:
+            if form.description.get('1.0', 'end-1c') or form.expected.get('1.0', 'end-1c') or store.path.exists():
+                raise RuntimeError('O formulário precisa começar vazio e sem persistência.')
+        finally:
+            form.window.destroy()
+        store.save(service_id=service_id, service_name=engine.store.services[service_id]['name'],
+            app_version=__version__, base_version=engine.store.version, category='Sugestão',
+            description='Teste técnico de feedback; nenhum conteúdo de análise.')
+        reader = FeedbackReader(window, store)
+        reader.window.withdraw()
+        try:
+            if len(reader.tree.get_children()) != 1:
+                raise RuntimeError('Falha ao ler o feedback de teste no pacote.')
+        finally:
+            reader.window.destroy()
 
 
 if __name__ == '__main__':

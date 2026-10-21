@@ -226,6 +226,19 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(result.decision, 'Não Conforme')
         self.assertEqual(len([item for item in result.matchedRules if item.severity]), 1)
 
+    def test_a_new_missing_object_is_not_a_photo_ellipsis(self):
+        sources = self.store.text.sources('Sem foto antes. Sem sinalização.')
+        self.assertEqual(sources[-1].model_text, 'Sem sinalização')
+        self.assertIsNone(sources[-1].inherited_from)
+
+    def test_all_explicit_combinations_preserve_the_expected_basis(self):
+        from audits.asphalt_cases import canonical_combinations
+        for case in canonical_combinations(self.store):
+            with self.subTest(case=case['name']):
+                result = self.engine.evaluate(case['turns'][0], case['serviceId'])
+                self.assertEqual(result.decision, case['expectedDecision'])
+                self.assertEqual(sorted(item.id for item in result.matchedRules if item.severity), sorted(case['expectedRules']))
+
     def test_nobody_showed_is_an_absent_record(self):
         self.assertTrue(self.store.text.absent_target('Ninguém mostrou em foto a condição inicial.', 'foto'))
 

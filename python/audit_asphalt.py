@@ -199,8 +199,8 @@ def main():
             'conversationCache': 'Interpretations cleared by Session.reset between independent cases; may be reused within the same case.'}
         save()
         print(json.dumps(dict(output=str(output), overall=report['overall']), ensure_ascii=False), flush=True)
-    except Exception as error:
-        report['status'] = 'failed'
+    except (Exception, KeyboardInterrupt) as error:
+        report['status'] = 'interrupted' if isinstance(error, KeyboardInterrupt) else 'failed'
         report['technicalException'] = type(error).__name__
         save()
         raise
