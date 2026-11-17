@@ -1,0 +1,10 @@
+{
+  "$schema": "../schemas/catalogProfile.schema.json",
+  "id": "asphalt",
+  "title": "Repavimentação Asfalto",
+  "assistantRole": "Programador de Serviços Sênior",
+  "serviceIds": [
+    "repavimentacao-asfalto-ate-1m2",
+    "repavimentacao-asfalto-acima-1m2"
+  ]
+}

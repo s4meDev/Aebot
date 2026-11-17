@@ -14,7 +14,7 @@ import type {
   RuleEvaluation,
 } from '../types';
 
-export const CURRENT_RULE_STORE_VERSION = '2.18.0';
+export const CURRENT_RULE_STORE_VERSION = '2.20.0';
 const SERVICE_ANALYSIS_STATUSES: ServiceAnalysisStatus[] = ['active', 'rules_pending'];
 const DECISION_POLICIES: ServiceDecisionPolicy[] = ['ranked', 'most_severe_applicable'];
 const CATALOG_NAME_STATUSES: CatalogNameStatus[] = ['confirmed', 'needs_confirmation'];

@@ -55,12 +55,26 @@ describe('interpretação compacta do Qwen', () => {
   it.each([
     ['Não enviaram nenhuma imagem de como ficou depois que terminaram de asfaltar.', 'RULE-ASF-FOTO-DEPOIS-01'],
     ['Conferi no SCAE e vi que esse mesmo trecho de asfalto já tinha sido feito e encerrado em outra ordem.', 'RULE-ASF-DUPLICIDADE-01'],
-    ['Usaram trena, só que pelas imagens ninguém consegue saber o tamanho real do pedaço asfaltado.', 'RULE-ASF-TRENA-01'],
   ])('leva a interpretação validada ao motor: %s', (query, id) => {
     // Aqui testamos o contrato com uma resposta fornecida, não o acerto do modelo real.
     const parsed = request(query).parse(response(id));
     expect(parsed?.mappings[0].ruleId).toBe(id);
     expect(ruleEngine.evaluateFacts({ serviceId: service.id, query, mappings: parsed!.mappings }).decision).toBe('Reprovado');
+  });
+
+  // Retificação expressa do responsável em 03/11: trena impeditiva depende
+  // do vínculo. O modelo não pode completar uma equipe que não foi relatada.
+  it.each([
+    { query: 'A trena impede verificar a metragem.', id: 'RULE-ASF-TRENA-01', decision: null },
+    { query: 'Usaram trena, só que pelas imagens ninguém consegue saber o tamanho real do pedaço asfaltado.', id: 'RULE-ASF-TRENA-01', decision: null },
+    { query: 'Equipe interna com trena que impede verificar a metragem.', id: 'RULE-ASF-TRENA-01', decision: 'Não Conforme' },
+    { query: 'Equipe terceirizada com trena que impede verificar a metragem.', id: 'RULE-ASF-TRENA-TERCEIRA-01', decision: 'Reprovado' },
+  ])('aplica a trena com contexto confirmado: $query', ({ query, id, decision }) => {
+    const parsed = request(query).parse(response(id));
+    expect(parsed?.mappings[0].ruleId).toBe(id);
+    expect(parsed?.mappings[0].stance).toBe('asserted');
+    const result = ruleEngine.evaluateFacts({ serviceId: service.id, query, mappings: parsed!.mappings });
+    expect(result.decision).toBe(decision);
   });
 
   it.each(['inventada', 'RULE-RC-01', 'RULE-ASF-FOTOS-COMBINADAS-01'])('recusa ID não permitido: %s', (id) => {

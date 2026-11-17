@@ -1,11 +1,13 @@
 """Casos adicionais, separados do corpus antigo. Testo o modelo real, sem rede."""
 from pathlib import Path
+import argparse
 import json
 import statistics
 import time
 from unittest.mock import patch
 from aebot.runtime import load_engine
 from aebot.session import Session
+from aebot import __version__
 
 
 CASES = [
@@ -28,7 +30,7 @@ CASES = [
 ]
 
 
-def main() -> None:
+def run() -> dict:
     started = time.perf_counter()
     with patch('socket.socket.connect', side_effect=AssertionError('A análise deve ser offline.')):
         engine = load_engine()
@@ -51,10 +53,32 @@ def main() -> None:
     report = dict(cases=len(rows), passed=sum(row['ok'] for row in rows), openingMs=opening,
         checkedOffline=True, checkedPairIndependence=invariant,
         medianMs=statistics.median(row['ms'] for row in rows), maxMs=max(row['ms'] for row in rows), rows=rows)
-    target = Path(__file__).resolve().parent / 'artifacts/semantic-additional.json'
+    return report
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', type=Path)
+    args = parser.parse_args()
+    target = args.output or Path(__file__).resolve().parent / 'artifacts/semantic-additional.json'
+    if args.output and target.exists():
+        raise SystemExit('Use um relatório novo; preservo medições anteriores.')
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    report = dict(status='starting', appVersion=__version__)
+    def save():
+        target.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+    save()
+    try:
+        report.update(run())
+        report['status'] = 'completed' if report['passed'] == report['cases'] else 'divergent'
+    except Exception as error:
+        report.update(status='failed', technicalException=type(error).__name__)
+        raise
+    finally:
+        save()
     print(json.dumps({key: value for key, value in report.items() if key != 'rows'}))
+    if report['status'] != 'completed':
+        raise SystemExit('Há divergências semânticas. Não anuncio a rodada como aprovada.')
 
 
 if __name__ == '__main__':

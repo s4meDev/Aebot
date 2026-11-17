@@ -28,3 +28,6 @@ worker-dist/
 .dev.vars.*
 *.local
 .aebot-private/
+**/.aebot-updates/
+/apresentacoes/.build-*/
+/entregas/

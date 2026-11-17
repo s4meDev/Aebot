@@ -28,10 +28,11 @@ def main() -> None:
         expected = sorted(case.get('expectedClassifyingRuleIds', []))
         # Hipótese explica uma conclusão condicional, não classifica uma OS real.
         decision = result.scenarioDecision if result.intent == 'hypothesis' else result.decision
-        ok = not result.errorCode and decision == case['decision'] and actual == expected
+        question_ok = not case.get('requiresQuestion') or bool(result.pendingInformation)
+        ok = not result.errorCode and decision == case['decision'] and actual == expected and question_ok
         row = dict(name=case['name'], ok=ok, expected=case['decision'], actual=decision,
             expectedRules=expected, actualRules=actual, ms=result.durationMs,
-            intent=result.intent, outcome=result.outcome, question=result.pendingInformation)
+            intent=result.intent, outcome=result.outcome, question=result.pendingInformation, questionOk=question_ok)
         rows.append(row)
         if not ok:
             print(json.dumps(row, ensure_ascii=False), flush=True)

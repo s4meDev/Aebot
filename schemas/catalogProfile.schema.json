@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Escopo do protótipo AEBOT",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "assistantRole", "serviceIds"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "assistantRole": {"type": "string", "minLength": 1},
+    "serviceIds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

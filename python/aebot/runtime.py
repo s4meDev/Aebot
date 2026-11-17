@@ -34,5 +34,5 @@ def verify_model(root: Path) -> Path:
 def load_engine(root: Path | None = None) -> Engine:
     from .reranker import LocalReranker
     root = root or resources_root()
-    store = RuleStore(root)
+    store = RuleStore(root, prototype=True)
     return Engine(store, LocalReranker(verify_model(root)))

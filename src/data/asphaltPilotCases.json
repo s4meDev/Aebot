@@ -125,10 +125,9 @@
     "name": "trena impeditiva",
     "serviceId": "repavimentacao-asfalto-ate-1m2",
     "query": "A trena impede verificar a metragem.",
-    "decision": "Reprovado",
-    "expectedClassifyingRuleIds": [
-      "RULE-ASF-TRENA-01"
-    ]
+    "decision": null,
+    "expectedClassifyingRuleIds": [],
+    "requiresQuestion": true
   },
   {
     "name": "trena apenas mencionada",
@@ -326,8 +325,9 @@
     "name": "paráfrase da trena impeditiva",
     "serviceId": "repavimentacao-asfalto-ate-1m2",
     "query": "Usaram trena, só que pelas imagens ninguém consegue saber o tamanho real do pedaço asfaltado.",
-    "decision": "Reprovado",
-    "expectedClassifyingRuleIds": ["RULE-ASF-TRENA-01"],
+    "decision": null,
+    "expectedClassifyingRuleIds": [],
+    "requiresQuestion": true,
     "requiresSemantic": true
   },
   {

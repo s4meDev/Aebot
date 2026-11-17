@@ -6,7 +6,8 @@ from dataclasses import replace
 from .contracts import Source
 
 STOP = {'qual', 'quais', 'como', 'regra', 'regras', 'servico', 'preciso', 'sobre', 'devo', 'fazer',
-        'essa', 'esse', 'pode', 'quando', 'onde', 'significa', 'explica', 'explique', 'uma', 'que', 'para', 'e', 'ou', 'se', 'nao'}
+        'essa', 'esse', 'pode', 'quando', 'onde', 'significa', 'explica', 'explique', 'uma', 'que', 'para', 'e', 'ou', 'se', 'nao',
+        'me', 'diferenca', 'entre', 'criterio', 'criterios', 'quero', 'gostaria', 'entender'}
 
 
 class Extractor:
@@ -20,9 +21,28 @@ class Extractor:
                 rule.get('relatedEvidence', []) + rule.get('conditionKeywords', []) + rule.get('semanticCriteria', [])) for rule in group.rules))
             self.vocabulary[key] = set(words) - STOP
         self.frequencies = Counter(word for words in self.vocabulary.values() for word in words)
+        self.context_words = {word for context in index.store.data.get('interpretation', {}).get('contexts', []) if not context.get('perStatement')
+            for value in context['values'] for expression in value['expressions'] + [value['label']]
+            for word in self.text.tokens(expression)}
+        self.context_links = set(self.text.tokens('não nem é era eram foi foram sou somos são estou estamos está estão estava estavam apenas só pode ser confirmo corrigindo na verdade'))
+        self.context_links.update(word for scope in index.store.data.get('interpretation', {}).get('scopes', [])
+            for expression in scope['expressions'] for word in self.text.tokens(expression))
+        self.scope_words = {word for scope in index.store.data.get('interpretation', {}).get('scopes', [])
+            for expression in scope['expressions'] for word in self.text.tokens(expression)}
+        self.context_links.update(self.text.tokens('não sei informar dizer não sabemos não tenho certeza não tenho como confirmar não foi confirmado ainda preciso confirmar conferir verificar acho que acredito que parece que pode ser talvez provavelmente possivelmente'))
 
-    def topic(self, query, group):
+    def context_only(self, query):
         words = set(self.text.tokens(query)) - STOP
+        return bool(words & self.context_words) and words <= self.context_words | self.context_links
+
+    def topic(self, query, group, *, ignore_service=False, ignore_context=False):
+        words = set(self.text.tokens(query)) - STOP
+        if ignore_service:
+            words -= set(self.text.tokens(self.index.service_name))
+        if ignore_context:
+            # Equipe/frente são filtros, não um assunto suficiente por si só.
+            # "Almoço da equipe" não é uma dúvida sobre falta de aferição.
+            words -= self.context_words
         return sum(math.log(1 + len(self.vocabulary) / self.frequencies[word])
             for word in words & self.vocabulary[(group.scope, group.key)])
 
@@ -36,6 +56,60 @@ class Extractor:
         overlap = max((len(words & set(self.text.tokens(term))) for term in anchors), default=0)
         return (overlap, not all(rule.get('appliesToAllActiveServices') for rule in group.rules),
             overlap >= 2 and any(rule.get('severity') for rule in group.rules), self.topic(query, group) / math.sqrt(size))
+
+    def consultation_groups(self, query, groups, selected_scope=None):
+        """Recupero cada assunto pedido, sem tratar a enumeração como ocorrência."""
+        from .facts import CaseFacts
+        selected, unresolved = [], []
+        record = None
+        previous_subject = None
+        for part in self.text.consultation_parts(query):
+            explicit_scopes = [scope['id'] for scope in self.index.store.data.get('interpretation', {}).get('scopes', [])
+                if self.text.found(part, scope['expressions'])]
+            words = set(self.text.tokens(part)) - STOP
+            scope_only = bool(words & self.scope_words) and words <= self.scope_words | self.context_links
+            ranking_query = part
+            if scope_only and previous_subject:
+                # “Aferição na OS atual e na origem” repete o assunto, não
+                # declara que a OS de origem está ausente. Só o ranking lexical
+                # retira termos de escopo; a fonte literal continua inteira.
+                ranking_query = ' '.join(word for word in self.text.tokens(previous_subject) if word not in self.scope_words)
+            elif not self.context_only(part):
+                previous_subject = part
+            if explicit_scopes and selected_scope and selected_scope not in explicit_scopes:
+                continue
+            head = self.text.record_match(part)
+            if head:
+                record = head.group(0)
+            elif record and any(self.text.tokens(part) == self.text.tokens(term) for term in self.text.ellipsis_terms):
+                # Em “foto antes e depois”, o objeto foi escrito na mesma
+                # consulta. Não estendo essa retomada a um assunto novo.
+                part = record + ' ' + part
+                ranking_query = part
+            local = CaseFacts(self.index.store)
+            source = Source(part, part)
+            scope = local.scope_of(source)
+            local.read_context(source, scope)
+            eligible = [group for group in groups if any(not any(
+                local.context(key, scope, source) and local.context(key, scope, source).value in values
+                for key, values in rule.get('evaluation', {}).get('incompatible', {}).items()) for rule in group.rules)]
+            lexical = [group for group in eligible if self.topic(ranking_query, group, ignore_service=True, ignore_context=True) > 0]
+            best = max(lexical, key=lambda group: self.topic_rank(ranking_query, group), default=None)
+            other_ranks = [self.topic_rank(ranking_query, group)[:2] for group in lexical if group is not best]
+            distinctive = bool(best and (self.topic_rank(ranking_query, best)[0] >= 2 or
+                self.topic_rank(ranking_query, best)[:2] > max(other_ranks, default=(0, False)) or any(
+                self.frequencies[word] == 1 for word in (set(self.text.tokens(ranking_query)) - STOP) & self.vocabulary[(best.scope, best.key)]) or
+                sum(self.frequencies[word] <= 2 for word in (set(self.text.tokens(ranking_query)) - STOP) & self.vocabulary[(best.scope, best.key)]) >= 2))
+            if (best is None or (self.scorer and not distinctive)) and not self.context_only(part) and self.text.tokens(part):
+                # “Registro” aparece em vários critérios. Uma palavra genérica
+                # não encerra uma consulta que ainda precisa de interpretação.
+                semantic = self.semantic(Source(query, self.text.consultation_subject(part)), eligible)
+                best = semantic[0] if semantic else None
+            if best and best not in selected:
+                selected.append(best)
+            elif best is None and not self.context_only(part) and set(self.text.tokens(part)) - STOP:
+                unresolved.append(part)
+        return selected, unresolved
 
     def evidence_heads(self, group):
         records = self.index.store.data.get('interpretation', {}).get('recordTerms', [])
@@ -115,11 +189,29 @@ class Extractor:
                 return evidence, True
         return [], False
 
+    def score_pairs(self, pairs):
+        """Reaproveito pares iguais só no caso atual, sem cache em disco."""
+        missing = list(dict.fromkeys(pair for pair in pairs if ('pair',) + pair not in self.cache))
+        fresh = {}
+        if missing:
+            scores = self.scorer.score(missing)
+            if len(scores) != len(missing) or not all(math.isfinite(score) for score in scores):
+                raise ValueError('O modelo retornou uma comparação inválida.')
+            fresh = dict(zip(missing, scores))
+        values = [fresh[pair] if pair in fresh else self.cache[('pair',) + pair] for pair in pairs]
+        for pair, value in zip(pairs, values):
+            key = ('pair',) + pair
+            self.cache[key] = value
+            self.cache.move_to_end(key)
+        while len(self.cache) > 256:
+            self.cache.popitem(last=False)
+        return values
+
     def semantic(self, source, groups):
         if not self.scorer:
             return None
         context = source.inherited_from if source.model_text == source.quote else None
-        key = (source.model_text, context, self.index.service_name, self.index.store.version,
+        key = ('interpretation', source.model_text, context, self.index.service_name, self.index.store.version,
             tuple((group.scope, group.key) for group in groups))
         if key in self.cache:
             self.cache.move_to_end(key)
@@ -127,7 +219,7 @@ class Extractor:
         # O mesmo relato tem significados diferentes conforme o serviço.
         # A identidade vem do catálogo selecionado, nunca de um fallback fixo.
         query = source.model_text + (f'\nContexto anterior: {context}.' if context else '') + f'\nServiço analisado: {self.index.service_name}'
-        scores = self.scorer.score([(query, self.index.criteria(group)) for group in groups])
+        scores = self.score_pairs([(query, self.index.criteria(group)) for group in groups])
         if len(scores) != len(groups) or not all(math.isfinite(score) for score in scores):
             raise ValueError('O modelo retornou uma comparação inválida.')
         ranked = sorted(zip(groups, scores), key=lambda item: item[1], reverse=True)
@@ -136,7 +228,7 @@ class Extractor:
             # Uma segunda organização do mesmo contexto pode resolver uma
             # paráfrase. Não baixo o limiar e não invento fato para resgatá-la.
             alternate = f'Serviço: {self.index.service_name}. ' + (f'Contexto anterior: {context}. ' if context else '') + f'Relato: {source.model_text}'
-            other = self.scorer.score([(alternate, self.index.criteria(group)) for group in groups])
+            other = self.score_pairs([(alternate, self.index.criteria(group)) for group in groups])
             if len(other) != len(groups) or not all(math.isfinite(score) for score in other):
                 raise ValueError('O modelo retornou uma comparação inválida.')
             ranked = sorted(zip(groups, [max(a, b) for a, b in zip(scores, other)]), key=lambda item: item[1], reverse=True)
@@ -149,6 +241,9 @@ class Extractor:
     def extract(self, state, sources, intent):
         scoped = [(source, state.scope_of(source)) for source in sources]
         for source, scope in scoped:
+            if source.relationship == 'coordination' and source.inherited_from and (
+                self.text.uncertain(source.inherited_from) or self.text.denied(source.inherited_from)):
+                continue
             state.read_context(source, scope)
         for source, scope in scoped:
             if source.inherited_from and source.model_text == source.quote and state.scope_of(Source(source.inherited_from, source.inherited_from)) != scope:
@@ -159,10 +254,12 @@ class Extractor:
             is_context = any(fact.quote == source.quote for fact in state.contexts.values())
             normalized = self.text.normalize(source.model_text)
             denied = self.text.denied(source.model_text)
+            denied = denied or bool(source.relationship == 'coordination' and source.inherited_from
+                and self.text.denied(source.inherited_from))
             if re.search(r'\b(?:expressao|frase|exemplo)\b', normalized):
                 continue
             if self.text.uncertain(source.model_text) or (source.relationship == 'coordination' and source.inherited_from and self.text.uncertain(source.inherited_from)):
-                if not re.fullmatch(r'nao sei(?: informar| dizer)?', normalized):
+                if not self.context_only(source.model_text) and not re.fullmatch(r'nao sei(?: informar| dizer)?', normalized):
                     state.unresolved.append(source)
                 continue
             if self.text.metadata(source.model_text) and not self.text.risk(source.model_text):
@@ -191,6 +288,11 @@ class Extractor:
                     if not active:
                         inactive.add(group.key)
             if found or (inactive and not self.text.risk(source.model_text)) or (is_context and not self.text.risk(source.model_text)) or denied:
+                continue
+            if self.context_only(source.model_text):
+                # Depois de conferir os fatos lexicais, uma resposta só sobre
+                # contexto não disputa uma falha no BGE. "Nem interna" não é
+                # uma nova evidência ausente que precise de outra explicação.
                 continue
             if self.text.regular(source.model_text):
                 continue

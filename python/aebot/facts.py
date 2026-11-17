@@ -50,6 +50,7 @@ class CaseFacts:
         self.config = store.data.get('interpretation', {})
         self.default_scope = self.config.get('defaultScope', 'default')
         self.contexts: dict[tuple[str, str], ContextFact] = {}
+        self.context_sources: dict[tuple[str, str], Source] = {}
         self.statement_contexts = {}
         self.observations: dict[tuple[str, str], Observation] = {}
         self.unresolved: list[Source] = []
@@ -73,27 +74,53 @@ class CaseFacts:
             return self.statement_contexts.get((dimension, scope, source))
         if definition.get('shared'):
             matches = [fact for (key, _), fact in self.contexts.items() if key == dimension]
-            return matches[-1] if matches else None
-        return self.contexts.get((dimension, scope)) or self.contexts.get((dimension, '*'))
+            actual = matches[-1] if matches else None
+        else:
+            actual = self.contexts[(dimension, scope)] if (dimension, scope) in self.contexts else self.contexts.get((dimension, '*'))
+        # Um valor explicitamente incerto bloqueia o contexto antigo, mas
+        # continua citado como incerto no diagnóstico em memória.
+        return actual if actual and actual.value is not None else None
 
     def read_context(self, source, scope):
         normalized = self.text.normalize(source.model_text)
+        if self.text.denied(source.model_text):
+            return False
         found_any = False
         for definition in self.config.get('contexts', []):
             found = []
+            negated = set()
             for value in definition['values']:
                 for expression in value['expressions']:
                     wanted = self.text.normalize(expression)
-                    for match in re.finditer(r'\b' + re.escape(wanted) + r'\b', normalized):
-                        if re.search(r'nao (?:(?:e|era|foi|esta|estava|fica|ficou) )?$', normalized[max(0, match.start() - 16):match.start()]):
+                    exact = list(re.finditer(r'\b' + re.escape(wanted) + r'\b', normalized))
+                    for match in exact:
+                        if self.text.context_negated(normalized[:match.start()]):
+                            negated.add(value['id'])
                             continue
                         found.append((match.start(), len(wanted), value))
-                # Contexto admite palavras intermediárias, mas não atravessa
-                # outra negação. O valor mais completo desempata a expressão.
-                for expression in value['expressions']:
-                    if self.text.flexible(source.model_text, expression, context=True) and not re.search(
-                        r'\bnao (?:e|era|foi) ' + re.escape(self.text.normalize(expression)), normalized):
+                    # Não reinsiro por matching flexível uma expressão exata
+                    # que já foi descartada por estar negada.
+                    if not exact and self.text.flexible(source.model_text, expression, context=True):
                         found.append((0, len(expression), value))
+            if not found and negated and not definition.get('perStatement'):
+                previous = self.context(definition['id'], scope)
+                if previous and previous.value in negated:
+                    # Negar o vínculo antigo não confirma o oposto. Suspendo
+                    # somente esse contexto até o analista informar o atual.
+                    key = (definition['id'], scope)
+                    self.contexts.pop(key, None)
+                    self.contexts[key] = ContextFact(definition['id'], None, scope, source.quote)
+                    self.context_sources[key] = source
+                    found_any = True
+            if found and self.text.uncertain(source.model_text) and not definition.get('perStatement'):
+                # Se a certeza anterior foi retirada, não continuo usando o
+                # vínculo antigo. Sem valor anterior, continuo sem confirmar.
+                if self.context(definition['id'], scope):
+                    key = (definition['id'], scope)
+                    self.contexts.pop(key, None)
+                    self.contexts[key] = ContextFact(definition['id'], None, scope, source.quote)
+                    self.context_sources[key] = source
+                    found_any = True
             if found and not self.text.uncertain(source.model_text):
                 if definition.get('perStatement'):
                     values = {item[2]['id'] for item in found}
@@ -103,12 +130,34 @@ class CaseFacts:
                         value = found[0][2]
                         self.statement_contexts[(definition['id'], scope, source)] = ContextFact(definition['id'], value['id'], scope, source.quote)
                     continue
-                value = max(found, key=lambda item: (item[0], item[1]))[2]
                 explicit_scope = any(self.text.found(source.model_text, item['expressions']) for item in self.config.get('scopes', []))
                 bound_scope = scope if explicit_scope or source.scope_hint else '*'
-                fact = ContextFact(definition['id'], value['id'], bound_scope, source.quote)
+                value_id = max(found, key=lambda item: (item[0], item[1]))[2]['id']
+                correction = bool(re.search(r'\b(?:agora|corrigindo|na verdade|quis dizer|quero dizer)\b', normalized))
+                explicit_alternatives = bool(re.search(r'\b(?:ou|versus|vs)\b', normalized.replace('/', ' ou '))) or '/' in source.model_text
+                alternatives = len({item[2]['id'] for item in found}) > 1 and (explicit_alternatives or not correction)
+                previous_key = (definition['id'], bound_scope)
+                previous = self.contexts.get(previous_key)
+                previous_source = self.context_sources.get(previous_key)
+                # Uma enumeração separada por vírgula continua sendo do mesmo
+                # turno. Não escolho a última equipe só por ser a última frase.
+                if (previous and previous_source and previous_source.message_index == source.message_index
+                    and previous.value != value_id and not correction):
+                    alternatives = True
+                if alternatives:
+                    # "Interna e terceirizada" também não confirma um vínculo.
+                    # A incerteza vale neste escopo, não apaga a OS de origem.
+                    bound_scope = scope
+                    value_id = None
+                else:
+                    previous = self.contexts.get((definition['id'], scope))
+                    if bound_scope == '*' and previous and previous.value is None:
+                        self.contexts.pop((definition['id'], scope))
+                        self.context_sources.pop((definition['id'], scope), None)
+                fact = ContextFact(definition['id'], value_id, bound_scope, source.quote)
                 self.contexts.pop((definition['id'], bound_scope), None)
                 self.contexts[(definition['id'], bound_scope)] = fact
+                self.context_sources[(definition['id'], bound_scope)] = source
                 found_any = True
         return found_any
 

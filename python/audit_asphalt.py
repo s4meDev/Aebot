@@ -52,14 +52,17 @@ def check(case, result, session, engine):
     basis_ok = case['expectedRules'] is None or actual == sorted(case['expectedRules'])
     basis_ok = basis_ok and (not case.get('requiredAnyRules') or bool(all_ids & set(case['requiredAnyRules'])))
     valid = {item['id'] for item in engine.store.for_service(result.serviceId)}
+    # Consultas e hipóteses não são gravadas no estado da OS. Confiro citações nos
+    # próprios turnos sintéticos, sem exigir que contaminem o caso real.
+    source_text = '. '.join(case['turns']) if result.intent in ('hypothesis', 'question') else session.query
     for item in result.matchedRules:
         # Uma agregadora tem várias fontes, indicadas pelos IDs de suporte.
         basis_ok = basis_ok and item.id in valid and bool(item.sourceQuote)
         if item.supportingRuleIds:
             basis_ok = basis_ok and set(item.supportingRuleIds).issubset(all_ids)
         else:
-            basis_ok = basis_ok and item.sourceQuote in session.query
-            basis_ok = basis_ok and all(quote in session.query for quote in item.contextQuotes)
+            basis_ok = basis_ok and item.sourceQuote in source_text
+            basis_ok = basis_ok and all(quote in source_text for quote in item.contextQuotes)
     behavior_ok = True
     for key, actual_value in [('expectedIntent', result.intent), ('contextApplied', result.contextApplied)]:
         if key in case:
@@ -80,7 +83,7 @@ def check(case, result, session, engine):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--repeat', type=int, default=3)
-    parser.add_argument('--suite', choices=['main', 'complex', 'coverage', 'focused', 'holdout', 'full', 'informal', 'acceptance'], default='main')
+    parser.add_argument('--suite', choices=['main', 'complex', 'coverage', 'focused', 'holdout', 'full', 'informal', 'acceptance', 'readiness'], default='main')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     if not 1 <= args.repeat <= 10:
@@ -99,7 +102,8 @@ def main():
     # realmente medida sem registrar nenhum conteúdo de conversa real.
     audited = sorted((ROOT / 'python/aebot').glob('*.py')) + sorted((ROOT / 'python/audits').glob('*.py')) + [
         ROOT / 'python/audit_asphalt.py', ROOT / 'src/data/rulesStore.json',
-        ROOT / 'src/data/languageAliases.json', ROOT / 'schemas/rulesStore.schema.json']
+        ROOT / 'src/data/languageAliases.json', ROOT / 'schemas/rulesStore.schema.json',
+        ROOT / 'python/catalogProfile.json', ROOT / 'schemas/catalogProfile.schema.json']
     report['sourceHashes'] = {path.relative_to(ROOT).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest() for path in audited}
     def save():
         output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
@@ -113,7 +117,10 @@ def main():
         report['ruleStoreVersion'] = engine.store.version
         report['modelLock'] = json.loads((ROOT / 'python/reranker.lock.json').read_text(encoding='utf-8'))
         report['selectedServices'] = ['repavimentacao-asfalto-ate-1m2', 'repavimentacao-asfalto-acima-1m2']
-        if args.suite == 'acceptance':
+        if args.suite == 'readiness':
+            from audits.readiness_cases import cases as readiness_cases
+            cases = readiness_cases(engine.store)
+        elif args.suite == 'acceptance':
             from audits.acceptance_cases import cases as acceptance_cases
             cases = acceptance_cases()
         elif args.suite == 'informal':
@@ -126,7 +133,25 @@ def main():
             from audits.asphalt_complex_cases import cases as complex_cases
             from audits.asphalt_holdout import cases as holdout_cases
             from audits.informal_cases import cases as informal_cases
+            from audits.consultation_cases import cases as consultation_cases
+            from audits.readiness_cases import cases as readiness_cases
+            from audits.tape_policy_cases import cases as tape_policy_cases
+            from audits.response_cases import cases as response_cases
+            from audits.conversation_cases import cases as conversation_cases
+            from audits.language_safety_cases import cases as language_safety_cases
+            from audits.release_cases import cases as release_cases
+            from audits.document_cases import cases as document_cases
+            from audits.consultation_multi_cases import cases as multi_cases
             cases = canonical_combinations(engine.store) + original_cases(ROOT) + additional_previous() + novel_cases() + complex_cases() + remaining_rule_coverage() + holdout_cases() + informal_cases()
+            cases += consultation_cases(engine.store)
+            cases += readiness_cases(engine.store)
+            cases += tape_policy_cases(engine.store)
+            cases += response_cases(engine.store)
+            cases += conversation_cases(engine.store)
+            cases += language_safety_cases(engine.store)
+            cases += release_cases(engine.store)
+            cases += document_cases(engine.store)
+            cases += multi_cases(engine.store)
         elif args.suite == 'focused':
             from audits.asphalt_complex_cases import cases as complex_cases
             cases = original_cases(ROOT) + additional_previous() + novel_cases() + complex_cases() + remaining_rule_coverage()
@@ -197,6 +222,16 @@ def main():
             'actualModelCalls': stats(inferred) if inferred else None,
             'noModelCall': stats(deterministic) if deterministic else None,
             'conversationCache': 'Interpretations cleared by Session.reset between independent cases; may be reused within the same case.'}
+        # Cobertura de regra é diferente de acertar milhares de combinações.
+        # Só casos sintéticos entram aqui; isto não coleta uso do aplicativo.
+        coverage = {rule['id']: dict(fact=0, consultation=0, scenario=0) for rule in engine.store.rules}
+        for turn in turns:
+            for match in turn['evaluation']['matchedRules']:
+                coverage[match['id']][match.get('application', 'fact')] += 1
+        report['ruleCoverage'] = coverage
+        report['uncoveredRules'] = [rule_id for rule_id, counts in coverage.items() if not any(counts.values())]
+        report['classifyingRulesWithoutRealFact'] = [rule['id'] for rule in engine.store.rules
+            if rule.get('severity') and not coverage[rule['id']]['fact']]
         save()
         print(json.dumps(dict(output=str(output), overall=report['overall']), ensure_ascii=False), flush=True)
     except (Exception, KeyboardInterrupt) as error:

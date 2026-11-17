@@ -6,7 +6,7 @@ from tkinter import ttk, messagebox, filedialog
 import unicodedata
 from .feedback import CATEGORIES, FeedbackStore
 
-BG, SURFACE, FG, MUTED = '#101113', '#22252a', '#eeeeef', '#b4b8c2'
+from .theme import BG, SURFACE, FG, MUTED
 
 
 def label(parent, text):
@@ -32,7 +32,10 @@ def editor(parent, height):
 def panel(parent, title, geometry):
     window = tk.Toplevel(parent)
     window.title(title)
-    window.geometry(geometry)
+    width, height = map(int, geometry.split('x'))
+    width = min(width, window.winfo_screenwidth() - 80)
+    height = min(height, window.winfo_screenheight() - 110)
+    window.geometry(f'{width}x{height}+40+40')
     window.minsize(540, 450)
     window.configure(bg=BG)
     window.transient(parent)
@@ -46,22 +49,34 @@ class FeedbackDialog:
         self.store, self.metadata = store, metadata
         self.window, frame = panel(parent, 'AEBOT • Enviar feedback', '620x610')
         self.window.grab_set()
-        label(frame, 'O que posso melhorar?').configure(font=('Segoe UI', 16, 'bold'))
-        label(frame, metadata['service_name'])
-        label(frame, 'Só o formulário e as versões do aplicativo/base serão salvos neste PC.\n'
-            'O chat não será anexado. Não inclua dados de clientes ou números de OS.').configure(fg=MUTED)
-        label(frame, 'Tipo de feedback')
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(6, weight=1)
+        frame.rowconfigure(8, weight=1)
+        def field_label(text, row, **style):
+            widget = tk.Label(frame, text=text, bg=BG, fg=FG, font=('Segoe UI', 10),
+                anchor='w', justify='left', **style)
+            widget.grid(row=row, column=0, sticky='ew', pady=(8, 5))
+            return widget
+        field_label('O que posso melhorar?', 0).configure(font=('Segoe UI', 17, 'bold'))
+        field_label(metadata['service_name'], 1)
+        field_label('Salvo só o formulário e as versões neste PC. O chat não será anexado.\n'
+            'Não inclua dados de clientes ou números de OS.', 2, wraplength=520).configure(fg=MUTED)
+        field_label('Tipo de feedback', 3)
         self.category = ttk.Combobox(frame, values=CATEGORIES, state='readonly')
         self.category.current(0)
-        self.category.pack(fill='x')
-        label(frame, 'Descreva o problema ou a sugestão (até 6.000 caracteres)')
-        self.description = editor(frame, 6)
-        label(frame, 'Qual seria a orientação correta? (opcional, até 4.000 caracteres)')
-        self.expected = editor(frame, 4)
+        self.category.grid(row=4, column=0, sticky='ew')
+        field_label('Problema ou sugestão (até 6.000 caracteres)', 5)
+        self.description = tk.Text(frame, height=5, wrap='word', bg=SURFACE, fg=FG,
+            insertbackground=FG, font=('Segoe UI', 10), bd=0, padx=10, pady=8)
+        self.description.grid(row=6, column=0, sticky='nsew')
+        field_label('Orientação esperada (opcional, até 4.000 caracteres)', 7)
+        self.expected = tk.Text(frame, height=3, wrap='word', bg=SURFACE, fg=FG,
+            insertbackground=FG, font=('Segoe UI', 10), bd=0, padx=10, pady=8)
+        self.expected.grid(row=8, column=0, sticky='nsew')
         row = tk.Frame(frame, bg=BG)
-        row.pack(fill='x', pady=(16, 0))
-        button(row, 'Salvar feedback neste PC', self.save)
-        button(row, 'Cancelar', self.window.destroy)
+        row.grid(row=9, column=0, sticky='ew', pady=(14, 0))
+        self.save_button = button(row, 'Salvar feedback neste PC', self.save)
+        self.cancel_button = button(row, 'Cancelar', self.window.destroy)
         self.description.focus_set()
 
     def save(self):
@@ -82,37 +97,46 @@ class FeedbackReader:
         self.store = store
         self.window, frame = panel(parent, 'AEBOT • Feedbacks salvos', '860x700')
         self.window.minsize(660, 540)
-        label(frame, 'Feedbacks salvos').configure(font=('Segoe UI', 16, 'bold'))
-        label(frame, 'Estes registros são locais. Para reunir os de outros PCs, importe os JSONs exportados por eles.').configure(fg=MUTED, wraplength=780)
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(4, weight=1)
+        frame.rowconfigure(5, weight=1)
+        tk.Label(frame, text='Feedbacks salvos', bg=BG, fg=FG,
+            font=('Segoe UI', 17, 'bold')).grid(row=0, column=0, sticky='w', pady=(0, 8))
+        tk.Label(frame, text='Registros locais. Importe os JSONs dos outros PCs para reunir os relatos.',
+            bg=BG, fg=MUTED, font=('Segoe UI', 10), wraplength=600, justify='left').grid(row=1, column=0, sticky='w')
         self.search = tk.StringVar()
         search = tk.Entry(frame, textvariable=self.search, bg=SURFACE, fg=FG, insertbackground=FG,
             relief='flat', font=('Segoe UI', 10))
-        search.pack(fill='x', pady=(10, 5), ipady=8)
-        self.search.trace_add('write', lambda *_: self.render())
-        label(frame, 'Buscar por texto, serviço ou categoria')
+        search.grid(row=2, column=0, sticky='ew', pady=(12, 4), ipady=8)
+        tk.Label(frame, text='Buscar por texto, serviço ou categoria', bg=BG, fg=MUTED,
+            font=('Segoe UI', 9)).grid(row=3, column=0, sticky='w', pady=(0, 8))
         table = tk.Frame(frame, bg=BG)
-        table.pack(fill='both', expand=True)
-        self.tree = ttk.Treeview(table, columns=('date', 'service', 'category'), show='headings', height=7)
-        for key, title, width in [('date', 'Data', 155), ('service', 'Serviço', 300), ('category', 'Tipo', 180)]:
+        table.grid(row=4, column=0, sticky='nsew')
+        self.tree = ttk.Treeview(table, columns=('date', 'service', 'category'), show='headings', height=5)
+        for key, title, width in [('date', 'Data', 145), ('service', 'Serviço', 290), ('category', 'Tipo', 165)]:
             self.tree.heading(key, text=title)
-            self.tree.column(key, width=width, minwidth=80)
+            self.tree.column(key, width=width, minwidth=70)
         scroll = ttk.Scrollbar(table, orient='vertical', command=self.tree.yview)
         self.tree.configure(yscrollcommand=scroll.set)
         self.tree.pack(side='left', fill='both', expand=True)
         scroll.pack(side='right', fill='y')
         self.tree.bind('<<TreeviewSelect>>', self.selected)
-        self.details = editor(frame, 9)
-        self.details.configure(state='disabled')
+        self.details = tk.Text(frame, height=6, bg=SURFACE, fg=FG, wrap='word',
+            font=('Segoe UI', 10), bd=0, padx=12, pady=10, state='disabled')
+        self.details.grid(row=5, column=0, sticky='nsew', pady=(10, 0))
         self.count = tk.StringVar()
-        tk.Label(frame, textvariable=self.count, bg=BG, fg=MUTED, anchor='w').pack(fill='x', pady=6)
+        tk.Label(frame, textvariable=self.count, bg=BG, fg=MUTED, anchor='w',
+            font=('Segoe UI', 9)).grid(row=6, column=0, sticky='ew', pady=6)
         row = tk.Frame(frame, bg=BG)
-        row.pack(fill='x', pady=(8, 0))
+        row.grid(row=7, column=0, sticky='ew', pady=(8, 0))
         button(row, 'Atualizar', self.refresh)
-        button(row, 'Exportar JSON', self.export_file)
+        self.export_button = button(row, 'Exportar JSON', self.export_file)
         button(row, 'Importar JSON', self.import_file)
         button(row, 'Fechar', self.window.destroy)
-        label(frame, str(store.path)).configure(fg=MUTED, wraplength=780, font=('Segoe UI', 8))
+        tk.Label(frame, text=str(store.path), bg=BG, fg=MUTED, wraplength=600,
+            font=('Segoe UI', 8), justify='left').grid(row=8, column=0, sticky='w', pady=(8, 0))
         self.rows = []
+        self.search.trace_add('write', lambda *_: self.render())
         self.refresh()
 
     def refresh(self):

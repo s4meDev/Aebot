@@ -1,10 +1,10 @@
-AEBOT - protótipo Python 0.3.0 / Repavimentação Asfalto
+AEBOT - protótipo Python 0.9.1 / Repavimentação Asfalto
 
 COMECE AQUI - SÓ PRECISA DE UM ZIP
-1. Baixe AEBOT-Python-0.3.0.zip. Se receber pelo WhatsApp, salve o Documento.
+1. Baixe AEBOT-Python-0.9.1.zip. Se receber pelo WhatsApp, salve o Documento.
 2. No computador em que vai usar, clique com o botão direito nesse ZIP.
 3. Escolha "Extrair Tudo" e aguarde terminar. Não abra o EXE dentro do ZIP.
-4. Abra a pasta extraída AEBOT-Python-0.3.0 e dê dois cliques em AEBOT.exe.
+4. Abra a pasta extraída AEBOT-Python-0.9.1 e abra Abrir-AEBOT.exe.
 5. Aguarde a indicação "IA local pronta". A primeira abertura prepara o modelo.
 6. Escolha até ou acima de 1 m² e descreva o que encontrou na OS.
 
@@ -17,15 +17,32 @@ COMO USAR
 - Escreva o relato ou a dúvida. Enter envia; Shift+Enter pula uma linha.
 - Se ele perguntar um detalhe (por exemplo, equipe), responda no mesmo chat.
 - Para retificar, escreva "Corrigindo: ...", explicando o que mudou.
+- Se um trecho ficou ambíguo, responda "Quis dizer: ..." para substituir
+  somente aquele ponto. Uma falha nova não apaga a dúvida anterior.
 - Para outra OS, clique em "Novo caso". Fechar a janela também descarta o chat.
+- Em "Regras e fluxo", consulte os critérios e suas exceções. O botão
+  "Abrir diagrama" mostra o mapa completo no navegador, sem internet.
+- Perguntas com "Se..." são hipóteses: não alteram os fatos do caso real.
+  Se faltar um detalhe da hipótese, responda à pergunta para completar a simulação.
+- Posso consultar outra regra no meio do caso ou de uma hipótese. Essa dúvida
+  não vira uma ocorrência. Depois posso responder o detalhe que ficou pendente.
+- Para sair de uma hipótese e retomar a OS, escrevo "Voltando ao caso real: ...".
 - Confira a orientação e as regras antes de concluir no sistema da empresa.
+- Em "Ver fundamentos", confira todas as regras, trechos e orientações da
+  última resposta. A conversa fica curta, sem esconder a base da análise.
+- Se falhar ao preparar a IA, confira a pasta completa e use "Tentar novamente".
 
 Não precisa instalar Python, cadastrar chave, configurar servidor ou ter internet
 para analisar. Não existe cota de API. O desempenho depende do computador.
 O modelo já está na pasta. Não exclua resources nem _internal.
 Para levar a outro PC, envie o ZIP inteiro ou copie toda a pasta extraída.
-Não envie só AEBOT.exe. Para atualizar, extraia a nova versão em outra pasta;
-não misture arquivos de versões diferentes. Não há Setup nem servidor a instalar.
+Não envie só AEBOT.exe. Para instalar pela primeira vez, extraia tudo.
+Para atualizar uma instalação compatível, use Atualizar, Procurar atualizações
+e Atualizar agora. A pasta da empresa precisa estar publicada e sincronizada.
+Como contingência, Pacote manual aceita o arquivo .aebot-update recebido.
+O modelo igual não entra no novo download. A versão anterior fica preservada.
+Depois continue usando Abrir-AEBOT.exe na pasta original. Não misture arquivos
+nem copie o patch por cima do app. Veja PASTA-DA-EMPRESA.md. Não há API de IA.
 
 IMPORTANTE
 Este é um protótipo novo, não uma garantia de 100% de acerto. Ele não lê fotos:
@@ -34,14 +51,83 @@ Algumas frases ainda precisam ser esclarecidas. Não use o pacote antigo 2.22.1
 para avaliar o desempenho desta versão: são implementações diferentes.
 
 NESTA REVISÃO
-Melhorei relatos informais, etapas, plurais, comparações e palavras intermediárias.
-O serviço atual, a origem e o adicional continuam separados. Corrigir equipe ou
-frente substitui o dado anterior sem apagar as outras falhas. Se faltar contexto
-ou a interpretação não for segura, o assistente pede esclarecimento.
+Consultas com mais de um assunto explicam os critérios encontrados, sem
+classificar a OS nem transformar uma comparação em ocorrência. Se parte da
+dúvida não for entendida, mantenho a orientação conhecida e peço o outro ponto.
+O resumo lateral mostra o contexto do caso em janelas largas; na janela menor,
+preservo a conversa e o envio. As escolhas de resposta vêm da pergunta pendente:
+clicar é declarar aquela informação, não uma escolha automática da IA.
+Posso preparar outro rascunho enquanto a análise roda. Uma falha não apaga o
+rascunho nem mostra os fundamentos anteriores como se fossem atuais.
+Copiar resposta leva também as regras. Ctrl+L foca a escrita; Ctrl+N inicia
+outro caso e pede confirmação se houver rascunho não enviado.
+
+RECURSOS DA 0.8.1 PRESERVADOS
+Incluí Procurar atualizações e Atualizar agora pela pasta da empresa
+sincronizada com OneDrive. Depois da primeira configuração, não escolho o
+arquivo manualmente. Instalar-AEBOT.exe pode obter a primeira instalação.
+Veja PASTA-DA-EMPRESA.md. Isso depende da pasta AEBOT publicada e sincronizada;
+o link do SharePoint sozinho não é download público e não conecto o ChatGPT.
+Também revisei o TXT de Asfalto com as retificações e ampliei o fluxograma.
+FLUXO-ANALISE.json e .mmd são gerados da fonte; não alteram regras sozinhos.
+
+RECURSOS DA 0.7.0 PRESERVADOS
+Incluí atualização menor por arquivo e um lançador estável. O pacote é
+conferido por assinatura do publicador e hashes; a versão nova passa pelo
+diagnóstico antes de ser ativada. Feedbacks não são movidos ou alterados.
+Se uso a 0.6.3, o guia COMO-ATUALIZAR.md explica a transição uma única vez.
+Não há download automático online. Assinatura do pacote não é certificado
+de EXE do Windows e não elimina bloqueios de segurança.
+
+RECURSOS DA 0.6.3 PRESERVADOS
+Corrigi a escolha indevida de vínculo em "interna e terceirizada" e quando
+digo "não tenho certeza se é interna". Se uma confirmação anterior ficou
+incerta, ele volta a perguntar. Depois posso confirmar sem perder os outros
+fatos da OS. O arquivo COMO-USAR.md traz um roteiro curto e controles básicos.
+
+RECURSOS DA 0.6.2 PRESERVADOS
+Corrigi negações como "não está sem foto depois": isso não é falta de foto.
+"Interna ou terceirizada" não escolhe equipe; o AEBOT pergunta antes de decidir.
+Corrigir um ponto não apaga outras falhas. Quando o relato não confirma uma
+falha, ele reconhece esse ponto, mas não aprova automaticamente a OS inteira.
+Vídeos e outros termos de registro da base também entram na retomada por etapa.
+
+CONVERSA PRESERVADA DA 0.6.1
+Corrigi a troca de assunto entre turnos. Uma pergunta sobre outra regra recebe
+a explicação atual, sem reanalisar o relato anterior como se fosse outra pergunta.
+Consultas não confirmam equipe ou fatos de uma hipótese pendente. Se a análise
+falhar, o botão de fundamentos não mostra a resposta antiga como se fosse nova.
+
+RECURSOS DA 0.6.0 PRESERVADOS
+Melhorei a leitura do assunto de consultas informais sem retirar negações ou
+inventar fatos. A interface mostra o estado da análise e os fundamentos em
+separado. Novo caso também limpa os caches de normalização dos relatos.
+Quando uma frase pode significar falta de foto ou falta de execução, o AEBOT
+pergunta a diferença em vez de assumir uma ocorrência grave.
+
+Trena que impede conferir a metragem depende da equipe: interna recebe Não
+Conforme com Retrabalho; terceirizada recebe Reprovado na OS atual. Sem saber
+o vínculo, o assistente pergunta. O critério foi confirmado pelo responsável.
+
+RECURSOS PRESERVADOS
+Corrigi a leitura de mais de uma ocorrência na frase e a substituição de pontos
+ambíguos. Uma palavra sobre equipe não é suficiente para escolher uma regra.
+O pacote leva RESULTADOS-TESTES.md com os limites e as pendências de validação.
+
+INTERFACE
+Refiz a interface em branco e azul, com a marca Aegea e espaço reservado para
+digitar mesmo em janela pequena. Organizei a consulta por categorias e o mapa
+das regras. Perguntas gerais explicam os caminhos possíveis; uma OS concreta
+continua exigindo o contexto que muda a conclusão. Corrigir equipe ou frente
+substitui o dado anterior sem apagar as outras falhas.
 
 Somente as duas faixas de Repavimentação Asfalto estão disponíveis nesta interface.
-As regras vêm do material "Repavimentação Asfalto atualizado.txt", preservado na
-base do projeto. Nenhuma conversa é gravada. Fechar a janela apaga o caso atual.
+São 39 regras e orientações aplicáveis: 22 identificadas com o material
+"Repavimentação Asfalto atualizado.txt" e as exceções gerais já informadas pelo
+responsável. Os outros serviços continuam no projeto, não neste pacote.
+O papel é de Programador de Serviços Sênior, mas o modelo BGE relaciona textos:
+não é um ChatGPT gerador de respostas e não inventa regras ou exceções.
+Nenhuma conversa é gravada. Fechar a janela apaga o caso atual.
 
 FEEDBACK
 Clique em "Enviar feedback", escreva o problema e salve. Só o formulário e as
@@ -61,9 +147,11 @@ nova. Se persistir, envie a mensagem completa ao responsável, sem desativar a
 proteção do Windows. Rodar nesta máquina não garante liberação em toda empresa.
 
 MANTENÇÃO
-Regras: resources/src/data/rulesStore.json
-Após uma alteração aprovada, feche e reabra o aplicativo e execute os testes do
-projeto antes de redistribuir a base. Não altere IDs sem revisar suas referências.
+No aplicativo, resources/src/data/rulesStore.json é a cópia validada da entrega.
+Não edite essa pasta por cima de uma versão assinada: isso quebra seus hashes.
+No projeto, edite src/data/rulesStore.json, revise condições e exceções, regenere
+o guia/fluxograma e execute os testes. Depois gere uma versão nova e seu pacote
+assinado para aplicar pelo atualizador. Não altere IDs sem revisar as referências.
 Os critérios de interpretação não mudam as conclusões cadastradas.
 
 Projeto idealizado e conduzido por Pedro Lucas Botelho Naus.

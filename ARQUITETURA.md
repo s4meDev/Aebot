@@ -1,5 +1,122 @@
 # Arquitetura do AEBOT
 
+## Primeira instalação offline — entrega de 16/11/2026
+
+O motor continua na 0.9.1. `offline_install.py` contém `OfflinePayload` (identidade fixa da entrega) e `OfflineSetup` (conferência e instalação). O instalador só aceita o pacote completo, assinado, com tamanho, hash e versão esperados. Reutilizo `updates.install_full`: preparo uma pasta separada, confiro todos os arquivos, executo o EXE com `--check` e só então disponibilizo o destino. Uma pasta existente nunca é sobrescrita e feedback não faz parte do pacote.
+
+`offline_setup.py` é a tela: uma operação por vez em thread, eventos na fila e atualização de widgets somente no thread de Tk. Abrir e Abrir pasta ficam disponíveis após sucesso. Fechar durante instalação não interrompe uma ativação; falha permite nova tentativa sem declarar conclusão. O destino padrão é o perfil local, não Program Files, OneDrive ou pasta de rede. Não faço download, mudança de política, registro de inicialização automática ou instalação de serviço.
+
+`package_offline.py` é do mantenedor: lê o pacote assinado já validado, incorpora sua identidade ao EXE do instalador e prepara pasta nova com manuais. `zip_delivery` confere o manifesto e fecha o ZIP somente depois do ensaio do EXE congelado. Não recompila o aplicativo/modelo nem troca a fonte de regras. `tests/test_offline_install.py` testa corrupção, identidade, assinatura, destino existente, validação e falha antes da publicação. `test_offline_setup.py` confere layout, operação única, espera e recuperação sem usar o perfil real. `--check --root --report` no instalador faz uma instalação real isolada, sem abrir o chat nem persistir conversa.
+
+## Conversa e apresentação — Python 0.9.1
+
+`Engine.validate_request` valida serviço e texto antes de qualquer mutação no `Session`. `PendingConsultation` pertence apenas à consulta incompleta; `Scenario` continua isolando a hipótese e `case_last` mantém a OS. Um esclarecimento explícito da consulta não vira fato. Continuação factual, troca de serviço e novo caso seguem caminhos próprios. Não há persistência de nenhum desses objetos.
+
+`Text.consultation_parts` separa os assuntos pedidos, preservando negações e exclusões explícitas. `Extractor.consultation_groups` recupera os assuntos, confere contexto por trecho e retoma somente objeto/assunto já declarado; comparar aferição entre escopos não declara falta da própria OS de origem. Âncoras genéricas não dispensam o modelo. O `Engine._consult` constrói alternativas do JSON e pede o ponto que ainda não foi entendido. Isso não altera a avaliação classificatória nem permite ao BGE inventar regras.
+
+`case_overview.py` contém `CaseOverview`, `ContextAnswer` e a projeção pura `build_overview`. O objeto recebe a avaliação vigente, não extrai negócio do chat renderizado. Não usa consultas como fatos nem apresenta contexto antigo quando há incerteza. `overview_ui.py` apresenta resumo e pergunta; o app decide quando mostrar a coluna conforme o tamanho da janela. Opções vêm do contexto pendente cadastrado, exigem escolha e são enviadas como declaração explícita. Dúvida/hipótese não enviada no rascunho não entra no caso ao clicar numa opção.
+
+`App` serializa o envio, permite preparar um rascunho enquanto o trabalhador roda e limpa o resultado visual no início do turno. Falha recupera o texto enviado somente se o usuário não tiver preparado outro. A ação de cópia usa o resultado tipado e inclui referências; não é exportação automática. O resumo não decide, não altera o catálogo e não grava nada.
+
+`benchmark_reranker.py` compara perfis de CPU com pares sintéticos em série; não integra telemetria. `consultation_multi_cases.py` acrescenta gabarito independente à auditoria sem modificar o anterior. `test_semantic.py --output` começa um relatório antes de carregar o modelo e preserva resultados anteriores quando o destino é explícito. Guias e fluxogramas continuam gerados da fonte única.
+
+`compare_audits.py` é a barreira de regressão do mantenedor: compara identidade, gabarito e resultado de todos os casos históricos, registra os novos e preserva divergências anteriores. Não considera erro técnico um acerto. `LocalReranker` valida quantidade e finitude de scores antes de devolvê-los: saída vazia ou extra não pode ser preenchida silenciosamente com zero.
+
+## Central corporativa e fluxo — Python 0.8.1
+
+`publish_channel.py` é ferramenta do mantenedor: prepara pacotes imutáveis, confere a versão antes de trocar o instalador público e publica o catálogo por último. `bundle_company.py` confere assinaturas, identidades e hashes e monta o ZIP da central nova usando somente uma lista permitida de arquivos públicos. Não é executado pelo analista. `test_distribution_exe.py` testa instalação completa, diferencial, processo congelado e rollback numa pasta de laboratório, sem acesso corporativo.
+
+`company_source.py` localiza somente a biblioteca autorizada por pontos de montagem/atalhos OneDrive ou escolha explícita. Não lê credenciais. `UpdateChannel` e `ChannelRelease`, em `update_channel.py`, validam o catálogo assinado e selecionam um pacote pela versão e pelo hash da base instalada. O leitor da origem permite placeholders CLOUD conhecidos do OneDrive; destino executável continua rejeitando reparse points. Não há HTTP/Graph nem autenticação no AEBOT.
+
+`ChannelClient` executa a leitura/cópia em um filho do próprio atualizador, com prazo e cancelamento. A consulta usa 20 s; a obtenção usa até 15 min. Somente esse filho pode ser encerrado; não mato OneDrive, navegador ou processos do usuário. `ChannelWindow` apresenta versões e confirmação. `updater_main.py --channel-job` não abre janela nem carrega ONNX. Pacote manual e rollback permanecem na tela. A antiga `update_ui.py` foi substituída; não há import da tela para o ponto de entrada.
+
+`install_full` prepara uma primeira instalação em pasta nova do perfil; `apply_update` usa a versão instalada como origem. Ambos verificam todos os arquivos e executam diagnóstico antes de ativar. O botão do app chama o lançador da versão ativa, não fica preso à tela do lançador original 0.7.0. `publish_channel.py` grava pacotes por hash, preserva histórico e atualiza o catálogo por último. Não modifica AutoForms ou permissões corporativas.
+
+Para análise, `RuleStore`, `Session`, `CaseFacts`, `Extractor` e `Engine` continuam com suas responsabilidades. `AnalysisStage` e `AnalysisFlow` descrevem etapas e projetam todas as regras/condições/exceções para manutenção. `export_rulebook.py` gera HTML, SVG, Mermaid e JSON. O desenho não é executado para decidir a OS; não pode virar outro cadastro de negócio. A matriz do TXT está em [Conferência do documento](docs/CONFERENCIA-DOCUMENTO-ASFALTO.md).
+
+## Atualizações por versão — Python 0.7.0 / base 2.20.0
+
+`updater_main.py` gera o lançador estável `Abrir-AEBOT.exe`, independente da IA. `aebot/updates.py` valida a assinatura Ed25519 com `update_trust.py`, caminhos, inventário, hashes, origem/destino e limites de tamanho. `create_update.py` compara duas entregas completas e inclui só arquivos alterados no `.aebot-update`. A chave privada do mantenedor não entra em código, manifesto ou pacote.
+
+No notebook, `update_ui.py` recebe o arquivo escolhido. O destino fica em `.aebot-updates/releases/<versão>-<hash>` da pasta original. Arquivos iguais vêm da versão instalada, por cópia; isso não é download nem link para dados do usuário. Depois de conferir a pasta completa e executar `AEBOT.exe --check`, o atualizador troca `current.json` atomicamente. A versão anterior não é sobrescrita. `current_directory` verifica a versão assinada antes de abri-la; o rollback é explícito. `update.lock` usa trava do sistema liberada no fechamento, sem apagar arquivos do usuário.
+
+O botão da interface fecha o chat com confirmação e abre o lançador em `--update`. O runtime/feedback seguem nos caminhos anteriores; não introduzi rede, telemetria ou migração de conversas. A versão 0.6.3 usa um atualizador de transição uma vez, pois não continha esse botão. Leia [Atualizar AEBOT](docs/ATUALIZAR-AEBOT.md) e [manutenção e resultados](docs/ATUALIZACOES-PYTHON-070.md).
+
+## Preparação de uso — Python 0.6.3 / base 2.20.0
+
+`CaseFacts.context_sources` guarda apenas em memória o trecho/turno que confirmou o contexto. Valores contraditórios no mesmo turno e escopo não escolhem o último. Uma incerteza explícita sobre o dado anterior suspende sua confirmação; respostas posteriores e retificações continuam permitidas. `Text.flexible(..., context=True)` não reduz uma expressão de disponibilidade a um verbo isolado. `Extractor` distingue resposta incerta só de contexto de outra ocorrência incerta. As decisões seguem exclusivamente na fonte JSON.
+
+Os controles novos ficam em `python/tests/test_release_readiness.py` e `python/audits/release_cases.py`, somados à auditoria completa sem mudar gabaritos antigos. O pacote leva `COMO-USAR.md`, copiado de `docs/USAR-ASFALTO.md`. Veja [a revisão 0.6.3](docs/REVISAO-PYTHON-063-2026-11-12.md).
+
+## Segurança linguística — Python 0.6.2 / base 2.20.0
+
+`Text` recebe os termos de registro da fonte validada e preserva sua palavra literal ao retomar uma etapa. A leitura distingue negação de falta de reforço por “não só”. `CaseFacts` registra alternativas como `ContextFact.value: null`; `context()` as trata como dado pendente e não recupera o valor antigo desse escopo. Isso não muda o schema da fonte nem cria uma decisão oficial.
+
+Se só há observações inativas e nenhum ponto pendente, o motor reconhece que aquele relato não confirmou falha, mantendo `decision: null`. A tela de fundamentos mostra esses trechos separados dos matches aplicáveis. A combinação de faltas continua recebendo apenas observações ativas. Veja [a revisão 0.6.2](docs/REVISAO-PYTHON-062-2026-11-04.md).
+
+## Roteamento da conversa — Python 0.6.1 / base 2.20.0
+
+`Session.ask` separa consultas gerais antes de montar o relato acumulado. A consulta usa só a pergunta atual; o estado factual e a pendência não são regravados por ela. `Scenario.last` pertence à própria hipótese, independente da resposta mais recente do chat. `Session.pending` permite à interface avisar que ainda há um contexto pendente depois de uma consulta. Contexto informado pode vir com outras falhas; não há atalho por contagem de palavras.
+
+Novo caso e mudança de serviço limpam caso, hipótese e caches. No mesmo caso, uma consulta não limpa o cache de pares para forçar inferência repetida do relato anterior. A interface descarta o fundamento anterior ao iniciar nova análise e não o reapresenta se o turno falhar. `benchmark_conversation.py` mede consultas sintéticas antes/depois, sem integrar coleta ao aplicativo. Veja [a revisão 0.6.1](docs/REVISAO-PYTHON-061-2026-11-03.md).
+
+## Interface e apresentação — Python 0.6.0 / base 2.20.0
+
+O motor produz `Evaluation`; `response.py` organiza o texto sem alterar a decisão. O chat recebe a forma compacta, enquanto `evidence_ui.py` mostra a resposta completa, regras, trechos e distinção entre fato, consulta e hipótese. Tudo fica em memória, separado do formulário de feedback. `app.py` centraliza o estado de espera, recuperação de carregamento e limpeza visual. A base da interface e do motor precisa ser idêntica.
+
+`text.py` mantém caches limitados por instância; `session.py` os limpa junto dos caches semânticos ao iniciar outro caso. Na consulta, o pedido de explicação é retirado somente para comparar o assunto literal no BGE; a citação original permanece no resultado. Veja [a revisão 0.6.0](docs/REVISAO-PYTHON-060-2026-11-03.md).
+
+## Retificação de trena — Python 0.5.1 / base 2.20.0
+
+Em 03/11/2026, o responsável confirmou o tratamento de Não Conforme + Retrabalho para equipe interna quando a trena impede a conferência. A fonte única mantém `RULE-ASF-TRENA-01` para essa condição e acrescenta duas alternativas de dados: equipe terceirizada e contexto de equipe ainda ausente. Todas compartilham o fato `measurement-obstructed`, com contexto tipado. Não alterei o motor genérico para conhecer o serviço ou esses IDs.
+
+São 39 regras/orientações no perfil, 102 na fonte histórica. Os gabaritos de trena sem vínculo foram atualizados por mudança explícita de critério, com matriz nova para ambas as faixas. Veja a [retificação e validação](docs/ATUALIZACAO-TRENA-2026-11-03.md). As seções abaixo são histórico. Créditos: **Pedro Lucas Botelho Naus**.
+
+## Atualização Python 0.5.0 — 03/11/2026
+
+Mantive a rota offline e a fonte única. A interface 0.4.0 permanece; mudei a interpretação e o estado de esclarecimento.
+
+- `contracts.py`: `Source.message_index` identifica a mensagem original; `pendingClarification` liga uma pergunta ao trecho e ao escopo; `Match.application` distingue fato, consulta e cenário hipotético.
+- `text.py`: separa predicados de uma frase e só retoma uma evidência em complemento declarado. “Nem sinalização” não recebe “foto” da oração anterior.
+- `session.py`: guarda em memória as substituições explícitas de trechos ambíguos. `Scenario` isola o estado da hipótese. Novo caso limpa substituições e caches. Uma falha nova, sem retificação explícita, não apaga a dúvida pendente.
+- `engine.py`: filtra fontes substituídas antes de aplicar fatos, condições, exceções ou aprovação. A consulta não transforma equipe/frente em assunto de uma regra por si só.
+- `extraction.py`: cache de comparações e interpretações compartilhando limite de 256 entradas por extrator, só no caso atual. Não persiste textos nem reduz o catálogo classificatório.
+- `audit_asphalt.py` e `audits/readiness_cases.py`: casos sintéticos novos, cobertura individual das regras e separação entre citação, hipótese e fato. Relatórios não são telemetria do aplicativo.
+
+As seções abaixo são histórico. Veja a [prontidão atual](docs/PRONTIDAO-ASFALTO-2026-11-03.md) e o [guia de execução](docs/EXECUTAR-PYTHON.md). BGE continua sendo um relacionador semântico, não um modelo generativo. Créditos: **Pedro Lucas Botelho Naus**.
+
+## Atualização Python 0.4.0 — 22/10/2026
+
+Refiz a interface em branco e azul. As seções anteriores do Python e o legado abaixo ficam como histórico; a ordem atual é janela → sessão em memória → fatos/contextos → BGE quando necessário → condições/exceções → avaliação → orientação.
+
+| Arquivo | Responsabilidade na versão atual |
+| --- | --- |
+| python/main.py | Entrada e diagnóstico explícito, sem salvar conversa. |
+| python/catalogProfile.json | Seleciona as duas faixas de Asfalto e declara o papel do assistente. Não contém decisões. |
+| schemas/catalogProfile.schema.json | Valida a estrutura do perfil e rejeita campos desconhecidos. |
+| src/data/rulesStore.json | Fonte única de regras, condições, exceções e orientações. Base 2.19.0. |
+| python/aebot/store.py | Valida a fonte e gera o recorte usado pelo protótipo e pacote. |
+| python/aebot/app.py | Janela, chat e ações. Só o chat expande; o envio fica reservado. A análise devolve eventos pela fila, sem desenhar widgets na thread de trabalho. |
+| python/aebot/theme.py | Cores e estilos comuns às janelas. |
+| python/assets/ | Logo Aegea fornecida, embarcada sem download. |
+| python/aebot/rulebook.py | Busca e consulta às regras reais, com condições, exceções e diagrama. Não edita a base. |
+| python/aebot/session.py | Continuação, esclarecimento, retificação e Novo caso só em memória. Consultas e hipóteses não acrescentam falhas à OS real; a simulação mantém estado próprio apenas enquanto pede esclarecimento. |
+| python/aebot/text.py, facts.py, extraction.py | Normalização e fatos por oração, etapa, escopo e contexto. |
+| python/aebot/reranker.py | BGE local: mede relevância, não ocorrência nem percentual de acerto. |
+| python/aebot/engine.py, contracts.py | Revalidação, combinação de fatos, conflitos, consulta condicional e resultado tipado. Sem regras ou IDs de Asfalto no motor. |
+| python/aebot/feedback.py, feedback_ui.py | Formulário voluntário e SQLite local, com leitura e importação/exportação explícitas. |
+| python/export_rulebook.py | Gera o guia e diagrama da base real; não é outra fonte de negócio. |
+| python/package_app.py, zip_app.py | Estágio versionado, EXE, recursos, catálogo recortado, licenças e manifesto. Preservam entregas anteriores. |
+| python/tests/, test_app.py, audit_asphalt.py | Regressões, janela real e auditoria sintética com modelo. Não coletam conversas de analistas. |
+
+No código-fonte, preservei o catálogo histórico. No pacote, resources/src/data/rulesStore.json contém somente os dois serviços e suas 37 regras/orientações aplicáveis. É uma projeção gerada, não outro cadastro manual. As condições e conclusões permanecem iguais às da fonte.
+
+O papel de Programador de Serviços Sênior descreve o apoio desejado. BGE não virou um modelo gerador: consultas explicam caminhos e exceções; casos concretos continuam exigindo informações reais.
+
+Guias atuais: [manutenção](docs/MANTER-REGRAS-ASFALTO.md), [execução](docs/EXECUTAR-PYTHON.md) e [revisão](docs/REVISAO-ASFALTO-2026-10-22.md).
+
+Projeto de **Pedro Lucas Botelho Naus**.
+
 ## Rota Python — revisão de 20/10/2026
 
 Esta é a implementação nova em avaliação. As seções seguintes são o histórico do Electron/TypeScript e não devem ser confundidas com o fluxo Python. Mantive o legado para evitar apagar recursos que ainda não migrei.

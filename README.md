@@ -4,33 +4,81 @@ Assistente de Análise para revisão de Ordens de Serviço executadas por equipe
 
 O AEBOT ajuda a interpretar relatos de análise, consultar regras e orientar a revisão de Ordens de Serviço. As decisões são fundamentadas na base cadastrada; a IA não inventa critérios de aprovação.
 
-## Atual — protótipo Python 0.3.0 para Asfalto
+## Instalar para os testes de 16/11
 
-A rota atual é **Python + Tkinter + BGE/ONNX local**, focada nas duas faixas de Repavimentação Asfalto. A resposta é curta e vem das regras cadastradas. Não usa servidor, API, chave ou cota por chamada; o modelo relaciona linguagem, mas não é um ChatGPT gerador de respostas livres.
+**Código e distribuição são separados:** o GitHub guarda os fontes. A pasta corporativa `Funcionalidades/AEBOT` recebe somente arquivos para instalar/atualizar, nunca o chat, backend, conversas ou feedbacks. O aplicativo continua local. Um commit não modifica o EXE já instalado: gero uma nova versão, testo, assino e republico os pacotes. Veja [Publicar atualizações](docs/PUBLICAR-ATUALIZACOES.md). Em 17/11, a publicação corporativa continua pendente: este computador tem apenas o OneDrive pessoal configurado, sem montagem da biblioteca da empresa.
 
-Na revisão **0.3.0**, ampliei a interpretação informal: separação das etapas, palavras intermediárias, plurais, omissões e comparações entre formulário e evidência. A IA recebe o serviço real selecionado e continua sem poder inventar regra. Mantive negações, retificações de equipe/frente e a separação entre serviço atual, origem e adicional executado. Ainda existem frases que precisam de esclarecimento; não apresento o protótipo como 100% confiável.
+Preparei uma entrega única: **[AEBOT — instalador offline e manuais](python/dist/AEBOT-Instalar-0.9.1-Testes-16-11-2026.zip)**. Extraio tudo, abro **Instalar-AEBOT.exe**, clico em **Instalar AEBOT** e, depois da conferência, em **Abrir AEBOT**. Não preciso de Python, chave, servidor ou SharePoint. O aplicativo continua na versão 0.9.1 já validada; o novo instalador simplifica a primeira instalação, sem trocar o modelo ou as regras.
 
-As medições da rodada atual, os casos que falharam e os testes estão na [revisão de linguagem informal e feedback](docs/REVISAO-INFORMAIS-FEEDBACK-2026-10-20.md). A [comparação anterior com o Electron](docs/REVISAO-PYTHON-2026-10-20.md) é histórica e não mede esta versão. Velocidade e acerto nesta máquina não garantem o mesmo resultado em todo notebook ou pergunta.
+O [manual de instalação e uso](docs/INSTALAR-TESTE-ASFALTO.md) explica como abrir novamente, criar atalho, atualizar e registrar problemas. O [roteiro de conferência](docs/ROTEIRO-TESTE-ASFALTO.md) ajuda a verificar equipe, retificação, escopo e exceções nas duas faixas. O instalador trabalha no perfil Windows, não sobrescreve instalação existente e executa o diagnóstico do EXE antes de concluir. A publicação da central corporativa não é necessária para este teste offline. Políticas da empresa ainda podem bloquear o executável; não altero proteções para executá-lo. A [validação da entrega](docs/ENTREGA-TESTES-2026-11-16.md) registra o ensaio do novo instalador, os 100 casos na cópia instalada e os limites conhecidos.
 
-**Para baixar e abrir:** use o [ZIP local completo 0.3.0](python/dist/AEBOT-Python-0.3.0.zip), extraia tudo e leia `00-COMECE-AQUI.txt`. O EXE passou em três execuções de diagnóstico, incluindo IA e feedback. O [guia simples](COMO-BAIXAR-EM-OUTRO-PC.md) explica a transferência. Mantenha `resources` e `_internal` ao lado de `AEBOT.exe`. Não precisa instalar Python, baixar outro modelo ou configurar chave/servidor. O pacote não tem assinatura própria e pode ser bloqueado pelo Windows; não altere proteções para executá-lo. Não confunda os pacotes antigos do GitHub com esta entrega local.
+## Atual — Python 0.9.1: conversa e contexto mais claros
 
-Para desenvolver em Windows x64, com Python 3.12 e Tkinter disponíveis:
+Ampliei a recuperação para perguntas com vários assuntos, incluindo comparação de etapas e escopos. A consulta não vira ocorrência da OS. Quando falta entender uma parte, mantenho a orientação conhecida e aceito um esclarecimento explícito sem contaminar os fatos do caso. O motor valida a entrada antes de alterar a conversa.
 
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r python/requirements.txt
-.\.venv\Scripts\python.exe python/prepare_model.py
-.\.venv\Scripts\python.exe python/main.py
-```
+A interface branca/azul ganhou resumo lateral responsivo, respostas rápidas vindas da pergunta pendente e rascunho durante a análise. Uma falha não apaga o texto preparado. Copiar a orientação é explícito e inclui as regras. O pacote continua local, com feedback voluntário separado e atualização assinada pela pasta da empresa.
 
-O preparador baixa e verifica aproximadamente 588 MB de modelo e tokenizer uma vez. A análise posterior é offline. O pacote portátil já contém esses arquivos e o runtime Python; o analista não executa esses comandos.
+Resultados, tempos medidos e limites desta revisão: [revisão 0.9.1](docs/REVISAO-PYTHON-090.md). O [fluxograma](docs/FLUXO-ASFALTO.html) e o [guia de manutenção](docs/MANTER-REGRAS-ASFALTO.md) acompanham as mudanças. A base 2.20.0 e o modelo foram preservados; não anuncio acerto universal ou uma aceleração que não medi.
 
-- [Executar, testar e empacotar em Python](docs/EXECUTAR-PYTHON.md)
-- [Arquitetura, arquivo por arquivo](ARQUITETURA.md)
-- [Regras editáveis](src/data/rulesStore.json): fonte única, com contexto e dependências explícitas na base 2.18.0.
-- [Feedback local: enviar, consultar e reunir](docs/FEEDBACK-PYTHON.md).
+Validação da 0.9.1: 225 testes Python, 42 cenários novos e 58 do documento passaram. A auditoria completa passou em 1.554/1.556 no critério estrito, sem regressões ou mudanças dos gabaritos históricos. Vitest teve 878 aprovados e 1 ignorado; typecheck/build/MV3 passaram. Os EXEs, a instalação completa, o diferencial da 0.8.1 e o rollback foram testados em laboratório. As duas divergências anteriores e os picos de abertura/latência permanecem documentados.
 
-**Enviar feedback** salva somente o formulário escrito voluntariamente. Em **Feedbacks salvos**, posso ler, buscar, exportar e importar relatos de outros PCs, sem servidor. Conversas ficam somente em memória. Não há métricas persistentes nesta etapa, por decisão do responsável. Importador de atualizações de regras e administração central ainda não foram migrados. Use **Novo caso** ao mudar de OS. O programa interpreta o relato; não lê as fotos.
+## Histórico — Python 0.8.1 e pasta da empresa
+
+Preparei **Procurar atualizações → Atualizar agora** pela pasta corporativa AEBOT sincronizada pelo OneDrive, separada da AutoForms. O instalador independente obtém o pacote completo na primeira instalação; revisões seguintes usam o diferencial compatível. Catálogo e pacotes são assinados, a nova versão é testada antes da ativação e feedbacks permanecem. Não conectei o ChatGPT ao SharePoint; a criação/publicação real da pasta ainda precisa de confirmação na empresa. Veja [Distribuir na empresa](docs/DISTRIBUIR-EMPRESA.md).
+
+A entrega está em `python/dist`: ZIP completo 0.8.1, ZIP da central da empresa e transições menores da 0.6.3/0.7.0. Passaram 197 testes Python, os 58 cenários do documento, 878 testes do legado e as verificações de build/typecheck/MV3. A auditoria geral passou em 1.512/1.514 no critério completo, com duas divergências preservadas e descritas na revisão. Testei os EXEs, primeira instalação, diferencial, rollback e reaplicação da transição final da 0.6.3; não alterei perfis reais nem publiquei na conta corporativa. O ensaio final dessa transição está em `python/artifacts/final-update-063-081/report.json`.
+
+Revisei o TXT de Repavimentação Asfalto com as retificações posteriores. A [matriz de conferência](docs/CONFERENCIA-DOCUMENTO-ASFALTO.md) liga seus itens às regras e aos arquivos de manutenção. O [fluxograma visual](docs/FLUXO-ASFALTO.html), [SVG](docs/FLUXO-ANALISE.svg), [Mermaid](docs/FLUXO-ANALISE.mmd) e [mapa JSON](docs/FLUXO-ANALISE.json) são gerados da fonte única, sem outro motor de decisão. O código mantém objetos com responsabilidades explícitas; não criei classes por ID de regra. Resultados e limites: [revisão 0.8.1](docs/REVISAO-PYTHON-080.md).
+
+Na 0.7.0, incluí [atualização por arquivo menor](docs/ATUALIZAR-AEBOT.md). Na 0.8.1, o app também procura e obtém esse pacote na pasta sincronizada da empresa, após confirmação. O modelo igual é reaproveitado por cópia local, sem entrar no download. A versão anterior e os feedbacks são preservados. A rota manual continua como contingência. Veja o [histórico 0.7.0](docs/ATUALIZACOES-PYTHON-070.md).
+
+Preparei esta revisão para apoio à análise de Asfalto. Corrigi contextos contraditórios e confirmações retiradas: “interna e terceirizada” não escolhe a última equipe, e “não tenho certeza se é interna” suspende uma certeza antiga. O assistente volta a perguntar e aceita o esclarecimento posterior sem perder os outros fatos. A disponibilidade de troca não é inferida do verbo “trocar” isolado. O [guia curto de uso](docs/USAR-ASFALTO.md) explica como abrir e conferir; os resultados desta versão estão na [revisão 0.6.3](docs/REVISAO-PYTHON-063-2026-11-12.md). Não há promessa de 100% em linguagem livre.
+
+Na 0.6.2, corrigi negações de falta e alternativas de equipe: “não está sem foto depois” não deve reprovar, e “interna ou terceirizada” precisa de esclarecimento. Também ampliei a retomada de evidências para usar os termos da base, inclusive vídeo. O assistente reconhece um ponto que não confirma falha sem aprovar o restante da OS. A [revisão 0.6.2](docs/REVISAO-PYTHON-062-2026-11-04.md) registra os testes e limites daquela rodada.
+
+Na 0.6.1, corrigi a troca de assunto entre turnos: consultas como “E qual é a regra…” respondem à pergunta atual sem transformar a dúvida em fato. Posso consultar outra regra durante uma hipótese e depois responder à pendência. “Voltando ao caso real: …” retoma a OS sem misturar a simulação. A interface também não mostra fundamentos antigos quando uma nova tentativa falha. A [revisão 0.6.1](docs/REVISAO-PYTHON-061-2026-11-03.md) permanece como histórico.
+
+Na revisão 0.6.0, deixei o chat mais direto e os fundamentos completos em **Ver fundamentos**. A janela mostra a situação da análise, permite tentar novamente após falha de preparação e limpa o estado visual em Novo caso. Melhorei a recuperação do assunto de consultas informais sem inventar fatos ou trocar critérios. O [relatório 0.6.0](docs/REVISAO-PYTHON-060-2026-11-03.md) permanece como histórico.
+
+Na base 2.20.0, incorporei a confirmação sobre trena impeditiva: **equipe interna recebe Não Conforme com Retrabalho**, terceirizada recebe Reprovado na OS atual. Sem vínculo informado, o assistente pergunta. A conclusão deixou de ser uma reprovação automática. As regras específicas de origem e adicional continuam separadas.
+
+Na revisão de 03/11, corrigi relatos com mais de uma ocorrência na frase, perguntas que puxavam regras só por mencionar uma equipe e a retomada de trechos ambíguos. O esclarecimento “quis dizer…” substitui só o ponto anterior, sem apagar as outras evidências. Comparações iguais são reaproveitadas apenas no caso atual, em RAM. Regras citadas agora declaram se são fatos, consultas ou hipóteses. Os [resultados e pendências de prontidão](docs/ATUALIZACAO-TRENA-2026-11-03.md) distinguem cobertura das regras de acerto em linguagem livre.
+
+O papel que estou construindo é o de um **Programador de Serviços Sênior**: consultar a base, separar contextos, explicar caminhos e perguntar quando uma informação muda a orientação. Isso não significa criar critérios ou exceções por conta própria.
+
+A versão usa **Python + Tkinter + BGE/ONNX local**, agora com interface branca/azul e a marca Aegea. O layout mantém o campo de mensagem e os botões visíveis em janelas menores. Não usa servidor, internet, chave ou cota de API para analisar. BGE relaciona o relato às regras; não é um ChatGPT gerador de respostas livres.
+
+O protótipo e seu pacote carregam **somente as duas faixas de Repavimentação Asfalto**, até e acima de 1 m². São 39 regras/orientações aplicáveis: os 22 cadastros identificados com o TXT e seus critérios compartilhados, inclusive as exceções de aferição. Os outros serviços foram preservados no histórico da fonte, mas não aparecem, não podem ser analisados no Python e não entram no catálogo do pacote.
+
+**Primeira instalação:** extraia o [ZIP completo 0.9.1](python/dist/AEBOT-Python-0.9.1.zip), leia 00-COMECE-AQUI.txt e execute Abrir-AEBOT.exe. Ou use Instalar-AEBOT.exe após a publicação da central da empresa. Mantenha resources e _internal na pasta. Para uma instalação anterior, siga [Como atualizar](docs/ATUALIZAR-AEBOT.md), sem baixar o modelo igual novamente. Não instale Python nem configure chave no computador do analista. A assinatura de atualização não é certificado de EXE; não altere proteções do Windows. O [guia simples](COMO-BAIXAR-EM-OUTRO-PC.md) explica a transferência.
+
+Em **Regras e fluxo**, consulto condições, exceções e orientações da própria base. O [diagrama offline](docs/FLUXO-ASFALTO.html) mostra os caminhos da análise e o [guia de regras](docs/REGRAS-ASFALTO.md) permite revisar cada cadastro. Os dois são gerados do JSON, não são outra fonte de regras.
+
+Posso perguntar, por exemplo:
+
+- “Me explique a falta de aferição.”
+- “Qual a diferença entre falta de aferição no serviço atual e na OS de origem?”
+- “Qual a diferença na falta de aferição entre equipe interna e terceirizada?”
+
+Numa consulta geral, o assistente explica possibilidades de forma condicional, sem classificar uma OS que não foi relatada. Num caso concreto, continua exigindo a equipe, frente ou outro dado que muda a regra. Hipóteses e pontos parcialmente entendidos não viram conclusão oficial. O aplicativo interpreta o texto do analista; **não lê as fotos**.
+
+Para desenvolver, com Python 3.12 e Tkinter disponíveis:
+
+    py -3.12 -m venv .venv
+    .\.venv\Scripts\python.exe -m pip install -r python/requirements.txt
+    .\.venv\Scripts\python.exe python/prepare_model.py
+    .\.venv\Scripts\python.exe python/main.py
+
+O preparador baixa e confere o modelo uma vez. O pacote portátil já leva modelo e runtime.
+
+- [Executar, testar e empacotar](docs/EXECUTAR-PYTHON.md).
+- [Arquitetura por pasta e arquivo](ARQUITETURA.md).
+- [Fonte única de regras](src/data/rulesStore.json) e [perfil do protótipo](python/catalogProfile.json).
+- [Manutenção de Asfalto](docs/MANTER-REGRAS-ASFALTO.md).
+- [Resultados e limitações atuais](docs/REVISAO-PYTHON-090.md).
+- [Feedback: enviar, consultar e reunir](docs/FEEDBACK-PYTHON.md).
+
+**Enviar feedback** salva só o formulário voluntário e as versões. **Feedbacks salvos** permite ler, buscar, exportar e importar JSON. Não anexo chat nem salvo métricas. Conversas ficam em memória; **Novo caso** limpa o contexto. Feedback não modifica a base automaticamente. Não prometo 100% de acerto ou poucos segundos em todo computador.
 
 ## Histórico preservado — Electron, extensão e API
 

@@ -1,9 +1,15 @@
 """Contratos pequenos, sem dependência da interface ou do modelo."""
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
-from typing import Literal
+from typing import Literal, TypedDict
 
 Decision = Literal["Conforme", "Não Conforme", "Reprovado"]
+
+
+class PendingClarification(TypedDict):
+    sourceQuote: str
+    scope: str
+    messageIndex: int
 
 
 @dataclass(frozen=True)
@@ -13,12 +19,13 @@ class Source:
     inherited_from: str | None = None
     scope_hint: str | None = None
     relationship: str | None = None
+    message_index: int | None = None
 
 
 @dataclass(frozen=True)
 class ContextFact:
     dimension: str
-    value: str
+    value: str | None
     scope: str
     quote: str
 
@@ -50,6 +57,7 @@ class Match:
     supportingRuleIds: list[str] = field(default_factory=list)
     matchedTerms: list[str] = field(default_factory=list)
     contextQuotes: list[str] = field(default_factory=list)
+    application: Literal['fact', 'consultation', 'scenario'] = 'fact'
 
 
 @dataclass
@@ -79,6 +87,8 @@ class Evaluation:
     activeScope: str | None = None
     observations: list[dict] = field(default_factory=list)
     contextFacts: list[dict] = field(default_factory=list)
+    guidanceOptions: list[str] = field(default_factory=list)
+    pendingClarification: PendingClarification | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)

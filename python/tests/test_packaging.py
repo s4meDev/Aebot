@@ -4,6 +4,7 @@ import hashlib
 import tempfile
 import unittest
 from package_app import copy_guides, write_manifest
+from aebot import __version__
 
 
 class PackagingTests(unittest.TestCase):
@@ -36,3 +37,8 @@ class PackagingTests(unittest.TestCase):
             self.assertIn('Pedro Lucas Botelho Naus', start)
             self.assertEqual(start, (root / 'LEIA-ME.txt').read_text(encoding='utf-8'))
             self.assertTrue((root / 'GUIA-FEEDBACK.md').is_file())
+            self.assertTrue((root / 'COMO-ATUALIZAR.md').is_file())
+            self.assertIn('Novo caso', (root / 'COMO-USAR.md').read_text(encoding='utf-8'))
+            self.assertTrue((root / 'FLUXO-ASFALTO.html').is_file())
+            self.assertTrue((root / 'REGRAS-ASFALTO.md').is_file())
+            self.assertIn(__version__, start)

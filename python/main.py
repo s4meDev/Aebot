@@ -29,6 +29,26 @@ def main() -> None:
         if sys.stdout is not None:
             print(json.dumps(report))
     else:
+        # O atalho original continua abrindo a versão ativa. --check sempre
+        # testa o próprio EXE informado, inclusive durante uma atualização.
+        if getattr(sys, 'frozen', False):
+            from aebot.updates import installation_root, current_directory
+            import subprocess
+            try:
+                own = Path(sys.executable).resolve().parent
+                root = installation_root(own)
+                target = current_directory(root)
+                if target != own:
+                    subprocess.Popen([str(target / 'AEBOT.exe')], creationflags=subprocess.CREATE_NO_WINDOW)
+                    return
+            except Exception:
+                import tkinter as tk
+                from tkinter import messagebox
+                window = tk.Tk()
+                window.withdraw()
+                messagebox.showerror('Versão ativa não conferida', 'Abra Abrir-AEBOT.exe para verificar ou voltar à versão anterior. Não vou abrir silenciosamente uma versão diferente.', parent=window)
+                window.destroy()
+                return
         from aebot.app import run
         run()
 
@@ -48,12 +68,69 @@ def check_runtime(report: dict) -> None:
         if semantic.decision != 'Reprovado' or not semantic.semanticApplied:
             raise RuntimeError('Falha na interpretação local do pacote.')
         check_feedback(window, engine)
+        check_interface(window, engine)
         report.update(ok=True, base=engine.store.version, decision=result.decision,
-            feedbackCheck=True,
+            feedbackCheck=True, interfaceCheck=True, profileServices=len(engine.store.services),
             analysisMs=result.durationMs, semanticMs=semantic.durationMs, semanticCalls=semantic.inferenceCalls,
             startupAndCheckMs=(time.perf_counter() - started) * 1000)
     finally:
         window.destroy()
+
+
+def check_interface(window, engine):
+    """Confiro o layout e os recursos que realmente entraram no EXE."""
+    import tempfile
+    from aebot.app import App
+    if getattr(sys, 'frozen', False) and not (Path(sys.executable).parent / 'Abrir-AEBOT.exe').is_file():
+        raise RuntimeError('O lançador/atualizador não veio na pasta completa.')
+    with tempfile.TemporaryDirectory(prefix='aebot-interface-check-') as directory:
+        app = App(window, feedback_directory=Path(directory), engine_loader=lambda: engine)
+        limit = time.monotonic() + 3
+        while app.busy and time.monotonic() < limit:
+            window.update()
+            time.sleep(.01)
+        if app.busy or app.session is None or app.logo is None:
+            raise RuntimeError('A interface, a logo ou o perfil não veio completo no pacote.')
+        if app.input.winfo_manager() != 'grid' or tuple(app.store.services) != tuple(engine.store.services):
+            raise RuntimeError('O layout e a análise não estão usando o mesmo perfil.')
+        if app.progress.winfo_manager():
+            raise RuntimeError('A interface não pode parecer carregando depois de pronta.')
+        app.latest_result = engine.evaluate('Sem foto depois.', next(iter(engine.store.services)))
+        reader = app.open_evidence()
+        if reader is None or any(item.id not in reader.details.get('1.0', 'end') for item in app.latest_result.matchedRules):
+            raise RuntimeError('Os fundamentos completos não vieram no pacote.')
+        app.new_case()
+        if reader.window.winfo_exists() or app.latest_result is not None:
+            raise RuntimeError('Novo caso deixou fundamentos antigos como se fossem atuais.')
+        service_id = next(iter(engine.store.services))
+        app.session.ask('Se faltar aferição da vala?', service_id)
+        query = 'E qual é a regra da foto depois?'
+        consultation = app.session.ask(query, service_id)
+        if consultation.intent != 'question' or consultation.pendingInformation or any(
+                item.sourceQuote not in query for item in consultation.matchedRules):
+            raise RuntimeError('A consulta intermediária foi misturada com a hipótese.')
+        scenario = app.session.ask('interna', service_id)
+        if scenario.decision is not None or scenario.scenarioDecision != 'Não Conforme' or scenario.pendingInformation:
+            raise RuntimeError('A hipótese não retomou seu próprio esclarecimento.')
+        app.new_case()
+        absent = engine.evaluate('Não está sem foto depois.', service_id)
+        if absent.decision is not None or absent.outcome != 'advisory':
+            raise RuntimeError('Uma negação de falta virou irregularidade.')
+        ambiguous = app.session.ask('Sem aferição da vala. Equipe interna ou terceirizada.', service_id)
+        if ambiguous.decision is not None or not ambiguous.pendingInformation:
+            raise RuntimeError('Uma alternativa foi tratada como equipe confirmada.')
+        clarified = app.session.ask('interna', service_id)
+        if clarified.decision != 'Não Conforme':
+            raise RuntimeError('A pergunta de equipe não foi resolvida pelo contexto informado.')
+        uncertain = app.session.ask('Corrigindo: não tenho certeza se é interna.', service_id)
+        if uncertain.decision is not None or not uncertain.pendingInformation:
+            raise RuntimeError('A retirada da certeza manteve o vínculo antigo.')
+        confirmed = app.session.ask('terceirizada', service_id)
+        if confirmed.decision != 'Reprovado' or confirmed.pendingInformation:
+            raise RuntimeError('O novo esclarecimento não resolveu a equipe pendente.')
+        app.new_case()
+        if app.feedback_store.path.exists():
+            raise RuntimeError('O diagnóstico não pode criar feedback automaticamente.')
 
 
 def check_feedback(window, engine) -> None:

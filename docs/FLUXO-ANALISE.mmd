@@ -1,0 +1,67 @@
+flowchart TD
+  input["Selecionar serviço e identificar intenção"] --> intent{"Consulta, hipótese ou OS real?"}
+  intent -->|Consulta| consult["Explicar caminhos da base sem declarar ocorrência"]
+  intent -->|Hipótese| scenario["Isolar fatos simulados; não classificar a OS real"]
+  intent -->|OS real| facts["Separar fatos, citações, etapa e escopo"]
+  scenario --> facts
+  facts --> certain{"Fatos e contexto suficientemente claros?"}
+  certain -->|Não| ask["Perguntar só o detalhe que muda a orientação"]
+  ask -->|Esclarecimento ou retificação| facts
+  certain -->|Sim| guards["Conferir condições e exceções de TODAS as regras"]
+  guards --> applicable{"Há regras classificatórias realmente aplicáveis?"}
+  applicable -->|Não| partial["Orientar com a base encontrada; decisão nula"]
+  applicable -->|Sim| combine["Combinar fatos independentes; resolver conflitos pelo serviço"]
+  combine --> reply["Explicar recomendação, ações e todas as regras utilizadas"]
+  consult --> topics["Recuperar TODOS os assuntos pedidos; preservar citação e escopo"]
+  topics --> unknown{"Algum assunto ainda está ambíguo?"}
+  unknown -->|Sim| clarify["Orientar o que foi entendido e pedir só o outro assunto"]
+  clarify -->|Esclarecimento da consulta; não altera OS| topics
+  unknown -->|Não| finish["Analista confere a OS antes de concluir no sistema"]
+  partial --> finish
+  reply --> finish
+  finish -->|Nova OS| input
+  finish -->|Complemento do mesmo caso| facts
+
+  subgraph catalog["Ramos gerados da fonte única; não são outra base de decisão"]
+    r0["RULE-PARAM-ESCAVACAO-01 — Retirada de desdobro sem evidência de vala<br/>conferir exceções do cadastro<br/>Orientação / pergunta; sem decisão oficial"]
+    r1["RULE-PARAM-GERAL-01 — Ausência de parametrização obrigatória<br/>Confirmar fato e condições cadastradas<br/>Não Conforme"]
+    r2["RULE-PARAM-TROCA-IMPOSSIVEL-01 — Impossibilidade de troca para o serviço correto<br/>current; troca correta indisponível<br/>Reprovado"]
+    r3["RULE-PARAM-TROCA-CONTEXTO-01 — Código diferente da execução: confirmar a possibilidade de troca<br/>current; O sistema oferece a troca para o serviço que foi realmente executado no local correto?<br/>Orientação / pergunta; sem decisão oficial"]
+    r4["RULE-GERAL-EVID-01 — Cadeia mínima de evidências do serviço original<br/>Confirmar fato e condições cadastradas<br/>Orientação / pergunta; sem decisão oficial"]
+    r5["RULE-GERAL-EVID-02 — Evidências próprias do adicional executado<br/>Confirmar fato e condições cadastradas<br/>Orientação / pergunta; sem decisão oficial"]
+    r6["RULE-GERAL-EVID-03 — Justificativa do adicional posterior<br/>Confirmar fato e condições cadastradas<br/>Orientação / pergunta; sem decisão oficial"]
+    r7["RULE-PAV-INFO-02 — Evidências da repavimentação asfáltica<br/>Confirmar fato e condições cadastradas<br/>Orientação / pergunta; sem decisão oficial"]
+    r8["RULE-PAV-01 — Medição da repavimentação fora do formato aceito<br/>current<br/>Não Conforme"]
+    r9["RULE-PAV-AFERICAO-CONTEXTO-01 — Tipo de equipe necessário quando falta aferição da vala<br/>current; A equipe que executou esse serviço é interna ou terceirizada?; conferir exceções do cadastro<br/>Orientação / pergunta; sem decisão oficial"]
+    r10["RULE-PAV-AFERICAO-INTERNA-01 — Falta de aferição em serviço original executado por equipe interna<br/>current; equipe interna; tipo de equipe confirmado; conferir exceções do cadastro<br/>Não Conforme"]
+    r11["RULE-PAV-AFERICAO-TERCEIRA-01 — Falta de aferição em serviço original executado por equipe terceirizada<br/>current; equipe terceirizada; tipo de equipe confirmado; conferir exceções do cadastro<br/>Reprovado"]
+    r12["RULE-PAV-AFERICAO-ADICIONAL-CONTEXTO-01 — Tipo de equipe necessário para corrigir adicional executado sem aferição<br/>executed; A equipe que executou esse serviço é interna ou terceirizada?; conferir exceções do cadastro<br/>Orientação / pergunta; sem decisão oficial"]
+    r13["RULE-PAV-AFERICAO-ADICIONAL-INTERNA-01 — Adicional executado sem aferição por equipe interna<br/>executed; equipe interna; tipo de equipe confirmado; posição do serviço confirmada; serviço de pavimento confirmado; conferir exceções do cadastro<br/>Não Conforme"]
+    r14["RULE-PAV-AFERICAO-ADICIONAL-TERCEIRA-01 — Adicional executado sem aferição por equipe terceirizada<br/>executed; equipe terceirizada; tipo de equipe confirmado; posição do serviço confirmada; serviço de pavimento confirmado; conferir exceções do cadastro<br/>Não Conforme"]
+    r15["RULE-ASF-FOTO-ANTES-01 — Falta de foto antes da repavimentação<br/>current; conferir exceções do cadastro<br/>Não Conforme"]
+    r16["RULE-ASF-FOTO-DURANTE-01 — Falta de foto durante da repavimentação<br/>current; conferir exceções do cadastro<br/>Não Conforme"]
+    r17["RULE-ASF-FOTO-DEPOIS-01 — Falta de foto depois da repavimentação<br/>current; conferir exceções do cadastro<br/>Reprovado"]
+    r18["RULE-ASF-FOTOS-COMBINADAS-01 — Ausência de antes e durante da repavimentação<br/>Confirmar fato e condições cadastradas<br/>Reprovado"]
+    r19["RULE-ASF-FOTO-QUALIDADE-01 — Má qualidade fotográfica<br/>current; evidência visual identificada<br/>Não Conforme"]
+    r20["RULE-ASF-ORIGEM-01 — Repavimentação sem OS de origem<br/>origin; vínculo de origem relatado<br/>Não Conforme"]
+    r21["RULE-ASF-ORIGEM-AFERICAO-CONTEXTO-01 — Frente necessária para falta de aferição na origem<br/>origin; A frente desse serviço é VCG, Manutenção ou Comercial?; conferir exceções do cadastro<br/>Orientação / pergunta; sem decisão oficial"]
+    r22["RULE-ASF-ORIGEM-AFERICAO-01 — Falta de aferição na origem fora de VCG<br/>origin; frente manutenção ou frente comercial; origem identificada; frente confirmada fora de VCG; conferir exceções do cadastro<br/>Não Conforme"]
+    r23["RULE-ASF-ORIGEM-VCG-01 — VCG não pontua falta de aferição na origem<br/>origin; frente VCG; frente VCG confirmada<br/>Orientação / pergunta; sem decisão oficial"]
+    r24["RULE-ASF-MEDICAO-01 — Medição incoerente<br/>current<br/>Não Conforme"]
+    r25["RULE-ASF-TRENA-01 — Trena impede verificar a metragem — equipe interna<br/>current; equipe interna; impedimento de conferir a medição relatado; equipe interna confirmada; conferir exceções do cadastro<br/>Não Conforme"]
+    r26["RULE-ASF-TRENA-TERCEIRA-01 — Trena impede verificar a metragem — equipe terceirizada<br/>current; equipe terceirizada; impedimento de conferir a medição relatado; equipe terceirizada confirmada; conferir exceções do cadastro<br/>Reprovado"]
+    r27["RULE-ASF-TRENA-CONTEXTO-01 — Tipo de equipe necessário quando a trena impede a conferência<br/>current; A equipe que executou esse serviço é interna ou terceirizada?; impedimento de conferir a medição relatado; conferir exceções do cadastro<br/>Orientação / pergunta; sem decisão oficial"]
+    r28["RULE-ASF-LOCAL-01 — Execução no local ou vala incorreta<br/>current<br/>Reprovado"]
+    r29["RULE-ASF-MATERIAL-01 — Reaterro ou concreto encerrado como asfalto<br/>current<br/>Reprovado"]
+    r30["RULE-ASF-ACABAMENTO-01 — Qualidade final inapropriada<br/>current; conferir exceções do cadastro<br/>Reprovado"]
+    r31["RULE-ASF-DUPLICIDADE-01 — Serviço já executado em outra OS<br/>current; sistema consultado para comprovar a duplicidade<br/>Reprovado"]
+    r32["RULE-ASF-TROCA-IMPOSSIVEL-01 — Execução incompatível sem opção adequada de troca<br/>Confirmar fato e condições cadastradas<br/>Reprovado"]
+    r33["RULE-ASF-TROCA-01 — Código incompatível com troca disponível<br/>current; troca correta disponível; conferir exceções do cadastro<br/>Não Conforme"]
+    r34["RULE-ASF-FORMULARIO-01 — Formulário preenchido incorretamente<br/>current; formulário ou preenchimento identificado<br/>Não Conforme"]
+    r35["RULE-ASF-DESDOBRO-INDEVIDO-01 — Serviço incorreto no adicional<br/>Confirmar fato e condições cadastradas<br/>Não Conforme"]
+    r36["RULE-ASF-DESDOBRO-EXCESSO-01 — Adicional desnecessário<br/>current; parametrização de adicional relatada<br/>Não Conforme"]
+    r37["RULE-ASF-EHS-01 — Irregularidade de segurança<br/>Confirmar fato e condições cadastradas<br/>Não Conforme"]
+    r38["RULE-ASF-CONFORME-01 — Verificação completa sem irregularidades<br/>conferência completa declarada; ausência de irregularidades declarada<br/>Conforme"]
+    r15 -->|fato independente confirmado| r18
+    r16 -->|fato independente confirmado| r18
+  end

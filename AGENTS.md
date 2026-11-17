@@ -2,6 +2,37 @@
 
 ## Implementação Python em avaliação (19/10/2026)
 
+- GitHub versiona o código; SharePoint distribui somente instalador, pacotes assinados e guias. Não hospedar chat, backend, conversas ou feedback na biblioteca. Commit/push não atualiza o EXE instalado: cada alteração distribuída exige nova versão validada e republicação do catálogo por último. Sem pasta corporativa acessível, não declarar publicação online concluída.
+
+- A entrega de testes de 16/11 usa instalador offline separado, sem mudar o motor 0.9.1. `OfflineSetup` aceita somente o pacote completo com identidade incorporada, assinatura e hashes; reutiliza `install_full` e testa o EXE antes da publicação. Não sobrescrever destinos existentes, não persistir conversa, não baixar componentes e não mudar políticas. Preserve a entrega anterior e gere pasta/ZIP novos ao reconstruir o instalador. O manual é `docs/INSTALAR-TESTE-ASFALTO.md`.
+
+- Em 0.9.1, `PendingConsultation` separa esclarecimento de consulta da OS e da hipótese. Consultas compostas recuperam seus assuntos; comparar escopos não declara ausência da OS de origem. Citações permanecem literais. Entrada inválida é recusada antes de alterar o caso; não mude gabaritos históricos para anunciar acerto.
+- `CaseOverview` é projeção em RAM, não motor. Opções rápidas vêm de `pendingContext` e exigem escolha explícita. Rascunho interrogativo/hipotético não vira fato ao confirmar contexto; uma falha não sobrescreve um rascunho novo nem reapresenta fundamentos antigos como atuais.
+
+- Em 0.8.1, o usuário autorizou consulta e obtenção explícitas pela pasta corporativa AEBOT sincronizada pelo OneDrive, separada da AutoForms. Não conectar ChatGPT/SharePoint, reutilizar cookies ou implementar OAuth/Graph sem nova autorização. `UpdateChannel` exige catálogo assinado e base compatível; `ChannelClient` isola I/O com prazo/cancelamento. O resultado é do catálogo sincronizado, não prova instantânea do servidor. Análise continua offline; pacotes não podem carregar conversa, feedback ou chave privada.
+- `AnalysisFlow` gera SVG/Mermaid/JSON da fonte única, com todos os campos e hash. Para alteração de negócio, ler `docs/CONFERENCIA-DOCUMENTO-ASFALTO.md`, editar `rulesStore.json`, acrescentar gabaritos, regenerar e testar. O fluxograma auxilia manutenção; não treina o BGE nem é outro motor. Preserve as retificações de aferição/trena e os gabaritos antigos.
+
+- Em 0.7.0, atualização Python é por `.aebot-update` Ed25519 e lançador estável `Abrir-AEBOT.exe`, sem download automático. `updates.py` prepara uma versão separada, valida todos os arquivos e executa `--check` antes de trocar o ponteiro ativo. Preserve original, anterior e feedback fora da instalação; não sobrescreva EXE em uso nem limpe estágios/versões automaticamente. A chave privada fica somente em `.aebot-private`; assinatura do pacote não é Authenticode. Manifeste responsável, versão, data e revisão; rejeite origem incompatível, downgrade, links, arquivos extras e caminhos inseguros.
+
+- Em 0.6.3, contextos contraditórios no mesmo turno/escopo não escolhem o último valor. Incerteza explícita suspende uma confirmação antiga; respostas posteriores podem esclarecê-la. `context_sources` fica só em RAM. Expressão de contexto não pode perder seu sentido ao ser reduzida a um verbo isolado. Perguntar sobre vínculo incerto não elimina outra ocorrência trazida no mesmo relato.
+
+- Em 0.6.2, negação de falta não confirma ausência; “não só” é ênfase. Alternativas de contexto não escolhem o último valor: `ContextFact.value: null` bloqueia o valor antigo no mesmo escopo até esclarecimento. Retomadas usam `interpretation.recordTerms` e etapa cadastrada, com citação literal. Observações inativas podem ser explicadas, nunca usadas para classificar ou aprovar a OS.
+
+- Em 0.6.1, consultas intermediárias usam só a pergunta atual e preservam a devolutiva do caso/hipótese. `Scenario.last` não depende do último texto exibido; consulta não é resposta à pendência. Novo caso ou troca de serviço limpam ambos. Após falha de um turno, a interface não pode reapresentar fundamentos antigos como se fossem atuais. Benchmark sintético não é telemetria do aplicativo.
+
+- Em 0.6.0, `response.py` apresenta a avaliação e `evidence_ui.py` mostra todos os fundamentos em memória. Encurtar o chat não remove regras do resultado. Uma ação secundária de aprovação nunca contradiz a decisão final. Caches de texto são por instância e limpos por caso. A recuperação da consulta pode retirar o pedido de explicação, mas preserva o assunto literal, negações e a citação original.
+
+- Retificação confirmada em 03/11/2026: na OS atual de Asfalto, trena que impede conferir a metragem segue a falta de aferição por vínculo. Interna = Não Conforme + Retrabalho; terceirizada = Reprovado; vínculo ausente exige pergunta. `RULE-ASF-TRENA-01` deixou de ser reprovação automática. Esta confirmação prevalece sobre o TXT e guias históricos anteriores.
+
+- Em 03/11, `pendingClarification` passou a ligar esclarecimento a mensagem/trecho/escopo. Só uma retificação explícita substitui esse ponto. Fontes descartadas não podem continuar como condição, exceção, aprovação ou antecedente. Preserve os demais fatos e o isolamento da hipótese.
+- `Match.application` separa fato, consulta e cenário. Cache de pares usa o mesmo limite em RAM e a mesma limpeza por caso do cache de interpretação. Auditoria deve medir cobertura por regra, sem mudar o gabarito antigo para anunciar acerto total.
+
+- Atualização de 22/10/2026: o Python usa interface branca/azul com a marca Aegea fornecida. O envio fica reservado em 580 × 500; o tema dark abaixo é apenas do legado.
+- O perfil python/catalogProfile.json seleciona as duas faixas de Asfalto, sem decisões. O pacote recebe projeção validada da fonte única. Preserve o histórico dos demais serviços enquanto não houver pedido explícito de exclusão.
+- Consulta geral explica alternativas sem declarar ocorrência. Comparar equipes não seleciona a última mencionada. Caso concreto exige contexto real e orientação parcial não fecha a OS. O papel de Programador de Serviços Sênior não deve ser anunciado como capacidade geradora inexistente no BGE.
+- A intenção é a da mensagem atual, não a da primeira frase concatenada. Consultas e hipóteses não entram no estado factual da OS; uma hipótese com contexto pendente pode receber resposta curta sem emitir decisão oficial nem contaminar a retomada do caso real.
+- python/export_rulebook.py gera guia e diagrama do catálogo real. Regenere-os após alterar a fonte e registre divergências sem mudar o gabarito para escondê-las.
+
 - A rota nova solicitada é `python/`, com Tkinter e BGE/ONNX local, focada nas duas faixas de Repavimentação Asfalto. Não imponha Electron ou TypeScript a essa implementação.
 - Regras continuam exclusivamente no `src/data/rulesStore.json` compartilhado; não copie IDs, conclusões ou textos de serviço para o motor Python.
 - Preserve citações, serviço selecionado, condições, exceções, múltiplos fatos, estado de esclarecimento e `decision: null` quando não houver suporte. Hipótese não é classificação de uma OS real.

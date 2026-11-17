@@ -42,7 +42,14 @@ class LocalReranker:
                 fields['attention_mask'].append(item.attention_mask + [0] * pad)
                 fields['token_type_ids'].append(item.type_ids + [0] * pad)
             inputs = {item.name: np.asarray(fields[item.name], dtype=np.int64) for item in self.session.get_inputs()}
-            scores = self.session.run(None, inputs)[0].reshape(-1)
+            outputs = self.session.run(None, inputs)
+            if not outputs:
+                raise ValueError('O modelo não retornou scores.')
+            scores = outputs[0].reshape(-1)
+            if len(scores) != len(indices) or not np.isfinite(scores).all():
+                # Não completo uma saída vazia com zero nem descarto valores
+                # extras. Falha de contrato é técnica, não falta de regra.
+                raise ValueError('Formato ou valor de score inválido no modelo local.')
             for index, score in zip(indices, scores):
                 result[index] = float(score)
         return result

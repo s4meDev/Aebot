@@ -1,0 +1,53 @@
+AEBOT - INSTALAR E USAR
+Testes de 16/11/2026 | Aplicativo 0.9.1 | Repavimentação Asfalto
+
+1. Salve o ZIP inteiro no computador em que vai usar.
+2. Clique com o botão direito no ZIP e escolha "Extrair Tudo".
+3. Espere terminar. Entre na pasta extraída.
+4. Abra Instalar-AEBOT.exe e clique em "Instalar AEBOT".
+5. Aguarde a conferência e o teste da IA. Não feche o instalador nessa etapa.
+6. Quando concluir, clique em "Abrir AEBOT".
+7. Espere "IA local pronta", escolha até ou acima de 1 m² e escreva o relato.
+
+IMPORTANTE
+Não abra o EXE dentro do ZIP e não envie apenas o EXE.
+O arquivo AEBOT-completo-0.9.1.aebot-update deve ficar ao lado do instalador.
+Não extraia esse arquivo. Não precisa instalar Python, cadastrar chave,
+configurar servidor ou usar a internet para analisar.
+Use Windows 10/11 de 64 bits atualizado e reserve cerca de 4 GB livres.
+
+PARA ABRIR DEPOIS
+Clique em "Abrir pasta instalada" no instalador e use Abrir-AEBOT.exe.
+O destino padrão é %LOCALAPPDATA%\AEBOT\Application.
+Posso colar esse caminho na barra de endereço do Explorador de Arquivos.
+Se escolhi outro destino, uso o caminho mostrado pelo instalador.
+Posso criar um atalho de Abrir-AEBOT.exe na Área de Trabalho.
+
+SE JÁ EXISTIR UMA INSTALAÇÃO
+O instalador não sobrescreve pastas existentes. Abro a instalação atual
+ou escolho outra pasta para teste. Atualizações usam o botão Atualizar do app
+com pacote compatível; a central corporativa só funciona depois de publicada.
+Não copio arquivos por cima da pasta antiga.
+
+COMO CONVERSAR
+Se pedir um detalhe, respondo na mesma conversa.
+Para corrigir: "Corrigindo: ...". Para esclarecer: "Quis dizer: ...".
+Para outra OS: "Novo caso". Fechar o app descarta a conversa.
+"Se..." simula uma hipótese, não muda os fatos da OS.
+O app interpreta texto; não lê fotos e não altera o sistema da empresa.
+Ver fundamentos mostra as regras utilizadas. Confiro a orientação na OS.
+
+SE HOUVER PROBLEMA
+Falta arquivo: copio o ZIP completo e extraio novamente em outra pasta.
+Destino existente: não sobrescrevo; uso a instalação ou outro destino novo.
+Bloqueio do Windows: guardo a mensagem completa. Não desativo proteções.
+Esta entrega ainda não tem certificado próprio de EXE; a assinatura do pacote
+é uma conferência interna e não garante liberação em qualquer computador.
+Resposta errada: registro em Enviar feedback, sem dados do cliente ou da OS.
+Feedback fica só neste PC. Em Feedbacks salvos, exporto JSON para o responsável.
+
+Leia 00-COMECE-AQUI.md para o manual completo e 01-ROTEIRO-DE-TESTE.md
+para os controles rápidos das duas faixas antes de usar nas dúvidas do dia.
+O aplicativo é para testes de apoio: não prometo 100% ou tempo igual em todo PC.
+
+Projeto idealizado e conduzido por Pedro Lucas Botelho Naus.

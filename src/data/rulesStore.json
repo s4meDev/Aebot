@@ -1,5 +1,5 @@
 {
-  "version": "2.18.0",
+  "version": "2.20.0",
   "interpretation": {
     "defaultScope": "current",
     "recordTerms": ["foto", "imagem", "registro", "evidência", "vídeo"],
@@ -2463,7 +2463,7 @@
       "description": "As fotos antes mostram a condição inicial da vala ou do local, antes de começar o trabalho. Se esse estado inicial não foi registrado, pontue qualidade fotográfica.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Evidência fotográfica",
       "conditionKeywords": [
         "sem foto antes",
         "faltou foto antes",
@@ -2514,7 +2514,7 @@
       "description": "A foto durante comprova o trabalho acontecendo, como a aplicação do material de pavimentação. Sem esse registro da execução em andamento, pontue qualidade fotográfica.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Evidência fotográfica",
       "conditionKeywords": [
         "sem foto durante",
         "faltou foto durante",
@@ -2564,7 +2564,7 @@
       "description": "As fotos depois mostram como o pavimento ficou pronto, após terminar o trabalho. Sem registro desse estado final, o resultado da execução não foi comprovado.",
       "severity": "Reprovado",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Evidência fotográfica",
       "conditionKeywords": [
         "sem foto depois",
         "faltou foto depois",
@@ -2613,7 +2613,7 @@
       "description": "Sem fotos antes e durante, não foi evidenciada a execução do serviço.",
       "severity": "Reprovado",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Evidência fotográfica",
       "conditionKeywords": [
         "sem foto antes e durante",
         "sem foto antes nem durante"
@@ -2647,7 +2647,7 @@
       "description": "Fotos tremidas ou sem nitidez devem ser pontuadas por qualidade fotográfica.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Evidência fotográfica",
       "conditionKeywords": [
         "fotos tremidas",
         "fotos sem nitidez",
@@ -2687,7 +2687,7 @@
       "description": "A Repavimentação Asfalto sem OS de origem correspondente recebe Não Conforme.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Origem e frente de serviço",
       "conditionKeywords": [
         "sem OS de origem",
         "não tem OS de origem",
@@ -2719,7 +2719,7 @@
       "title": "Frente necessária para falta de aferição na origem",
       "description": "A falta de aferição na OS de origem depende da frente: VCG não pontua essa falta.",
       "priority": 3,
-      "category": "Repavimentação Asfalto",
+      "category": "Origem e frente de serviço",
       "conditionKeywords": [
         "sem aferição na OS de origem",
         "falta de aferição na OS de origem",
@@ -2758,7 +2758,7 @@
       "description": "Falta de aferição na OS de origem antecedente, fora de VCG, recebe Não Conforme.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Origem e frente de serviço",
       "conditionKeywords": [],
       "message": "Falta de aferição na OS de origem antecedente, fora de VCG, recebe Não Conforme.",
       "guidance": "Registre Não Conforme por Falta de Aferição (OS de Origem). Não confunda com falta de aferição do asfalto atual.",
@@ -2808,7 +2808,7 @@
       "title": "VCG não pontua falta de aferição na origem",
       "description": "Em VCG, não pontue a falta de aferição da OS de origem, pois essa frente não possui a OS de origem.",
       "priority": 3,
-      "category": "Repavimentação Asfalto",
+      "category": "Origem e frente de serviço",
       "conditionKeywords": [],
       "message": "Em VCG, não pontue a falta de aferição da OS de origem, pois essa frente não possui a OS de origem.",
       "guidance": "Não pontue Falta de Aferição (OS de Origem) em VCG. Isso não aprova automaticamente a OS nem dispensa a aferição do serviço atual.",
@@ -2853,7 +2853,7 @@
       "description": "A medição informada não corresponde ao serviço executado ou às evidências.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Medição e aferição",
       "conditionKeywords": [
         "medição incoerente",
         "medição não corresponde ao serviço",
@@ -2876,27 +2876,31 @@
     {
       "id": "RULE-ASF-TRENA-01",
       "semanticCriteria": ["Usaram trena para medir, mas pelas imagens não é possível conferir ou saber o tamanho real do trecho executado. A medição não está verificável."],
-      "evaluation": {"fact":"measurement-obstructed","scope":"current","stance":"irregularity"},
-      "mandatoryConditionGroups": [{"label":"impedimento de conferir a medição relatado","expressions":["impossibilita verificar","impede verificar","não permite conferir","não consigo conferir","ninguém consegue saber","ninguém consegue ver","não é possível conferir","não dá para conferir","não dá pra conferir"]}],
-      "examples": ["trena impossibilita verificar a metragem"],
+      "evaluation": {"fact":"measurement-obstructed","scope":"current","stance":"irregularity","requires":{"team":["internal"]}},
+      "mandatoryConditionGroups": [
+        {"label":"impedimento de conferir a medição relatado","expressions":["impossibilita verificar","impede verificar","não permite conferir","não consigo conferir","ninguém consegue saber","ninguém consegue ver","não é possível conferir","não dá para conferir","não dá pra conferir"]},
+        {"label":"equipe interna confirmada","expressions":["interna","interno","equipe própria","própria empresa","pessoal próprio","funcionário da empresa","equipe da empresa"]}
+      ],
+      "examples": ["Equipe interna: a trena impossibilita verificar a metragem."],
       "serviceId": "repavimentacao-asfalto-ate-1m2",
       "applicableServiceIds": [
         "repavimentacao-asfalto-acima-1m2"
       ],
-      "title": "Trena impede verificar a metragem",
-      "description": "A aferição com trena que impossibilita verificar a metragem real equivale a falta de aferição.",
-      "severity": "Reprovado",
+      "title": "Trena impede verificar a metragem — equipe interna",
+      "description": "Quando a equipe interna apresenta uma trena que impede conferir a metragem real, trate como falta de aferição: Não Conforme com geração de Retrabalho.",
+      "severity": "Não Conforme",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Medição e aferição",
       "conditionKeywords": [
         "trena impossibilita verificar a metragem",
         "trena não permite conferir a metragem",
         "trena impede verificar a metragem"
       ],
-      "message": "A aferição com trena que impossibilita verificar a metragem real equivale a falta de aferição.",
-      "guidance": "Reprove por Sem aferição quando o uso da trena impedir conferir a metragem real. A mera menção de trena não comprova essa falha.",
+      "message": "A equipe interna não comprovou a aferição, pois a trena não permite conferir a metragem real; o serviço precisa de retrabalho.",
+      "guidance": "Registre Não Conforme por falta de aferição e gere o Retrabalho da mesma Repavimentação para execução com aferição comprovada. A mera menção de trena não comprova essa falha.",
       "sourceReferences": [
-        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026"
+        "Repavimentação Asfalto atualizado.txt — fornecido por Pedro Lucas Botelho em 07/10/2026",
+        "Retificação confirmada por Pedro Lucas Botelho Naus em 03/11/2026: equipe interna com trena impeditiva segue Não Conforme + Retrabalho, como nos demais casos sem aferição."
       ],
       "relatedEvidence": [
         "trena",
@@ -2904,8 +2908,50 @@
       ],
       "exceptions": [
         "trena permite conferir a metragem",
-        "medição legível com trena"
+        "medição legível com trena",
+        "terceirizada", "terceirizado", "equipe terceira", "empreiteira", "contratada"
       ]
+    },
+    {
+      "id": "RULE-ASF-TRENA-TERCEIRA-01",
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2"],
+      "title": "Trena impede verificar a metragem — equipe terceirizada",
+      "description": "A trena que impede conferir a metragem real equivale a falta de aferição. Se a execução da OS atual foi feita por equipe terceirizada, a conclusão é Reprovado.",
+      "severity": "Reprovado",
+      "priority": 1,
+      "category": "Medição e aferição",
+      "evaluation": {"fact":"measurement-obstructed","scope":"current","stance":"irregularity","requires":{"team":["contractor"]}},
+      "mandatoryConditionGroups": [
+        {"label":"impedimento de conferir a medição relatado","expressions":["impossibilita verificar","impede verificar","não permite conferir","não consigo conferir","ninguém consegue saber","ninguém consegue ver","não é possível conferir","não dá para conferir","não dá pra conferir"]},
+        {"label":"equipe terceirizada confirmada","expressions":["terceirizada","terceirizado","equipe terceira","empreiteira","contratada"]}
+      ],
+      "conditionKeywords": ["trena impossibilita verificar a metragem","trena não permite conferir a metragem","trena impede verificar a metragem"],
+      "relatedEvidence": ["trena","metragem real"],
+      "exceptions": ["trena permite conferir a metragem","medição legível com trena","interna","interno","equipe própria","própria empresa","pessoal próprio","funcionário da empresa","equipe da empresa"],
+      "message": "A equipe terceirizada não comprovou a aferição, pois a trena impede conferir a metragem real.",
+      "guidance": "Reprove a OS atual por falta de aferição. Confirme o vínculo da equipe e o impedimento de conferir a metragem; usar trena, sozinho, não é irregularidade.",
+      "sourceReferences": ["Regra de falta de aferição por tipo de equipe informada pelo responsável e confirmação de equivalência da trena impeditiva em 03/11/2026."],
+      "examples": ["A equipe terceirizada apresentou trena, mas ela não permite conferir a metragem."]
+    },
+    {
+      "id": "RULE-ASF-TRENA-CONTEXTO-01",
+      "serviceId": "repavimentacao-asfalto-ate-1m2",
+      "applicableServiceIds": ["repavimentacao-asfalto-acima-1m2"],
+      "title": "Tipo de equipe necessário quando a trena impede a conferência",
+      "description": "Sem aferição verificável, inclusive por trena impeditiva, a orientação da OS atual depende do vínculo da equipe. Sem essa informação, pergunte antes de concluir.",
+      "priority": 1,
+      "category": "Medição e aferição",
+      "evaluation": {"fact":"measurement-obstructed","scope":"current","stance":"irregularity","ask":"team"},
+      "mandatoryConditionGroups": [{"label":"impedimento de conferir a medição relatado","expressions":["impossibilita verificar","impede verificar","não permite conferir","não consigo conferir","ninguém consegue saber","ninguém consegue ver","não é possível conferir","não dá para conferir","não dá pra conferir"]}],
+      "conditionKeywords": ["trena impossibilita verificar a metragem","trena não permite conferir a metragem","trena impede verificar a metragem"],
+      "relatedEvidence": ["trena","metragem real"],
+      "exceptions": ["trena permite conferir a metragem","medição legível com trena","interna","interno","equipe própria","própria empresa","pessoal próprio","funcionário da empresa","equipe da empresa","terceirizada","terceirizado","equipe terceira","empreiteira","contratada"],
+      "message": "A trena não permite comprovar a aferição. O tipo de equipe muda a orientação.",
+      "guidance": "Confirme a equipe: interna gera Não Conforme com Retrabalho; terceirizada gera Reprovado na OS atual.",
+      "missingInformation": ["A equipe que executou esse serviço é interna ou terceirizada?"],
+      "sourceReferences": ["Confirmação de Pedro Lucas Botelho Naus em 03/11/2026: trena impeditiva segue o tratamento dos demais casos sem aferição."],
+      "examples": ["A trena impede verificar a metragem, mas não informaram o vínculo da equipe."]
     },
     {
       "id": "RULE-ASF-LOCAL-01",
@@ -2920,7 +2966,7 @@
       "description": "A execução não corresponde à vala ou ao local correto da OS e sua origem.",
       "severity": "Reprovado",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Local e material executado",
       "conditionKeywords": [
         "vala incorreta",
         "vala errada",
@@ -2956,7 +3002,7 @@
       "description": "Usar a OS de Asfalto para executar reaterro ou concreto corresponde a material/execução incorreto.",
       "severity": "Reprovado",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Local e material executado",
       "conditionKeywords": [
         "fez concreto na OS de asfalto",
         "executou reaterro na OS de asfalto",
@@ -2986,7 +3032,7 @@
       "description": "O acabamento ou a qualidade visual final da repavimentação não atende ao padrão.",
       "severity": "Reprovado",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Qualidade do acabamento",
       "conditionKeywords": [
         "qualidade inapropriada da repavimentação",
         "acabamento inadequado",
@@ -3022,7 +3068,7 @@
       "description": "O Field ou o SCAE comprova que o mesmo serviço já foi executado em outra OS.",
       "severity": "Reprovado",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Duplicidade",
       "conditionKeywords": [
         "serviço já executado em outra OS no Field",
         "serviço já executado em outra OS no SCAE",
@@ -3048,7 +3094,7 @@
       "description": "A execução não corresponde ao código da OS e não existe opção de Troca de Serviço que a represente corretamente.",
       "severity": "Reprovado",
       "priority": 1,
-      "category": "Repavimentação Asfalto",
+      "category": "Troca de serviço",
       "conditionKeywords": ["não há possibilidade de troca para o serviço correto", "execução incompatível sem opção de troca", "serviço executado sem código adequado na troca"],
       "message": "Não há possibilidade de troca para adequar o código à execução; a OS deve ser reprovada.",
       "guidance": "Reprove e oriente o cancelamento por Não há possibilidade de troca de serviço. Confirme a indisponibilidade no sistema; não selecione um código incorreto. O AEBOT apenas orienta, não cancela a OS.",
@@ -3066,7 +3112,7 @@
       "description": "O código da OS não corresponde à execução e existe opção adequada para troca.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Troca de serviço",
       "conditionKeywords": [
         "código incompatível com troca disponível",
         "serviço diferente com opção de troca",
@@ -3099,7 +3145,7 @@
       "description": "O formulário relacionado à repavimentação foi preenchido incorretamente.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Formulário e adicionais",
       "conditionKeywords": [
         "formulário preenchido incorretamente",
         "preenchimento incorreto do formulário",
@@ -3123,7 +3169,7 @@
       "description": "O serviço informado no Adicional Executado ou Posterior é diferente do necessário.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Formulário e adicionais",
       "conditionKeywords": [
         "desdobro indevido",
         "adicional executado incorreto",
@@ -3154,7 +3200,7 @@
       "description": "Foi incluído um adicional sem necessidade, ou além dos serviços suficientes.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Formulário e adicionais",
       "conditionKeywords": [
         "excesso de desdobro",
         "adicional desnecessário",
@@ -3178,7 +3224,7 @@
       "description": "A equipe não cumpriu as recomendações de segurança aplicáveis.",
       "severity": "Não Conforme",
       "priority": 2,
-      "category": "Repavimentação Asfalto",
+      "category": "Segurança",
       "conditionKeywords": [
         "irregularidade EHS",
         "sem sinalização",
@@ -3219,7 +3265,7 @@
       "description": "O analista declarou que conferiu todos os critérios aplicáveis da repavimentação e não encontrou irregularidades.",
       "severity": "Conforme",
       "priority": 3,
-      "category": "Repavimentação Asfalto",
+      "category": "Verificação completa",
       "conditionKeywords": [
         "conferi todos os critérios aplicáveis da repavimentação e não há irregularidades",
         "todos os critérios da repavimentação conferidos sem irregularidades"

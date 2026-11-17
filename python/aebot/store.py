@@ -1,12 +1,13 @@
 """A conclusão e a orientação vêm do JSON compartilhado, não do código Python."""
 from pathlib import Path
+from copy import deepcopy
 import json
 from jsonschema.validators import validator_for
 from .text import Text
 
 
 class RuleStore:
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, prototype: bool = False):
         self.root = root
         schema = json.loads((root / "schemas/rulesStore.schema.json").read_text(encoding="utf-8"))
         self.data = json.loads((root / "src/data/rulesStore.json").read_text(encoding="utf-8"))
@@ -48,7 +49,47 @@ class RuleStore:
         aliases = json.loads((root / "src/data/languageAliases.json").read_text(encoding="utf-8"))["aliases"]
         ellipsis_terms = tuple(expression for context in contexts.values() if context.get('perStatement')
             for value in context['values'] for expression in value['expressions'])
-        self.text = Text(aliases, ellipsis_terms)
+        self.text = Text(aliases, ellipsis_terms, tuple(interpretation.get('recordTerms', [])))
+        self.profile = None
+        if prototype:
+            profile_schema = json.loads((root / 'schemas/catalogProfile.schema.json').read_text(encoding='utf-8'))
+            profile = json.loads((root / 'python/catalogProfile.json').read_text(encoding='utf-8'))
+            validator_for(profile_schema)(profile_schema).validate(profile)
+            if any(item not in self.services for item in profile['serviceIds']):
+                raise ValueError('O perfil aponta para um serviço inexistente.')
+            self.profile = profile
+            self.data = self.project(profile['serviceIds'])
+            # Valido também a projeção que vai dentro do EXE. O histórico
+            # de outros serviços não participa do protótipo nem do pacote.
+            validator_for(schema)(schema).validate(self.data)
+            self.services = {item['id']: item for item in self.data['services']}
+            self.rules = self.data['rules']
+
+    def project(self, service_ids: list[str]) -> dict:
+        """Seleciono dados da base, sem reescrever conclusão ou orientação."""
+        if not service_ids or len(set(service_ids)) != len(service_ids) or any(item not in self.services for item in service_ids):
+            raise ValueError('Seleção de serviços inválida.')
+        result = deepcopy(self.data)
+        result['services'] = [deepcopy(self.services[item]) for item in service_ids]
+        for service in result['services']:
+            # Relações com o catálogo legado não devem deixar IDs órfãos.
+            if 'parameterization' in service:
+                service['parameterization'] = {key: [item for item in values if item in service_ids]
+                    for key, values in service['parameterization'].items()}
+        selected = {rule['id']: rule for service_id in service_ids for rule in self.for_service(service_id)}
+        result['rules'] = []
+        for original in self.rules:
+            if original['id'] not in selected:
+                continue
+            rule = deepcopy(original)
+            applicable = [item for item in service_ids if rule in self.for_service(item)]
+            rule['serviceId'] = applicable[0]
+            if len(applicable) > 1:
+                rule['applicableServiceIds'] = applicable[1:]
+            else:
+                rule.pop('applicableServiceIds', None)
+            result['rules'].append(rule)
+        return result
 
     def for_service(self, service_id: str) -> list[dict]:
         if service_id not in self.services:
